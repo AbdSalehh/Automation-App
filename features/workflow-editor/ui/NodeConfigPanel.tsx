@@ -219,12 +219,15 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
 
   const sheetSources = getSheetSources();
 
+  const COMMON_TRIGGER_FIELDS = ["sender", "message", "name"];
+
   const availableColumns = Array.from(
-    new Set(
-      sheetSources.flatMap(
+    new Set([
+      ...COMMON_TRIGGER_FIELDS,
+      ...sheetSources.flatMap(
         (source) => dataBySpreadsheet[source.spreadsheetId]?.headers ?? [],
       ),
-    ),
+    ]),
   );
 
   const handleRefreshColumns = () => {

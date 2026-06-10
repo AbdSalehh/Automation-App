@@ -149,7 +149,7 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
       key: "columns",
       label: "Kolom (pisahkan koma)",
       placeholder: "sender,message,receivedAt",
-      hint: "Urutan kolom yang akan ditulis ke sheet. Kosongkan untuk menulis semua field.",
+      hint: "Nama field dari data masuk (mis. sender, message, name dari WA trigger). Baris baru ditulis mulai kolom A sesuai urutan ini.",
     },
   ],
   google_calendar_create_event: [

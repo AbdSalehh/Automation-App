@@ -28,12 +28,28 @@ export async function POST(request: Request) {
       raw = {};
     }
 
-    // Whapi delivers an array of message events; use the first inbound one.
-    const messages = Array.isArray(raw.messages)
+    /**
+     * Whapi delivers an array of message events. We must filter out
+     * messages sent by the bot itself (from_me === true) to prevent
+     * an infinite loop where the bot's own replies re-trigger this
+     * webhook endlessly.
+     */
+    const allMessages = Array.isArray(raw.messages)
       ? (raw.messages as Array<Record<string, unknown>>)
       : [];
 
-    const firstMessage = messages[0] ?? {};
+    const inboundMessages = allMessages.filter(
+      (messageItem) => messageItem.from_me !== true,
+    );
+
+    if (inboundMessages.length === 0) {
+      return ok(
+        { triggered: [], count: 0 },
+        "Pesan keluar (from_me) diabaikan",
+      );
+    }
+
+    const firstMessage = inboundMessages[0] ?? {};
 
     const textValue = firstMessage.text as { body?: string } | undefined;
 

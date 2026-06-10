@@ -824,15 +824,23 @@ async function runNode(
         .filter(Boolean);
 
       /**
-       * Each column value may contain {{template}} references — resolve them
-       * against the current item so WA reply fields like {{sender}}, {{message}}
-       * are properly substituted.
+       * Each column entry can be:
+       *   - A plain field name (e.g. "message") → extracts item.message
+       *   - A {{template}} reference (e.g. "{{message}}") → resolved via template
+       *
+       * When a field is not found in the item, fall back to empty string
+       * instead of the literal column name to avoid writing column headers
+       * as data values.
        */
       const values = items.map((item) =>
         columnOrder.length > 0
-          ? columnOrder.map((column) =>
-              resolveTemplate(String(item[column] ?? column), item),
-            )
+          ? columnOrder.map((column) => {
+              if (column.includes("{{")) {
+                return resolveTemplate(column, item);
+              }
+
+              return String(item[column] ?? "");
+            })
           : Object.values(item).map((cell) =>
               resolveTemplate(String(cell ?? ""), item),
             ),

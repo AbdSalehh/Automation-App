@@ -26,6 +26,7 @@ export function LabeledEdge({
   label,
   style,
   markerEnd,
+  data,
 }: EdgeProps) {
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
@@ -41,9 +42,29 @@ export function LabeledEdge({
     BRANCH_STYLES[labelString] ??
     "bg-muted text-muted-foreground border-border";
 
+  /** Edge is animated while its workflow execution is running. */
+  const isAnimated = Boolean(
+    (data as { animated?: boolean } | undefined)?.animated,
+  );
+
+  const edgeStyle = isAnimated
+    ? { ...style, stroke: "#6366f1", strokeWidth: 2.5 }
+    : style;
+
   return (
     <>
-      <BaseEdge id={id} path={edgePath} style={style} markerEnd={markerEnd} />
+      <BaseEdge
+        id={id}
+        path={edgePath}
+        style={edgeStyle}
+        markerEnd={markerEnd}
+      />
+
+      {isAnimated && (
+        <circle r="5" fill="#6366f1">
+          <animateMotion dur="1.6s" repeatCount="indefinite" path={edgePath} />
+        </circle>
+      )}
 
       {label && (
         <EdgeLabelRenderer>

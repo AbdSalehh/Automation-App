@@ -1,6 +1,10 @@
 import { create } from "zustand";
 import { executionService } from "../service/execution.service";
-import type { Execution, ExecutionDetail } from "../model/execution.model";
+import type {
+  Execution,
+  ExecutionDetail,
+  ExecutionStatus,
+} from "../model/execution.model";
 
 /**
  * Execution store. Per coding rule #6, fetching and loading state for
@@ -13,8 +17,12 @@ interface ExecutionState {
   isLoadingDetail: boolean;
   errorMessage: string | null;
 
+  /** Status of the most recent execution, used to animate running edges. */
+  latestStatus: ExecutionStatus | null;
+
   fetchExecutions: (workflowId?: string) => Promise<void>;
   fetchExecutionDetail: (executionId: string) => Promise<void>;
+  pollLatestStatus: (workflowId: string) => Promise<void>;
   clearDetail: () => void;
 }
 
@@ -24,6 +32,7 @@ export const useExecutionStore = create<ExecutionState>((set) => ({
   isLoading: false,
   isLoadingDetail: false,
   errorMessage: null,
+  latestStatus: null,
 
   fetchExecutions: async (workflowId) => {
     set({ isLoading: true, errorMessage: null });
@@ -48,6 +57,21 @@ export const useExecutionStore = create<ExecutionState>((set) => ({
       set({ errorMessage: "Gagal memuat detail eksekusi." });
     } finally {
       set({ isLoadingDetail: false });
+    }
+  },
+
+  /**
+   * Fetches the most recent execution and stores its status. Intended to be
+   * polled by the editor so edges can animate while a run is in progress.
+   */
+  pollLatestStatus: async (workflowId) => {
+    try {
+      const executions = await executionService.list(workflowId);
+      const latest = executions[0] ?? null;
+
+      set({ latestStatus: latest ? latest.status : null });
+    } catch {
+      set({ latestStatus: null });
     }
   },
 

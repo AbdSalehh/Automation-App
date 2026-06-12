@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ReactFlow,
   Background,
@@ -22,6 +22,7 @@ import {
   type FlowNode,
 } from "@/entities/workflow";
 import { Modal } from "@/shared/ui";
+import { useExecutionStore } from "@/entities/execution";
 import { WorkflowNode } from "./WorkflowNode";
 import { LabeledEdge } from "./LabeledEdge";
 import { CanvasControls } from "./CanvasControls";
@@ -29,7 +30,10 @@ import { NodeConfigPanel } from "./NodeConfigPanel";
 import { FlowInfoPanel } from "./FlowInfoPanel";
 
 export function WorkflowEditor() {
-  const { nodes, edges, setNodes, setEdges } = useWorkflowStore();
+  const { nodes, edges, setNodes, setEdges, workflowId, isExecuting } =
+    useWorkflowStore();
+
+  const { latestStatus, pollLatestStatus } = useExecutionStore();
 
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [isMiniMapVisible, setIsMiniMapVisible] = useState(true);
@@ -39,6 +43,45 @@ export function WorkflowEditor() {
   const edgeTypes = useMemo(() => ({ labeled: LabeledEdge }), []);
 
   const { fetchPreview, fetchSheetList } = useSheetPreviewStore();
+
+  /** True while the most recent run (manual or scheduled) is in progress. */
+  const isRunning = isExecuting || latestStatus === "running";
+
+  /**
+   * Poll the latest execution status while a run is active so edges keep
+   * animating until the workflow finishes. Stops once status leaves "running".
+   */
+  useEffect(() => {
+    if (!workflowId) {
+      return;
+    }
+
+    pollLatestStatus(workflowId);
+
+    if (!isRunning) {
+      return;
+    }
+
+    const intervalId = setInterval(() => {
+      pollLatestStatus(workflowId);
+    }, 2000);
+
+    return () => clearInterval(intervalId);
+  }, [workflowId, isRunning, pollLatestStatus]);
+
+  /** Inject the animated flag into edges while running, without mutating store. */
+  const displayEdges = useMemo(() => {
+    const baseEdges = edges as unknown as Edge[];
+
+    if (!isRunning) {
+      return baseEdges;
+    }
+
+    return baseEdges.map((edge) => ({
+      ...edge,
+      data: { ...edge.data, animated: true },
+    }));
+  }, [edges, isRunning]);
 
   /** Sheets nodes whose data can be previewed in the bottom drawer. */
   const SHEET_NODE_KINDS = useMemo(
@@ -124,7 +167,7 @@ export function WorkflowEditor() {
       <div className="relative flex-1 bg-muted/30">
         <ReactFlow
           nodes={nodes as unknown as Node[]}
-          edges={edges as unknown as Edge[]}
+          edges={displayEdges}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           onNodesChange={handleNodesChange}

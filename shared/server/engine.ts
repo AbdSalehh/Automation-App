@@ -819,7 +819,11 @@ async function runNode(
        * name. Legacy format: single targetColumn (letter) + value.
        */
       const writeTargets = Array.isArray(config.writeTargets)
-        ? (config.writeTargets as Array<{ column: string; value: string }>)
+        ? (config.writeTargets as Array<{
+            column: string;
+            value: string;
+            append?: boolean;
+          }>)
         : [];
 
       const legacyColumn = String(config.targetColumn ?? "").trim();
@@ -931,9 +935,35 @@ async function runNode(
               continue;
             }
 
+            const range = `${sheetName}!${columnLetter}${rowNumber}`;
+            const newValue = resolveTemplate(target.value, item);
+
+            let finalValue = newValue;
+
+            /**
+             * Append mode: read the existing cell and, when it already has
+             * content, join the old value and the new one with a comma so we
+             * never overwrite prior data.
+             */
+            if (target.append) {
+              const existingResponse = await requestExternal(
+                `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}`,
+                { headers: { Authorization: `Bearer ${accessToken}` } },
+              );
+
+              const existingValue = String(
+                (existingResponse.body as { values?: string[][] })
+                  ?.values?.[0]?.[0] ?? "",
+              ).trim();
+
+              finalValue = existingValue
+                ? `${existingValue}, ${newValue}`
+                : newValue;
+            }
+
             updates.push({
-              range: `${sheetName}!${columnLetter}${rowNumber}`,
-              values: [[resolveTemplate(target.value, item)]],
+              range,
+              values: [[finalValue]],
             });
           }
         } else {
@@ -1683,13 +1713,24 @@ export async function resumeWorkflow(
   if (waiting.pauseType === "wait_reply") {
     const reply = replyPayload ?? {};
 
+    /**
+     * Formatted reply time (local Asia/Jakarta) so write templates can record
+     * exactly when the target replied, e.g. "{{message}} ({{__replyAt}})".
+     */
+    const replyAt = new Date().toLocaleString("id-ID", {
+      timeZone: "Asia/Jakarta",
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+
     const enrichedRows = pauseRows.map((row) => ({
       ...row,
       ...reply,
       reply: reply.message,
+      __replyAt: replyAt,
     }));
 
-    resumeOutput = { rows: enrichedRows, ...reply };
+    resumeOutput = { rows: enrichedRows, ...reply, __replyAt: replyAt };
   } else {
     resumeOutput = {
       rows: pauseRows,

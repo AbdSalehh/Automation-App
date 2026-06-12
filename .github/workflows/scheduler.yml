@@ -1,0 +1,23 @@
+name: Workflow Scheduler
+
+# Pings the app's /api/cron endpoint on a fixed schedule so that published
+# workflows with a schedule_trigger (cron) or polling trigger run automatically.
+# This is the long-term, free alternative to Vercel Cron (which is limited to
+# once-per-day on the Hobby plan).
+
+on:
+  schedule:
+    # Every 5 minutes. GitHub's minimum granularity is 5 minutes; tighten this
+    # only if your plan allows and you actually need sub-5-minute precision.
+    - cron: "*/5 * * * *"
+  # Allows manually triggering a run from the Actions tab for testing.
+  workflow_dispatch:
+
+jobs:
+  ping-cron:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger scheduler endpoint
+        run: |
+          curl --fail --silent --show-error \
+            "${{ secrets.CRON_ENDPOINT_URL }}?secret=${{ secrets.CRON_SECRET }}"

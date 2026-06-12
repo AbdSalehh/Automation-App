@@ -290,7 +290,13 @@ const SCHEDULE_REMINDER_NODES = JSON.stringify([
         sheetName: "Orders",
         matchColumn: "Nomor",
         matchValue: "{{sender}}",
-        writeTargets: [{ column: "Respon", value: "{{message}}" }],
+        writeTargets: [
+          {
+            column: "Respon",
+            value: "{{message}} ({{__replyAt}})",
+            append: true,
+          },
+        ],
       },
       credentialId: "",
     },

@@ -16,6 +16,8 @@ export interface WriteTarget {
   column: string;
   /** Value template (supports {{kolom}} and {{__waMessageId}} etc). */
   value: string;
+  /** When true, append after existing cell content using a comma separator. */
+  append?: boolean;
 }
 
 interface SheetWriteTargetsProps {
@@ -106,12 +108,26 @@ export function SheetWriteTargets({
 
           <Input
             className="h-8 text-xs"
-            placeholder="Nilai baru, mis. Sudah Diingatkan {{__waMessageId}}"
+            placeholder="Nilai baru, mis. {{message}} ({{__replyAt}})"
             value={target.value}
             onChange={(changeEvent) =>
               updateTarget(targetIndex, { value: changeEvent.target.value })
             }
           />
+
+          <label className="flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">
+            <input
+              type="checkbox"
+              className="size-3.5 rounded border-border"
+              checked={Boolean(target.append)}
+              onChange={(changeEvent) =>
+                updateTarget(targetIndex, {
+                  append: changeEvent.target.checked,
+                })
+              }
+            />
+            Tambahkan setelah data lama (pakai koma)
+          </label>
         </div>
       ))}
 
@@ -127,8 +143,9 @@ export function SheetWriteTargets({
       </Button>
 
       <p className="text-xs text-muted-foreground">
-        Mendukung {"{{kolom}}"} dan hasil WA: {"{{__waMessageId}}"},{" "}
-        {"{{__waTarget}}"}, {"{{__waSentAt}}"}.
+        Mendukung {"{{kolom}}"}, hasil WA ({"{{__waMessageId}}"},{" "}
+        {"{{__waTarget}}"}, {"{{__waSentAt}}"}) dan waktu balasan{" "}
+        {"{{__replyAt}}"}.
       </p>
     </div>
   );

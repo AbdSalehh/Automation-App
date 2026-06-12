@@ -1,6 +1,6 @@
 import { prisma } from "@/shared/lib/prisma";
 import { handleRoute, ok } from "@/shared/api/http";
-import { runWorkflow } from "@/shared/server/engine";
+import { runWorkflow, resumeWaitingReplies } from "@/shared/server/engine";
 import type { FlowNode } from "@/entities/workflow/model/workflow.model";
 
 /**
@@ -10,7 +10,7 @@ import type { FlowNode } from "@/entities/workflow/model/workflow.model";
  * message). Fonnte POSTs a payload like:
  *   { device, sender, message, name, ... }
  *
- * For every published workflow that contains a `whatsapp_fonnte_trigger` node,
+ * For every published workflow that contains a `whatsapp_trigger` node,
  * we run it with the normalised reply as the trigger payload so downstream
  * nodes can use {{sender}}, {{message}}, {{name}} and write the reply back to a
  * sheet.
@@ -47,6 +47,9 @@ export async function POST(request: Request) {
       raw,
     };
 
+    /** Resume any paused wait_reply executions for this sender. */
+    const resumedCount = await resumeWaitingReplies(payload.sender, payload);
+
     const publishedWorkflows = await prisma.workflow.findMany({
       where: { isPublished: true },
     });
@@ -57,7 +60,7 @@ export async function POST(request: Request) {
       const nodes: FlowNode[] = JSON.parse(workflow.nodes || "[]");
 
       const hasReplyTrigger = nodes.some(
-        (node) => node.data.kind === "whatsapp_fonnte_trigger",
+        (node) => node.data.kind === "whatsapp_trigger",
       );
 
       if (!hasReplyTrigger) {
@@ -69,7 +72,7 @@ export async function POST(request: Request) {
     }
 
     return ok(
-      { triggered, count: triggered.length },
+      { triggered, count: triggered.length, resumed: resumedCount },
       "Balasan WhatsApp diterima",
     );
   });

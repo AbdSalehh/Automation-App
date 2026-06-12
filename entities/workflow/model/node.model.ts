@@ -9,10 +9,7 @@ export type NodeKind =
   | "google_sheets_trigger"
   | "http_request"
   | "whatsapp_send"
-  | "whatsapp_fonnte_send"
-  | "whatsapp_fonnte_trigger"
-  | "whatsapp_whapi_send"
-  | "whatsapp_whapi_trigger"
+  | "whatsapp_trigger"
   | "telegram_send"
   | "google_sheets_append"
   | "google_sheets_read"
@@ -20,9 +17,16 @@ export type NodeKind =
   | "google_calendar_trigger"
   | "google_calendar_create_event"
   | "google_calendar_list_events"
+  | "date_calculator"
+  | "schedule"
+  | "wait_reply"
   | "function"
+  | "transform"
   | "filter"
   | "condition";
+
+/** WhatsApp delivery provider, chosen per-node via the provider dropdown. */
+export type WhatsAppProvider = "whapi" | "fonnte" | "meta";
 
 export interface NodeTypeDef {
   kind: NodeKind;
@@ -95,49 +99,19 @@ export const NODE_TYPES: NodeTypeDef[] = [
   {
     kind: "whatsapp_send",
     category: "action",
-    label: "Send WhatsApp (Meta)",
-    description: "Send a message via WhatsApp Business Cloud API (Meta).",
+    label: "Send WhatsApp",
+    description:
+      "Kirim pesan WhatsApp. Pilih provider: Whapi, Fonnte, atau Meta.",
     icon: "MessageCircle",
-    credentialType: "whatsapp",
-    outputs: ["sent", "results"],
-  },
-  {
-    kind: "whatsapp_fonnte_send",
-    category: "action",
-    label: "Send WhatsApp (Fonnte)",
-    description:
-      "Send a WhatsApp message easily via Fonnte — no Meta approval needed.",
-    icon: "MessageSquare",
-    credentialType: "whatsapp_fonnte",
     outputs: ["sent", "pending", "rows"],
   },
   {
-    kind: "whatsapp_fonnte_trigger",
+    kind: "whatsapp_trigger",
     category: "trigger",
-    label: "WhatsApp Reply (Fonnte)",
+    label: "WhatsApp Reply",
     description:
-      "Trigger when someone replies to your WhatsApp (via Fonnte incoming webhook).",
+      "Trigger saat ada balasan WhatsApp masuk (via webhook Whapi/Fonnte).",
     icon: "MessageSquareReply",
-    credentialType: "whatsapp_fonnte",
-    outputs: ["sender", "message", "name"],
-  },
-  {
-    kind: "whatsapp_whapi_send",
-    category: "action",
-    label: "Send WhatsApp (Whapi)",
-    description: "Send a WhatsApp message via Whapi (gate.whapi.cloud).",
-    icon: "MessageSquare",
-    credentialType: "whatsapp_whapi",
-    outputs: ["sent", "pending", "rows"],
-  },
-  {
-    kind: "whatsapp_whapi_trigger",
-    category: "trigger",
-    label: "WhatsApp Reply (Whapi)",
-    description:
-      "Trigger when someone replies to your WhatsApp (via Whapi incoming webhook).",
-    icon: "MessageSquareReply",
-    credentialType: "whatsapp_whapi",
     outputs: ["sender", "message", "name"],
   },
   {
@@ -206,12 +180,48 @@ export const NODE_TYPES: NodeTypeDef[] = [
     outputs: ["events", "count"],
   },
   {
+    kind: "date_calculator",
+    category: "logic",
+    label: "Date Calculator",
+    description:
+      "Hitung tanggal relatif (mis. Deadline dikurangi 3 hari) untuk penjadwalan.",
+    icon: "Calculator",
+    outputs: ["computedDate", "rows"],
+  },
+  {
+    kind: "schedule",
+    category: "logic",
+    label: "Schedule (Tunggu Tanggal)",
+    description:
+      "Tunda alur sampai tanggal/jam tertentu sebelum melanjutkan ke node berikutnya.",
+    icon: "Timer",
+    outputs: ["scheduledAt", "rows"],
+  },
+  {
+    kind: "wait_reply",
+    category: "logic",
+    label: "Wait Reply",
+    description:
+      "Pause eksekusi sampai target membalas WhatsApp, lalu lanjutkan alur.",
+    icon: "Hourglass",
+    outputs: ["reply", "sender", "message"],
+  },
+  {
     kind: "function",
     category: "logic",
     label: "Function (Code)",
     description: "Run a custom JavaScript snippet to transform data.",
     icon: "Code",
     outputs: ["result"],
+  },
+  {
+    kind: "transform",
+    category: "logic",
+    label: "Transform",
+    description:
+      "Petakan ulang data: mode key/value dengan {{ekspresi}} atau JavaScript.",
+    icon: "Shuffle",
+    outputs: ["result", "rows"],
   },
   {
     kind: "condition",

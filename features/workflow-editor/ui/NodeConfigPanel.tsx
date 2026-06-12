@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
-import { XIcon, Trash2Icon, TableIcon } from "lucide-react";
+import {
+  XIcon,
+  Trash2Icon,
+  TableIcon,
+  PlayIcon,
+  AlertTriangleIcon,
+} from "lucide-react";
 import {
   Button,
   Input,
@@ -12,12 +18,17 @@ import {
   SelectTrigger,
   SelectValue,
   MultiSelect,
+  Spinner,
+  ScrollArea,
 } from "@/shared/ui";
+import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import {
   useWorkflowStore,
   useSheetColumnsStore,
   useSheetPreviewStore,
+  useNodeTestStore,
   getNodeTypeDef,
+  validateNodeData,
   type FlowNode,
   type ConditionGroup,
 } from "@/entities/workflow";
@@ -25,6 +36,12 @@ import { useCredentialStore } from "@/entities/credential";
 import { ConditionBuilder } from "./ConditionBuilder";
 import { SheetWriteTargets, type WriteTarget } from "./SheetWriteTargets";
 import { SpreadsheetPreviewDrawer } from "./SpreadsheetPreviewDrawer";
+import { DateCalculatorConfig } from "./DateCalculatorConfig";
+import { ScheduleTriggerConfig } from "./ScheduleTriggerConfig";
+import { TransformConfig, type TransformMapping } from "./TransformConfig";
+import { ExpressionInput } from "./ExpressionInput";
+import type { VariableGroup } from "./VariablePicker";
+import { cn } from "@/shared/lib/utils";
 
 interface NodeConfigPanelProps {
   node: FlowNode;
@@ -51,25 +68,6 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
       key: "targetField",
       label: "Kolom Nomor Tujuan",
       columnSelect: true,
-      hint: "Nomor diambil dari kolom ini pada tiap baris.",
-    },
-    {
-      key: "to",
-      label: "Atau Nomor Manual / Template",
-      placeholder: "628xxx atau {{Nomor}}",
-    },
-    {
-      key: "text",
-      label: "Pesan",
-      multiline: true,
-      placeholder: "Halo {{Nama}}, tagihan {{Pesanan}} belum dibayar.",
-    },
-  ],
-  whatsapp_fonnte_send: [
-    {
-      key: "targetField",
-      label: "Kolom Nomor Tujuan",
-      columnSelect: true,
       hint: "Pilih kolom yang berisi nomor WhatsApp dari sheet.",
     },
     {
@@ -89,49 +87,41 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
       key: "reminderDelayMinutes",
       label: "Tunda Kirim (menit)",
       placeholder: "0 = kirim langsung",
-      hint: "Jika diisi, pesan dijadwalkan setelah N menit. Saat jatuh tempo, data dicek ulang — jika kondisi sudah tidak terpenuhi (mis. sudah bayar), pengiriman dibatalkan otomatis. Butuh trigger polling/scheduler aktif.",
+      hint: "Jika diisi, pesan dijadwalkan setelah N menit. Saat jatuh tempo, data dicek ulang — jika kondisi sudah tidak terpenuhi (mis. sudah bayar), pengiriman dibatalkan otomatis.",
     },
   ],
-  whatsapp_fonnte_trigger: [
+  whatsapp_trigger: [
     {
       key: "senderField",
       label: "Info",
       placeholder: "",
-      hint: "Saat ada balasan WA, data tersedia sebagai {{sender}}, {{message}}, {{name}}. Pasang URL webhook /api/webhooks/whatsapp di dashboard Fonnte → Device → Webhook.",
+      hint: "Saat ada balasan WA, data tersedia sebagai {{sender}}, {{message}}, {{name}}. Pasang URL webhook /api/webhooks/whapi (Whapi) atau /api/webhooks/whatsapp (Fonnte) di dashboard provider.",
     },
   ],
-  whatsapp_whapi_send: [
+  schedule: [
     {
-      key: "targetField",
-      label: "Kolom Nomor Tujuan",
+      key: "executeDate",
+      label: "Tanggal Eksekusi / Template",
+      placeholder: "{{computedDate}}",
+      hint: "Tanggal absolut atau {{computedDate}} dari Date Calculator.",
+    },
+    {
+      key: "time",
+      label: "Jam (HH:MM, opsional)",
+      placeholder: "09:00",
+    },
+  ],
+  wait_reply: [
+    {
+      key: "matchField",
+      label: "Kolom Nomor Target",
       columnSelect: true,
-      hint: "Pilih kolom yang berisi nomor WhatsApp dari sheet.",
+      hint: "Nomor yang ditunggu balasannya, mis. Nomor.",
     },
     {
-      key: "target",
+      key: "matchValue",
       label: "Atau Nomor Manual / Template",
-      placeholder: "628xxx atau {{Nomor}}",
-    },
-    {
-      key: "message",
-      label: "Pesan (dukung {{kolom}})",
-      multiline: true,
-      placeholder:
-        "Halo {{Nama}} 👋\nReminder: {{Pesanan}} status {{Status Baru}}.",
-    },
-    {
-      key: "reminderDelayMinutes",
-      label: "Tunda Kirim (menit)",
-      placeholder: "0 = kirim langsung",
-      hint: "Jika diisi, pesan dijadwalkan setelah N menit. Saat jatuh tempo, data dicek ulang — jika kondisi sudah tidak terpenuhi (mis. sudah bayar), pengiriman dibatalkan otomatis. Butuh trigger polling/scheduler aktif.",
-    },
-  ],
-  whatsapp_whapi_trigger: [
-    {
-      key: "senderField",
-      label: "Info",
-      placeholder: "",
-      hint: "Saat ada balasan WA, data tersedia sebagai {{sender}}, {{message}}, {{name}}. Pasang URL webhook /api/webhooks/whapi di panel.whapi.cloud → Channel → Webhooks.",
+      placeholder: "{{Nomor}}",
     },
   ],
   telegram_send: [
@@ -175,18 +165,32 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
       placeholder: "2026-06-07T00:00:00Z",
     },
   ],
-  schedule_trigger: [
-    { key: "cron", label: "Cron Expression", placeholder: "0 9 * * *" },
-  ],
+  schedule_trigger: [],
   function: [{ key: "code", label: "Kode JavaScript", multiline: true }],
 };
 
 const CONDITION_NODE_KINDS = new Set(["condition", "filter"]);
 
+/** Maps the chosen WhatsApp provider to the credential type it requires. */
+const PROVIDER_TO_CREDENTIAL_TYPE = {
+  whapi: "whatsapp_whapi",
+  fonnte: "whatsapp_fonnte",
+  meta: "whatsapp",
+} as const;
+
+const WHATSAPP_PROVIDER_OPTIONS = [
+  { value: "whapi", label: "Whapi" },
+  { value: "fonnte", label: "Fonnte" },
+  { value: "meta", label: "WhatsApp Cloud API (Meta)" },
+];
+
 const EMPTY_CONDITION_GROUP: ConditionGroup = { match: "all", rules: [] };
 
 export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
-  const { updateNodeData, removeNode, getSheetSources } = useWorkflowStore();
+  const { updateNodeData, removeNode, getSheetSources, workflowId } =
+    useWorkflowStore();
+
+  const { resultByNodeId, runningNodeId, runNodeTest } = useNodeTestStore();
 
   const { credentials, fetchCredentials, credentialsByType } =
     useCredentialStore();
@@ -213,9 +217,24 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
 
   const nodeTypeDefinition = getNodeTypeDef(node.data.kind);
   const configFields = CONFIG_FIELDS[node.data.kind] ?? [];
+
+  const isWhatsAppSend = node.data.kind === "whatsapp_send";
+  const selectedProvider = String(node.data.config.provider ?? "whapi");
+
+  /** For Send WhatsApp the credential type follows the provider dropdown. */
+  const effectiveCredentialType = isWhatsAppSend
+    ? PROVIDER_TO_CREDENTIAL_TYPE[
+        selectedProvider as keyof typeof PROVIDER_TO_CREDENTIAL_TYPE
+      ]
+    : nodeTypeDefinition?.credentialType;
   const usesConditionBuilder = CONDITION_NODE_KINDS.has(node.data.kind);
   const isSheetReadNode = node.data.kind === "google_sheets_read";
   const isSheetUpdateNode = node.data.kind === "google_sheets_update";
+  const isDateCalculator = node.data.kind === "date_calculator";
+  const isTransform = node.data.kind === "transform";
+  const isConditionNode = node.data.kind === "condition";
+  const isScheduleTrigger = node.data.kind === "schedule_trigger";
+  const conditionMode = String(node.data.config.mode ?? "visual");
 
   const sheetSources = getSheetSources();
 
@@ -234,6 +253,34 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
     sheetSources.forEach((source) => fetchColumns({ ...source, force: true }));
   };
 
+  /** Variables offered by the picker: system values + known sheet columns. */
+  const columnVariables = availableColumns.map(
+    (column) => `payload['${column}']`,
+  );
+
+  const variableGroups: VariableGroup[] = [
+    {
+      label: "Sistem",
+      variables: ["$now", "$workflow.id", "$execution.id"],
+    },
+    ...(columnVariables.length > 0
+      ? [{ label: "Kolom & Data", variables: columnVariables }]
+      : []),
+  ];
+
+  /** Sample context used to render live expression previews. */
+  const samplePayload: Record<string, unknown> = {};
+
+  availableColumns.forEach((column) => {
+    samplePayload[column] = `<${column}>`;
+  });
+
+  const previewContext = {
+    payload: samplePayload,
+    $workflow: { id: workflowId ?? "" },
+    $execution: { id: "preview" },
+  };
+
   /** Column value lookup across all known spreadsheets (for value dropdowns). */
   const lookupColumnValues = (column: string): string[] => {
     for (const source of sheetSources) {
@@ -248,14 +295,10 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
   };
 
   useEffect(() => {
-    if (nodeTypeDefinition?.credentialType && credentials.length === 0) {
+    if (effectiveCredentialType && credentials.length === 0) {
       fetchCredentials();
     }
-  }, [
-    nodeTypeDefinition?.credentialType,
-    credentials.length,
-    fetchCredentials,
-  ]);
+  }, [effectiveCredentialType, credentials.length, fetchCredentials]);
 
   /** Auto-fetch on mount (non-force, skip if already cached). */
   useEffect(() => {
@@ -283,13 +326,34 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
       config: { ...node.data.config, [configKey]: configValue },
     });
 
+  const updateConfigValuesBatch = (updates: Record<string, unknown>) =>
+    updateNodeData(node.id, {
+      config: { ...node.data.config, ...updates },
+    });
+
+  const validationIssues = validateNodeData(node.data);
+  const testResult = resultByNodeId[node.id];
+  const isTestRunning = runningNodeId === node.id;
+
+  const handleTestNode = () =>
+    runNodeTest({
+      workflowId: workflowId ?? "test-workflow",
+      node,
+      sampleInput: previewContext.payload,
+      sheetSources,
+    });
+
+  const transformMappings = Array.isArray(node.data.config.mappings)
+    ? (node.data.config.mappings as TransformMapping[])
+    : [];
+
   const updateConditions = (nextGroup: ConditionGroup) =>
     updateNodeData(node.id, {
       config: { ...node.data.config, conditions: nextGroup },
     });
 
-  const credentialOptions = nodeTypeDefinition?.credentialType
-    ? credentialsByType(nodeTypeDefinition.credentialType)
+  const credentialOptions = effectiveCredentialType
+    ? credentialsByType(effectiveCredentialType)
     : [];
 
   const currentConditions =
@@ -302,8 +366,8 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
 
   return (
     <>
-      <aside className="flex w-80 shrink-0 flex-col overflow-y-auto border-l border-border bg-card">
-        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+      <aside className="flex w-80 shrink-0 flex-col border-l border-border bg-card">
+        <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
           <h2 className="text-sm font-semibold text-foreground">
             Node Properties
           </h2>
@@ -317,327 +381,453 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
           </button>
         </div>
 
-        <div className="flex flex-col gap-4 p-4">
-          <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">
-              Label
-            </label>
-
-            <Input
-              value={node.data.label}
-              onChange={(changeEvent) =>
-                updateNodeData(node.id, { label: changeEvent.target.value })
-              }
-            />
-
-            <p className="mt-1.5 text-xs text-muted-foreground">
-              {nodeTypeDefinition?.description}
-            </p>
-          </div>
-
-          {nodeTypeDefinition?.credentialType && (
+        <ScrollArea className="flex-1">
+          <div className="flex flex-col gap-4 p-4">
             <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                Kredensial
+                Label
               </label>
 
-              <Select
-                value={node.data.credentialId ?? ""}
-                onValueChange={(credentialId) =>
-                  updateNodeData(node.id, { credentialId })
+              <Input
+                value={node.data.label}
+                onChange={(changeEvent) =>
+                  updateNodeData(node.id, { label: changeEvent.target.value })
                 }
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="— Pilih kredensial —" />
-                </SelectTrigger>
+              />
 
-                <SelectContent>
-                  {credentialOptions.map((credential) => (
-                    <SelectItem key={credential.id} value={credential.id}>
-                      {credential.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {credentialOptions.length === 0 && (
-                <p className="mt-1.5 text-xs text-amber-600">
-                  Belum ada kredensial untuk konektor ini. Tambahkan di halaman
-                  Credentials.
-                </p>
-              )}
+              <p className="mt-1.5 text-xs text-muted-foreground">
+                {nodeTypeDefinition?.description}
+              </p>
             </div>
-          )}
 
-          {/* Google Sheets Read & Update share: Spreadsheet ID + Nama Sheet */}
-          {(isSheetReadNode || isSheetUpdateNode) && (
-            <>
+            {isWhatsAppSend && (
               <div>
                 <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                  Spreadsheet ID
-                </label>
-
-                <div className="flex items-center gap-2">
-                  <Input
-                    value={String(node.data.config.spreadsheetId ?? "")}
-                    placeholder="1BxiMVs0XRA5nFMdKvBdBZjg..."
-                    onChange={(changeEvent) =>
-                      updateConfigValue(
-                        "spreadsheetId",
-                        changeEvent.target.value,
-                      )
-                    }
-                  />
-
-                  <Button
-                    variant="outline"
-                    size="icon-sm"
-                    type="button"
-                    title="Preview data spreadsheet"
-                    disabled={
-                      !node.data.config.spreadsheetId || !node.data.credentialId
-                    }
-                    onClick={handlePreviewData}
-                  >
-                    <TableIcon className="size-4" />
-                  </Button>
-                </div>
-              </div>
-
-              <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                  Nama Sheet
-                </label>
-
-                <Input
-                  value={String(node.data.config.sheetName ?? "")}
-                  placeholder="Sheet1"
-                  onChange={(changeEvent) =>
-                    updateConfigValue("sheetName", changeEvent.target.value)
-                  }
-                />
-
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Membaca seluruh kolom otomatis dari sheet ini.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleRefreshColumns}
-                className="self-start text-xs text-primary hover:underline disabled:opacity-50"
-                disabled={isLoadingColumns}
-              >
-                {isLoadingColumns ? "Memuat..." : "↻ Muat kolom sheet"}
-              </button>
-            </>
-          )}
-
-          {/* Read node: pick which columns to read */}
-          {isSheetReadNode && (
-            <>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                  Kolom yang Dibaca
-                </label>
-
-                <MultiSelect
-                  options={availableColumns}
-                  value={selectedReadColumns}
-                  onChange={(next) => updateConfigValue("readColumns", next)}
-                  placeholder="Semua kolom (default)"
-                />
-
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Kosongkan untuk membaca semua kolom.
-                </p>
-              </div>
-
-              <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                  Maks Baris
-                </label>
-
-                <Input
-                  value={String(node.data.config.limit ?? "")}
-                  placeholder="100"
-                  onChange={(changeEvent) =>
-                    updateConfigValue("limit", changeEvent.target.value)
-                  }
-                />
-              </div>
-            </>
-          )}
-
-          {/* Update node: pick columns to write + values */}
-          {isSheetUpdateNode && (
-            <>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                  Cari Baris Berdasarkan Kolom (opsional)
+                  Provider
                 </label>
 
                 <Select
-                  value={String(node.data.config.matchColumn ?? "") || "_none"}
-                  onValueChange={(columnValue) =>
-                    updateConfigValue(
-                      "matchColumn",
-                      columnValue === "_none" ? "" : columnValue,
-                    )
-                  }
+                  value={selectedProvider}
+                  onValueChange={(provider) => {
+                    updateNodeData(node.id, {
+                      credentialId: "",
+                      config: { ...node.data.config, provider },
+                    });
+                  }}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="— tidak perlu (pakai baris dari Read) —" />
+                    <SelectValue placeholder="— Pilih provider —" />
                   </SelectTrigger>
 
                   <SelectContent>
-                    <SelectItem value="_none">
-                      — tidak perlu (pakai baris dari Read) —
-                    </SelectItem>
+                    {WHATSAPP_PROVIDER_OPTIONS.map((providerOption) => (
+                      <SelectItem
+                        key={providerOption.value}
+                        value={providerOption.value}
+                      >
+                        {providerOption.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
-                    {availableColumns.map((column) => (
-                      <SelectItem key={column} value={column}>
-                        {column}
+            {effectiveCredentialType && (
+              <div>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                  Kredensial
+                </label>
+
+                <Select
+                  value={node.data.credentialId ?? ""}
+                  onValueChange={(credentialId) =>
+                    updateNodeData(node.id, { credentialId })
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="— Pilih kredensial —" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    {credentialOptions.map((credential) => (
+                      <SelectItem key={credential.id} value={credential.id}>
+                        {credential.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
 
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Gunakan ini untuk balasan WA: cari baris yang kolomnya cocok
-                  dengan nilai di bawah (mis. kolom Nomor = {"{{sender}}"}).
-                </p>
+                {credentialOptions.length === 0 && (
+                  <p className="mt-1.5 text-xs text-amber-600">
+                    Belum ada kredensial untuk konektor ini. Tambahkan di
+                    halaman Credentials.
+                  </p>
+                )}
               </div>
+            )}
 
-              {String(node.data.config.matchColumn ?? "") && (
+            {/* Google Sheets Read & Update share: Spreadsheet ID + Nama Sheet */}
+            {(isSheetReadNode || isSheetUpdateNode) && (
+              <>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                    Nilai yang Dicari
+                    Spreadsheet ID
+                  </label>
+
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={String(node.data.config.spreadsheetId ?? "")}
+                      placeholder="1BxiMVs0XRA5nFMdKvBdBZjg..."
+                      onChange={(changeEvent) =>
+                        updateConfigValue(
+                          "spreadsheetId",
+                          changeEvent.target.value,
+                        )
+                      }
+                    />
+
+                    <Button
+                      variant="outline"
+                      size="icon-sm"
+                      type="button"
+                      title="Preview data spreadsheet"
+                      disabled={
+                        !node.data.config.spreadsheetId ||
+                        !node.data.credentialId
+                      }
+                      onClick={handlePreviewData}
+                    >
+                      <TableIcon className="size-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Nama Sheet
                   </label>
 
                   <Input
-                    value={String(node.data.config.matchValue ?? "")}
-                    placeholder="{{sender}}"
+                    value={String(node.data.config.sheetName ?? "")}
+                    placeholder="Sheet1"
                     onChange={(changeEvent) =>
-                      updateConfigValue("matchValue", changeEvent.target.value)
+                      updateConfigValue("sheetName", changeEvent.target.value)
+                    }
+                  />
+
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Membaca seluruh kolom otomatis dari sheet ini.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleRefreshColumns}
+                  className="self-start text-xs text-primary hover:underline disabled:opacity-50"
+                  disabled={isLoadingColumns}
+                >
+                  {isLoadingColumns ? "Memuat..." : "↻ Muat kolom sheet"}
+                </button>
+              </>
+            )}
+
+            {/* Read node: pick which columns to read */}
+            {isSheetReadNode && (
+              <>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Kolom yang Dibaca
+                  </label>
+
+                  <MultiSelect
+                    options={availableColumns}
+                    value={selectedReadColumns}
+                    onChange={(next) => updateConfigValue("readColumns", next)}
+                    placeholder="Semua kolom (default)"
+                  />
+
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Kosongkan untuk membaca semua kolom.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Maks Baris
+                  </label>
+
+                  <Input
+                    value={String(node.data.config.limit ?? "")}
+                    placeholder="100"
+                    onChange={(changeEvent) =>
+                      updateConfigValue("limit", changeEvent.target.value)
                     }
                   />
                 </div>
-              )}
+              </>
+            )}
 
-              <SheetWriteTargets
-                availableColumns={availableColumns}
-                value={
-                  Array.isArray(node.data.config.writeTargets)
-                    ? (node.data.config.writeTargets as WriteTarget[])
-                    : []
-                }
-                onChange={(next: WriteTarget[]) =>
-                  updateConfigValue("writeTargets", next)
-                }
-              />
-            </>
-          )}
+            {/* Update node: pick columns to write + values */}
+            {isSheetUpdateNode && (
+              <>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Cari Baris Berdasarkan Kolom (opsional)
+                  </label>
 
-          {usesConditionBuilder && (
-            <div>
-              <div className="mb-1 flex items-center justify-between">
-                <label className="block text-xs font-medium text-muted-foreground">
-                  Kondisi
-                </label>
-
-                {sheetSources.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={handleRefreshColumns}
-                    className="text-xs text-primary hover:underline disabled:opacity-50"
-                    disabled={isLoadingColumns}
-                  >
-                    {isLoadingColumns ? "Memuat..." : "↻ Muat kolom sheet"}
-                  </button>
-                )}
-              </div>
-
-              <ConditionBuilder
-                value={currentConditions}
-                availableColumns={availableColumns}
-                getColumnValues={lookupColumnValues}
-                onChange={updateConditions}
-              />
-
-              {availableColumns.length === 0 && (
-                <p className="mt-1.5 text-xs text-amber-600">
-                  Kolom belum tersedia. Pastikan node Google Sheets sudah punya
-                  Kredensial + Spreadsheet ID, lalu klik &quot;Muat kolom
-                  sheet&quot;.
-                </p>
-              )}
-
-              <p className="mt-1.5 text-xs text-muted-foreground">
-                {node.data.kind === "filter"
-                  ? "Hanya baris yang lolos kondisi yang diteruskan ke node berikutnya."
-                  : "Flow lanjut ke node berikutnya hanya jika ada baris yang cocok."}
-              </p>
-            </div>
-          )}
-
-          {configFields.map((configField) => (
-            <div key={configField.key}>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                {configField.label}
-              </label>
-
-              {configField.columnSelect ? (
-                <div className="flex items-center gap-2">
                   <Select
-                    value={String(node.data.config[configField.key] ?? "")}
-                    onValueChange={(value) =>
-                      updateConfigValue(configField.key, value)
+                    value={
+                      String(node.data.config.matchColumn ?? "") || "_none"
+                    }
+                    onValueChange={(columnValue) =>
+                      updateConfigValue(
+                        "matchColumn",
+                        columnValue === "_none" ? "" : columnValue,
+                      )
                     }
                   >
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="— pilih kolom —" />
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="— tidak perlu (pakai baris dari Read) —" />
                     </SelectTrigger>
 
                     <SelectContent>
-                      {availableColumns.length === 0 ? (
-                        <SelectItem value="_none" disabled>
-                          Belum ada kolom — klik ↻ Muat
+                      <SelectItem value="_none">
+                        — tidak perlu (pakai baris dari Read) —
+                      </SelectItem>
+
+                      {availableColumns.map((column) => (
+                        <SelectItem key={column} value={column}>
+                          {column}
                         </SelectItem>
-                      ) : (
-                        availableColumns.map((column) => (
-                          <SelectItem key={column} value={column}>
-                            {column}
-                          </SelectItem>
-                        ))
-                      )}
+                      ))}
                     </SelectContent>
                   </Select>
+
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Gunakan ini untuk balasan WA: cari baris yang kolomnya cocok
+                    dengan nilai di bawah (mis. kolom Nomor = {"{{sender}}"}).
+                  </p>
+                </div>
+
+                {String(node.data.config.matchColumn ?? "") && (
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      Nilai yang Dicari
+                    </label>
+
+                    <Input
+                      value={String(node.data.config.matchValue ?? "")}
+                      placeholder="{{sender}}"
+                      onChange={(changeEvent) =>
+                        updateConfigValue(
+                          "matchValue",
+                          changeEvent.target.value,
+                        )
+                      }
+                    />
+                  </div>
+                )}
+
+                <SheetWriteTargets
+                  availableColumns={availableColumns}
+                  value={
+                    Array.isArray(node.data.config.writeTargets)
+                      ? (node.data.config.writeTargets as WriteTarget[])
+                      : []
+                  }
+                  onChange={(next: WriteTarget[]) =>
+                    updateConfigValue("writeTargets", next)
+                  }
+                />
+              </>
+            )}
+
+            {usesConditionBuilder && (
+              <div>
+                <div className="mb-1 flex items-center justify-between">
+                  <label className="block text-xs font-medium text-muted-foreground">
+                    Kondisi
+                  </label>
 
                   {sheetSources.length > 0 && (
                     <button
                       type="button"
                       onClick={handleRefreshColumns}
-                      className="shrink-0 text-sm text-primary hover:underline disabled:opacity-50"
+                      className="text-xs text-primary hover:underline disabled:opacity-50"
                       disabled={isLoadingColumns}
-                      title="Muat ulang kolom dari spreadsheet"
                     >
-                      ↻
+                      {isLoadingColumns ? "Memuat..." : "↻ Muat kolom sheet"}
                     </button>
                   )}
                 </div>
-              ) : configField.multiline ? (
-                <Textarea
-                  rows={5}
-                  className="font-mono text-xs"
-                  value={String(node.data.config[configField.key] ?? "")}
-                  placeholder={configField.placeholder}
-                  onChange={(changeEvent) =>
-                    updateConfigValue(configField.key, changeEvent.target.value)
-                  }
-                />
-              ) : configField.key === "spreadsheetId" ? (
-                <div className="flex items-center gap-2">
+
+                {isConditionNode && (
+                  <Tabs
+                    value={conditionMode === "code" ? "code" : "visual"}
+                    onValueChange={(mode) => updateConfigValue("mode", mode)}
+                    className="mb-3"
+                  >
+                    <TabsList className="w-full">
+                      <TabsTrigger value="visual" className="flex-1">
+                        Visual
+                      </TabsTrigger>
+                      <TabsTrigger value="code" className="flex-1">
+                        Code
+                      </TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                )}
+
+                {isConditionNode && conditionMode === "code" ? (
+                  <ExpressionInput
+                    value={String(node.data.config.expression ?? "")}
+                    placeholder={'payload["Status"] === "Belum Dibayar"'}
+                    multiline
+                    rawExpression
+                    variableGroups={variableGroups}
+                    previewContext={previewContext}
+                    onChange={(next) => updateConfigValue("expression", next)}
+                  />
+                ) : (
+                  <ConditionBuilder
+                    value={currentConditions}
+                    availableColumns={availableColumns}
+                    getColumnValues={lookupColumnValues}
+                    onChange={updateConditions}
+                  />
+                )}
+
+                {availableColumns.length === 0 && (
+                  <p className="mt-1.5 text-xs text-amber-600">
+                    Kolom belum tersedia. Pastikan node Google Sheets sudah
+                    punya Kredensial + Spreadsheet ID, lalu klik &quot;Muat
+                    kolom sheet&quot;.
+                  </p>
+                )}
+
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  {node.data.kind === "filter"
+                    ? "Hanya baris yang lolos kondisi yang diteruskan ke node berikutnya."
+                    : "Flow lanjut ke node berikutnya hanya jika ada baris yang cocok."}
+                </p>
+              </div>
+            )}
+
+            {isDateCalculator && (
+              <DateCalculatorConfig
+                config={node.data.config}
+                availableColumns={availableColumns}
+                onConfigChange={updateConfigValue}
+              />
+            )}
+
+            {isTransform && (
+              <TransformConfig
+                mode={String(node.data.config.mode ?? "keyvalue")}
+                mappings={transformMappings}
+                code={String(node.data.config.code ?? "")}
+                variableGroups={variableGroups}
+                previewContext={previewContext}
+                onModeChange={(mode) => updateConfigValue("mode", mode)}
+                onMappingsChange={(next) => updateConfigValue("mappings", next)}
+                onCodeChange={(next) => updateConfigValue("code", next)}
+              />
+            )}
+
+            {isScheduleTrigger && (
+              <ScheduleTriggerConfig
+                config={node.data.config}
+                onConfigChange={updateConfigValuesBatch}
+              />
+            )}
+
+            {configFields.map((configField) => (
+              <div key={configField.key}>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                  {configField.label}
+                </label>
+
+                {configField.columnSelect ? (
+                  <div className="flex items-center gap-2">
+                    <Select
+                      value={String(node.data.config[configField.key] ?? "")}
+                      onValueChange={(value) =>
+                        updateConfigValue(configField.key, value)
+                      }
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="— pilih kolom —" />
+                      </SelectTrigger>
+
+                      <SelectContent>
+                        {availableColumns.length === 0 ? (
+                          <SelectItem value="_none" disabled>
+                            Belum ada kolom — klik ↻ Muat
+                          </SelectItem>
+                        ) : (
+                          availableColumns.map((column) => (
+                            <SelectItem key={column} value={column}>
+                              {column}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+
+                    {sheetSources.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleRefreshColumns}
+                        className="shrink-0 text-sm text-primary hover:underline disabled:opacity-50"
+                        disabled={isLoadingColumns}
+                        title="Muat ulang kolom dari spreadsheet"
+                      >
+                        ↻
+                      </button>
+                    )}
+                  </div>
+                ) : configField.multiline ? (
+                  <Textarea
+                    rows={5}
+                    className="font-mono text-xs"
+                    value={String(node.data.config[configField.key] ?? "")}
+                    placeholder={configField.placeholder}
+                    onChange={(changeEvent) =>
+                      updateConfigValue(
+                        configField.key,
+                        changeEvent.target.value,
+                      )
+                    }
+                  />
+                ) : configField.key === "spreadsheetId" ? (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={String(node.data.config[configField.key] ?? "")}
+                      placeholder={configField.placeholder}
+                      onChange={(changeEvent) =>
+                        updateConfigValue(
+                          configField.key,
+                          changeEvent.target.value,
+                        )
+                      }
+                    />
+
+                    <Button
+                      variant="outline"
+                      size="icon-sm"
+                      type="button"
+                      title="Preview data spreadsheet"
+                      disabled={
+                        !node.data.config[configField.key] ||
+                        !node.data.credentialId
+                      }
+                      onClick={handlePreviewData}
+                    >
+                      <TableIcon className="size-4" />
+                    </Button>
+                  </div>
+                ) : (
                   <Input
                     value={String(node.data.config[configField.key] ?? "")}
                     placeholder={configField.placeholder}
@@ -648,52 +838,92 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                       )
                     }
                   />
+                )}
 
-                  <Button
-                    variant="outline"
-                    size="icon-sm"
-                    type="button"
-                    title="Preview data spreadsheet"
-                    disabled={
-                      !node.data.config[configField.key] ||
-                      !node.data.credentialId
-                    }
-                    onClick={handlePreviewData}
-                  >
-                    <TableIcon className="size-4" />
-                  </Button>
+                {configField.hint && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {configField.hint}
+                  </p>
+                )}
+              </div>
+            ))}
+
+            {/* Validation issues */}
+            {validationIssues.length > 0 && (
+              <div className="flex flex-col gap-1.5 rounded-md border border-amber-200 bg-amber-50 p-2.5">
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-700">
+                  <AlertTriangleIcon className="size-3.5" />
+                  Perlu diperbaiki
                 </div>
-              ) : (
-                <Input
-                  value={String(node.data.config[configField.key] ?? "")}
-                  placeholder={configField.placeholder}
-                  onChange={(changeEvent) =>
-                    updateConfigValue(configField.key, changeEvent.target.value)
-                  }
-                />
+
+                {validationIssues.map((issue) => (
+                  <p key={issue.field} className="text-[11px] text-amber-700">
+                    • {issue.message}
+                  </p>
+                ))}
+              </div>
+            )}
+
+            {/* Per-node Test Run */}
+            <div className="flex flex-col gap-2 rounded-md border border-border bg-muted/20 p-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-foreground">
+                  Test Node
+                </span>
+
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  type="button"
+                  onClick={handleTestNode}
+                  disabled={isTestRunning}
+                >
+                  {isTestRunning ? (
+                    <Spinner className="size-3.5" />
+                  ) : (
+                    <PlayIcon className="size-3.5" />
+                  )}
+                  {isTestRunning ? "Menjalankan…" : "Jalankan Test"}
+                </Button>
+              </div>
+
+              {testResult && (
+                <div
+                  className={cn(
+                    "max-h-48 overflow-auto rounded-md border p-2 font-mono text-[10px]",
+                    testResult.ok
+                      ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                      : "border-rose-200 bg-rose-50 text-rose-700",
+                  )}
+                >
+                  <pre className="whitespace-pre-wrap break-all">
+                    {testResult.ok
+                      ? JSON.stringify(testResult.output, null, 2)
+                      : testResult.error}
+                  </pre>
+                </div>
               )}
 
-              {configField.hint && (
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {configField.hint}
-                </p>
-              )}
+              <p className="text-[11px] text-muted-foreground">
+                Menjalankan node ini saja dengan data contoh. Node konektor
+                tetap memanggil API aslinya.
+              </p>
             </div>
-          ))}
 
-          <Button
-            variant="destructive"
-            size="sm"
-            className="mt-2 w-full"
-            onClick={() => {
-              removeNode(node.id);
-              onClose();
-            }}
-          >
-            <Trash2Icon />
-            Hapus Node
-          </Button>
-        </div>
+            <Button
+              variant="destructive"
+              size="sm"
+              className="mt-2 w-full"
+              onClick={() => {
+                removeNode(node.id);
+                onClose();
+              }}
+            >
+              <Trash2Icon />
+              Hapus Node
+            </Button>
+          </div>
+        </ScrollArea>
       </aside>
       <SpreadsheetPreviewDrawer />
     </>

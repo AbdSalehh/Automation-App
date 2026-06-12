@@ -30,3 +30,8 @@ export { sheetColumnsService } from "./service/sheet-columns.service";
 export { useSheetPreviewStore } from "./store/sheet-preview.store";
 export { sheetPreviewService } from "./service/sheet-preview.service";
 export type { SheetPreviewResult } from "./service/sheet-preview.service";
+export { validateNodeData } from "./model/node-validation.model";
+export type { NodeValidationIssue } from "./model/node-validation.model";
+export { useNodeTestStore } from "./store/node-test.store";
+export { nodeTestService } from "./service/node-test.service";
+export type { NodeTestResult } from "./service/node-test.service";

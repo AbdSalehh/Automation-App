@@ -1,6 +1,6 @@
 import { prisma } from "@/shared/lib/prisma";
 import { handleRoute, ok, unauthorized } from "@/shared/api/http";
-import { runWorkflow } from "@/shared/server/engine";
+import { runWorkflow, resumeDueSchedules } from "@/shared/server/engine";
 import { shouldRunCron } from "@/shared/server/cron";
 import { getRedisClient } from "@/shared/lib/redis";
 import type { FlowNode } from "@/entities/workflow/model/workflow.model";
@@ -118,9 +118,17 @@ export async function GET(request: Request) {
       }
     }
 
+    /** Resume paused Schedule nodes whose due time has passed. */
+    const resumedSchedules = await resumeDueSchedules();
+
     return ok(
-      { triggered, count: triggered.length, checkedAt: now.toISOString() },
-      `Cron selesai — ${triggered.length} workflow dijalankan`,
+      {
+        triggered,
+        count: triggered.length,
+        resumedSchedules,
+        checkedAt: now.toISOString(),
+      },
+      `Cron selesai — ${triggered.length} workflow dijalankan, ${resumedSchedules} jadwal dilanjutkan`,
     );
   });
 }

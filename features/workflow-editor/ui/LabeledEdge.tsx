@@ -57,10 +57,11 @@ export function LabeledEdge({
           >
             <span
               className={cn(
-                "rounded-full border px-2 py-0.5 text-[10px] font-semibold",
+                "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium shadow-sm",
                 pillStyle,
               )}
             >
+              <span className="size-1.5 rounded-full bg-current opacity-60" />
               {String(label)}
             </span>
           </div>

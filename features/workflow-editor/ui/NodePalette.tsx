@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { PlusIcon, SearchIcon } from "lucide-react";
-import { Button, Input, Icon } from "@/shared/ui";
+import { Button, Input, Icon, ScrollArea } from "@/shared/ui";
 import { cn } from "@/shared/lib/utils";
 import {
   NODE_TYPES,
@@ -55,50 +55,52 @@ export function NodePalette() {
         </Button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3">
-        {CATEGORY_ORDER.map((category) => {
-          const nodesInCategory = NODE_TYPES.filter(
-            (nodeType) =>
-              nodeType.category === category && matchesSearch(nodeType.label),
-          );
+      <ScrollArea className="flex-1">
+        <div className="p-3">
+          {CATEGORY_ORDER.map((category) => {
+            const nodesInCategory = NODE_TYPES.filter(
+              (nodeType) =>
+                nodeType.category === category && matchesSearch(nodeType.label),
+            );
 
-          if (nodesInCategory.length === 0) {
-            return null;
-          }
+            if (nodesInCategory.length === 0) {
+              return null;
+            }
 
-          return (
-            <div key={category} className="mb-5">
-              <p className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                {CATEGORY_LABELS[category]}
-              </p>
+            return (
+              <div key={category} className="mb-5">
+                <p className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                  {CATEGORY_LABELS[category]}
+                </p>
 
-              <div className="grid grid-cols-2 gap-2">
-                {nodesInCategory.map((nodeType) => (
-                  <button
-                    key={nodeType.kind}
-                    type="button"
-                    title={nodeType.description}
-                    onClick={() => addNodeByKind(nodeType.kind)}
-                    className="flex items-center gap-2 rounded-lg border border-border bg-background px-2.5 py-2 text-left transition-colors hover:border-primary/40 hover:bg-accent"
-                  >
-                    <span
-                      className={cn(
-                        "grid size-6 shrink-0 place-items-center rounded-md",
-                        CATEGORY_ICON_STYLES[category],
-                      )}
+                <div className="grid grid-cols-2 gap-2">
+                  {nodesInCategory.map((nodeType) => (
+                    <button
+                      key={nodeType.kind}
+                      type="button"
+                      title={nodeType.description}
+                      onClick={() => addNodeByKind(nodeType.kind)}
+                      className="flex items-center gap-2 rounded-lg border border-border bg-background px-2.5 py-2 text-left transition-colors hover:border-primary/40 hover:bg-accent"
                     >
-                      <Icon name={nodeType.icon} className="size-3.5" />
-                    </span>
-                    <span className="truncate text-xs font-medium text-foreground">
-                      {nodeType.label}
-                    </span>
-                  </button>
-                ))}
+                      <span
+                        className={cn(
+                          "grid size-6 shrink-0 place-items-center rounded-md",
+                          CATEGORY_ICON_STYLES[category],
+                        )}
+                      >
+                        <Icon name={nodeType.icon} className="size-3.5" />
+                      </span>
+                      <span className="truncate text-xs font-medium text-foreground">
+                        {nodeType.label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      </ScrollArea>
     </aside>
   );
 }

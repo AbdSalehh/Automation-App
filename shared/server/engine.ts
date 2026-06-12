@@ -6,6 +6,10 @@ import {
   evaluateConditionGroup,
   type ConditionGroup,
 } from "@/shared/server/templating";
+import {
+  resolveExpression,
+  evaluateBooleanExpression,
+} from "@/shared/lib/expression";
 import { getGoogleAccessToken } from "@/shared/server/google";
 import {
   upsertReminder,
@@ -16,7 +20,10 @@ import type {
   FlowNode,
   FlowEdge,
 } from "@/entities/workflow/model/workflow.model";
-import type { NodeKind } from "@/entities/workflow/model/node.model";
+import type {
+  NodeKind,
+  WhatsAppProvider,
+} from "@/entities/workflow/model/node.model";
 
 /**
  * In-process, item-aware workflow execution engine.
@@ -241,6 +248,87 @@ async function sendWhapi(
   return { provider: "whapi", messageId, raw: body };
 }
 
+/**
+ * Sends a WhatsApp message via the Meta WhatsApp Business Cloud API.
+ */
+async function sendMeta(
+  credential: Record<string, string>,
+  target: string,
+  message: string,
+): Promise<Record<string, unknown>> {
+  const to = target.replace(/\D/g, "");
+
+  const response = await requestExternal(
+    `https://graph.facebook.com/v20.0/${credential.phoneNumberId}/messages`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${credential.accessToken}`,
+        "Content-Type": "application/json",
+      },
+      data: {
+        messaging_product: "whatsapp",
+        to,
+        type: "text",
+        text: { body: message },
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `WhatsApp Meta: gagal mengirim ke ${target} (status ${response.status})`,
+    );
+  }
+
+  return { provider: "meta", messageId: null, raw: response.body };
+}
+
+/**
+ * Provider dispatcher used by the unified `whatsapp_send` node. Routes the send
+ * to Whapi, Fonnte, or Meta based on the selected provider.
+ */
+async function sendWhatsApp(
+  provider: WhatsAppProvider,
+  credential: Record<string, string>,
+  target: string,
+  message: string,
+  countryCode: string,
+): Promise<Record<string, unknown>> {
+  if (provider === "fonnte") {
+    return sendFonnte(credential, target, message, countryCode);
+  }
+
+  if (provider === "meta") {
+    return sendMeta(credential, target, message);
+  }
+
+  return sendWhapi(credential, target, message);
+}
+
+/**
+ * Validates that the selected provider has the credential fields it needs.
+ */
+function assertWhatsAppCredential(
+  provider: WhatsAppProvider,
+  credential: Record<string, string> | null,
+): asserts credential is Record<string, string> {
+  if (provider === "fonnte" && !credential?.apiKey) {
+    throw new Error("WhatsApp Fonnte: API key tidak ada");
+  }
+
+  if (provider === "whapi" && !credential?.apiToken) {
+    throw new Error("WhatsApp Whapi: API token tidak ada");
+  }
+
+  if (
+    provider === "meta" &&
+    (!credential?.accessToken || !credential?.phoneNumberId)
+  ) {
+    throw new Error("WhatsApp Meta: kredensial tidak lengkap");
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Node executor
 // ---------------------------------------------------------------------------
@@ -275,8 +363,7 @@ async function runNode(
         }
       );
 
-    case "whatsapp_fonnte_trigger":
-    case "whatsapp_whapi_trigger": {
+    case "whatsapp_trigger": {
       /**
        * Incoming WhatsApp reply. The provider webhook seeds triggerPayload with
        * { sender, message, ... }. Expose it as a single-item collection so
@@ -348,75 +435,27 @@ async function runNode(
     }
 
     case "whatsapp_send": {
+      const provider = String(config.provider ?? "whapi") as WhatsAppProvider;
+
       const credential = await loadCredential(
         node.data.credentialId,
         context.ownerId,
       );
 
-      if (!credential?.accessToken || !credential?.phoneNumberId) {
-        throw new Error("WhatsApp: kredensial tidak lengkap");
-      }
-
-      const items = toItems(input);
-      const itemsToSend = items.length > 0 ? items : [{}];
-      const results: unknown[] = [];
-
-      for (const item of itemsToSend) {
-        const to = resolveTemplate(
-          String(config.to ?? config.targetField ?? ""),
-          item,
-        );
-        const text = resolveTemplate(String(config.text ?? ""), item);
-
-        const response = await requestExternal(
-          `https://graph.facebook.com/v20.0/${credential.phoneNumberId}/messages`,
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${credential.accessToken}`,
-              "Content-Type": "application/json",
-            },
-            data: {
-              messaging_product: "whatsapp",
-              to,
-              type: "text",
-              text: { body: text },
-            },
-          },
-        );
-
-        if (!response.ok) {
-          throw new Error(`WhatsApp: gagal mengirim ke ${to}`);
-        }
-
-        results.push(response.body);
-      }
-
-      return { sent: results.length, results };
-    }
-
-    case "whatsapp_fonnte_send": {
-      const credential = await loadCredential(
-        node.data.credentialId,
-        context.ownerId,
-      );
-
-      if (!credential?.apiKey) {
-        throw new Error("WhatsApp Fonnte: API key tidak ada");
-      }
+      assertWhatsAppCredential(provider, credential);
 
       const { items, isCollection } = resolveActionItems(input);
       const countryCode = String(config.countryCode ?? "62");
       const targetField = String(config.targetField ?? "").trim();
-      const messageTemplate = String(config.message ?? "");
+      const messageTemplate = String(config.message ?? config.text ?? "");
 
-      // If an upstream collection is empty, there's nothing to send.
+      /** If an upstream collection is empty, there's nothing to send. */
       if (isCollection && items.length === 0) {
         return { sent: 0, results: [], rows: [] };
       }
 
       const resolveTarget = (item: Item): string =>
-        resolveTemplate(String(config.target ?? ""), item) ||
+        resolveTemplate(String(config.target ?? config.to ?? ""), item) ||
         (targetField
           ? String(item[targetField] ?? item[targetField + " "] ?? "")
           : "") ||
@@ -426,10 +465,9 @@ async function runNode(
        * Delayed reminder mode with auto-cancel.
        *
        * When reminderDelayMinutes > 0, matching rows are not sent immediately.
-       * Instead each row registers a pending reminder (due = now + delay). On a
-       * later run we only send rows whose reminder is due. Rows that stopped
-       * matching the upstream condition simply don't appear in `items` anymore,
-       * so we cancel their pending reminders.
+       * Each row registers a pending reminder (due = now + delay). On a later
+       * run we only send rows whose reminder is due. Rows that stopped matching
+       * the upstream condition disappear from `items`, so we cancel them.
        */
       const reminderDelayMinutes = Number(config.reminderDelayMinutes ?? 0);
       const reminderScope = `${context.workflowId}:${node.id}`;
@@ -438,7 +476,6 @@ async function runNode(
         const now = Date.now();
         const dueOffsetMs = reminderDelayMinutes * 60_000;
 
-        // Build the set of currently-matching row keys.
         const currentRowKeys = new Set<string>();
 
         const results: Array<{
@@ -457,7 +494,6 @@ async function runNode(
             continue;
           }
 
-          // Stable per-row key: prefer the sheet row number, else the number.
           const rowKey = String(item.__rowNumber ?? target);
           currentRowKeys.add(rowKey);
 
@@ -471,9 +507,10 @@ async function runNode(
             message,
           });
 
-          // Redis unavailable -> fall back to immediate send.
+          /** Redis unavailable -> fall back to immediate send. */
           if (!reminder) {
-            const sendResult = await sendFonnte(
+            const sendResult = await sendWhatsApp(
+              provider,
               credential,
               target,
               message,
@@ -497,8 +534,8 @@ async function runNode(
           }
 
           if (now >= reminder.dueAt) {
-            // Due and still matching -> send now and clear.
-            const sendResult = await sendFonnte(
+            const sendResult = await sendWhatsApp(
+              provider,
               credential,
               target,
               reminder.message,
@@ -521,7 +558,6 @@ async function runNode(
               __waSentAt: new Date().toISOString(),
             });
           } else {
-            // Not due yet -> keep waiting.
             const minutesLeft = Math.ceil((reminder.dueAt - now) / 60_000);
 
             results.push({
@@ -533,7 +569,6 @@ async function runNode(
           }
         }
 
-        // Auto-cancel: drop any previously-pending row that no longer matches.
         const pendingKeys = await listReminderKeys(reminderScope);
         let cancelled = 0;
 
@@ -545,19 +580,22 @@ async function runNode(
         }
 
         const sentCount = results.filter(
-          (r) => r.status === "sent" || r.status === "sent_immediate",
+          (result) =>
+            result.status === "sent" || result.status === "sent_immediate",
         ).length;
 
         return {
           sent: sentCount,
-          pending: results.filter((r) => r.status.startsWith("pending")).length,
+          pending: results.filter((result) =>
+            result.status.startsWith("pending"),
+          ).length,
           cancelled,
           results,
           rows: enrichedRows,
         };
       }
 
-      // Immediate send mode (default).
+      /** Immediate send mode (default). */
       const results: Array<{
         target: string;
         ok: boolean;
@@ -582,203 +620,13 @@ async function runNode(
           ? resolveTemplate(messageTemplate, item)
           : JSON.stringify(item);
 
-        const sendResult = await sendFonnte(
+        const sendResult = await sendWhatsApp(
+          provider,
           credential,
           target,
           message,
           countryCode,
         );
-
-        results.push({
-          target,
-          ok: true,
-          messageId: sendResult.messageId,
-        });
-
-        enrichedRows.push({
-          ...item,
-          __waTarget: target,
-          __waMessageId: sendResult.messageId,
-          __waSentAt: new Date().toISOString(),
-        });
-      }
-
-      return { sent: results.length, results, rows: enrichedRows };
-    }
-
-    case "whatsapp_whapi_send": {
-      const credential = await loadCredential(
-        node.data.credentialId,
-        context.ownerId,
-      );
-
-      if (!credential?.apiToken) {
-        throw new Error("WhatsApp Whapi: API token tidak ada");
-      }
-
-      const { items, isCollection } = resolveActionItems(input);
-      const targetField = String(config.targetField ?? "").trim();
-      const messageTemplate = String(config.message ?? "");
-
-      // If an upstream collection is empty, there's nothing to send.
-      if (isCollection && items.length === 0) {
-        return { sent: 0, results: [], rows: [] };
-      }
-
-      const resolveTarget = (item: Item): string =>
-        resolveTemplate(String(config.target ?? ""), item) ||
-        (targetField
-          ? String(item[targetField] ?? item[targetField + " "] ?? "")
-          : "") ||
-        String(item.phone ?? item.nomor ?? item.Nomor ?? "");
-
-      /**
-       * Delayed reminder mode with auto-cancel. Same behaviour as the Fonnte
-       * sender: matching rows register a pending reminder and are sent when
-       * due; rows that stop matching get their pending reminders cancelled.
-       */
-      const reminderDelayMinutes = Number(config.reminderDelayMinutes ?? 0);
-      const reminderScope = `${context.workflowId}:${node.id}`;
-
-      if (reminderDelayMinutes > 0) {
-        const now = Date.now();
-        const dueOffsetMs = reminderDelayMinutes * 60_000;
-
-        const currentRowKeys = new Set<string>();
-
-        const results: Array<{
-          target: string;
-          ok: boolean;
-          messageId: unknown;
-          status: string;
-        }> = [];
-
-        const enrichedRows: Item[] = [];
-
-        for (const item of items) {
-          const target = resolveTarget(item);
-
-          if (!target) {
-            continue;
-          }
-
-          const rowKey = String(item.__rowNumber ?? target);
-          currentRowKeys.add(rowKey);
-
-          const message = messageTemplate
-            ? resolveTemplate(messageTemplate, item)
-            : JSON.stringify(item);
-
-          const reminder = await upsertReminder(reminderScope, rowKey, {
-            dueAt: now + dueOffsetMs,
-            target,
-            message,
-          });
-
-          // Redis unavailable -> fall back to immediate send.
-          if (!reminder) {
-            const sendResult = await sendWhapi(credential, target, message);
-
-            results.push({
-              target,
-              ok: true,
-              messageId: sendResult.messageId,
-              status: "sent_immediate",
-            });
-
-            enrichedRows.push({
-              ...item,
-              __waTarget: target,
-              __waMessageId: sendResult.messageId,
-              __waSentAt: new Date().toISOString(),
-            });
-            continue;
-          }
-
-          if (now >= reminder.dueAt) {
-            const sendResult = await sendWhapi(
-              credential,
-              target,
-              reminder.message,
-            );
-
-            await clearReminder(reminderScope, rowKey);
-
-            results.push({
-              target,
-              ok: true,
-              messageId: sendResult.messageId,
-              status: "sent",
-            });
-
-            enrichedRows.push({
-              ...item,
-              __waTarget: target,
-              __waMessageId: sendResult.messageId,
-              __waSentAt: new Date().toISOString(),
-            });
-          } else {
-            const minutesLeft = Math.ceil((reminder.dueAt - now) / 60_000);
-
-            results.push({
-              target,
-              ok: true,
-              messageId: null,
-              status: `pending_${minutesLeft}m`,
-            });
-          }
-        }
-
-        // Auto-cancel: drop any previously-pending row that no longer matches.
-        const pendingKeys = await listReminderKeys(reminderScope);
-        let cancelled = 0;
-
-        for (const pendingKey of pendingKeys) {
-          if (!currentRowKeys.has(pendingKey)) {
-            await clearReminder(reminderScope, pendingKey);
-            cancelled += 1;
-          }
-        }
-
-        const sentCount = results.filter(
-          (r) => r.status === "sent" || r.status === "sent_immediate",
-        ).length;
-
-        return {
-          sent: sentCount,
-          pending: results.filter((r) => r.status.startsWith("pending")).length,
-          cancelled,
-          results,
-          rows: enrichedRows,
-        };
-      }
-
-      // Immediate send mode (default).
-      const results: Array<{
-        target: string;
-        ok: boolean;
-        messageId: unknown;
-      }> = [];
-
-      const enrichedRows: Item[] = [];
-
-      for (const item of items) {
-        const target = resolveTarget(item);
-
-        if (!target) {
-          results.push({
-            target: "(tidak ada nomor)",
-            ok: false,
-            messageId: null,
-          });
-          continue;
-        }
-
-        const message = messageTemplate
-          ? resolveTemplate(messageTemplate, item)
-          : JSON.stringify(item);
-
-        const sendResult = await sendWhapi(credential, target, message);
 
         results.push({
           target,
@@ -1230,6 +1078,25 @@ async function runNode(
     case "condition": {
       const conditionGroup = config.conditions as ConditionGroup | undefined;
       const items = toItems(input);
+      const conditionMode = String(config.mode ?? "visual");
+      const customExpression = String(config.expression ?? "").trim();
+
+      /** Code mode: evaluate a JS expression per item against payload context. */
+      if (conditionMode === "code" && customExpression) {
+        const matchedRows = items.filter((item) =>
+          evaluateBooleanExpression(customExpression, {
+            payload: item,
+            $workflow: { id: context.workflowId },
+            $execution: { id: context.executionId },
+          }),
+        );
+
+        return {
+          condition: matchedRows.length > 0,
+          rows: matchedRows,
+          totalRows: matchedRows.length,
+        };
+      }
 
       // Structured condition (preferred): keep matching rows.
       if (conditionGroup && Array.isArray(conditionGroup.rules)) {
@@ -1269,6 +1136,188 @@ async function runNode(
       const runUserCode = Function("input", `"use strict"; ${userCode}`);
 
       return runUserCode(input);
+    }
+
+    case "transform": {
+      const items = toItems(input);
+      const transformMode = String(config.mode ?? "keyvalue");
+
+      const expressionContext = (item: Item) => ({
+        payload: item,
+        $workflow: { id: context.workflowId },
+        $execution: { id: context.executionId },
+      });
+
+      /** Code mode: run a JS transform returning a new object per item. */
+      if (transformMode === "code") {
+        const userCode = String(config.code ?? "return payload;");
+
+        const transformedRows = items.map((item) => {
+          try {
+            // eslint-disable-next-line no-new-func
+            const runTransform = Function(
+              "payload",
+              "$now",
+              `"use strict"; ${userCode}`,
+            );
+
+            return (runTransform(item, new Date()) ?? {}) as Item;
+          } catch {
+            return item;
+          }
+        });
+
+        return {
+          rows: transformedRows,
+          result: transformedRows[0] ?? {},
+          totalRows: transformedRows.length,
+        };
+      }
+
+      /** Key/value mode: map each output field via a {{ }} template. */
+      const mappings = Array.isArray(config.mappings)
+        ? (config.mappings as { key: string; value: string }[])
+        : [];
+
+      const transformedRows = items.map((item) => {
+        const mapped: Record<string, unknown> = {};
+
+        for (const mapping of mappings) {
+          if (!mapping.key) {
+            continue;
+          }
+
+          mapped[mapping.key] = resolveExpression(
+            mapping.value ?? "",
+            expressionContext(item),
+          );
+        }
+
+        return mapped as Item;
+      });
+
+      return {
+        rows: transformedRows,
+        result: transformedRows[0] ?? {},
+        totalRows: transformedRows.length,
+      };
+    }
+
+    case "date_calculator": {
+      const items = toItems(input);
+
+      const mode = String(config.mode ?? "relative");
+      const operation = String(config.operation ?? "subtract");
+      const dateField = String(config.dateField ?? "").trim();
+      const time = String(config.time ?? "").trim();
+      const absoluteDate = String(config.absoluteDate ?? "").trim();
+
+      /** Offset units; falls back to the legacy `days` field when present. */
+      const offsets = (config.offsets as Record<string, unknown>) ?? {};
+      const offsetMinutes = Number(offsets.minutes ?? 0);
+      const offsetHours = Number(offsets.hours ?? 0);
+      const offsetDays = Number(offsets.days ?? config.days ?? 0);
+      const offsetMonths = Number(offsets.months ?? 0);
+      const offsetYears = Number(offsets.years ?? 0);
+
+      const applyTimeOverride = (targetDate: Date) => {
+        if (time && /^\d{1,2}:\d{2}$/.test(time)) {
+          const [hours, minutes] = time.split(":").map(Number);
+          targetDate.setHours(hours, minutes, 0, 0);
+        }
+      };
+
+      const enrichedRows = items.map((item) => {
+        let computedDate = "";
+
+        if (mode === "absolute") {
+          const fixedDate = absoluteDate ? new Date(absoluteDate) : new Date();
+
+          if (!Number.isNaN(fixedDate.getTime())) {
+            applyTimeOverride(fixedDate);
+            computedDate = fixedDate.toISOString();
+          }
+
+          return { ...item, computedDate };
+        }
+
+        const baseRaw = dateField ? String(item[dateField] ?? "") : "";
+        const baseDate = baseRaw ? new Date(baseRaw) : new Date();
+
+        if (!Number.isNaN(baseDate.getTime())) {
+          const sign = operation === "add" ? 1 : -1;
+
+          baseDate.setFullYear(baseDate.getFullYear() + sign * offsetYears);
+          baseDate.setMonth(baseDate.getMonth() + sign * offsetMonths);
+          baseDate.setDate(baseDate.getDate() + sign * offsetDays);
+          baseDate.setHours(baseDate.getHours() + sign * offsetHours);
+          baseDate.setMinutes(baseDate.getMinutes() + sign * offsetMinutes);
+
+          applyTimeOverride(baseDate);
+
+          computedDate = baseDate.toISOString();
+        }
+
+        return { ...item, computedDate };
+      });
+
+      return {
+        rows: enrichedRows,
+        computedDate: enrichedRows[0]?.computedDate ?? "",
+        totalRows: enrichedRows.length,
+      };
+    }
+
+    case "schedule": {
+      const items = toItems(input);
+      const firstItem = items[0] ?? {};
+
+      const dateField = String(config.dateField ?? "computedDate").trim();
+      const explicitDate = String(config.executeDate ?? "").trim();
+      const time = String(config.time ?? "").trim();
+
+      const targetRaw = explicitDate
+        ? resolveTemplate(explicitDate, firstItem)
+        : String(firstItem[dateField] ?? "");
+
+      const dueDate = targetRaw ? new Date(targetRaw) : null;
+
+      if (dueDate && time && /^\d{1,2}:\d{2}$/.test(time)) {
+        const [hours, minutes] = time.split(":").map(Number);
+        dueDate.setHours(hours, minutes, 0, 0);
+      }
+
+      const dueAt =
+        dueDate && !Number.isNaN(dueDate.getTime())
+          ? dueDate.getTime()
+          : Date.now();
+
+      /** Future due time -> pause the workflow until the scheduler resumes it. */
+      if (dueAt > Date.now()) {
+        return { __pause: "schedule", dueAt, rows: items };
+      }
+
+      return { rows: items, scheduledAt: new Date(dueAt).toISOString() };
+    }
+
+    case "wait_reply": {
+      const items = toItems(input);
+      const firstItem = items[0] ?? {};
+
+      const matchField = String(config.matchField ?? "").trim();
+
+      const matchKey =
+        resolveTemplate(String(config.matchValue ?? ""), firstItem) ||
+        (matchField ? String(firstItem[matchField] ?? "") : "") ||
+        String(
+          firstItem.__waTarget ??
+            firstItem.phone ??
+            firstItem.Nomor ??
+            firstItem.nomor ??
+            "",
+        );
+
+      return { __pause: "wait_reply", matchKey, rows: items };
     }
 
     default:
@@ -1330,9 +1379,193 @@ function orderNodes(nodes: FlowNode[], edges: FlowEdge[]): FlowNode[] {
   return orderedNodes;
 }
 
+interface ExecOutcome {
+  status: "success" | "failed" | "paused";
+  lastOutput: unknown;
+}
+
 /**
- * Runs a workflow synchronously and records an Execution with logs.
- * Returns the created execution id.
+ * Executes ordered nodes starting from a cursor, seeding prior outputs. Detects
+ * the `__pause` sentinel returned by `schedule` / `wait_reply` nodes: when hit,
+ * it serialises the engine state into a `WaitingExecution` row, marks the
+ * execution as "waiting", and returns early so the workflow can resume later.
+ */
+async function executeNodes(
+  orderedNodes: FlowNode[],
+  edges: FlowEdge[],
+  context: RunContext,
+  startCursor: number,
+  outputByNodeId: Map<string, unknown>,
+  seedLastOutput: unknown,
+): Promise<ExecOutcome> {
+  let lastOutput: unknown = seedLastOutput;
+  let hasFailed = false;
+
+  for (
+    let cursorIndex = startCursor;
+    cursorIndex < orderedNodes.length;
+    cursorIndex += 1
+  ) {
+    const node = orderedNodes[cursorIndex];
+
+    /** Resolve this node's input: prefer the output of its direct predecessor. */
+    const incomingEdge = edges.find((edge) => edge.target === node.id);
+    const nodeInput = incomingEdge
+      ? (outputByNodeId.get(incomingEdge.source) ?? lastOutput)
+      : lastOutput;
+
+    try {
+      const output = await runNode(node, nodeInput, context);
+
+      /** Pause sentinel -> persist state and stop until resumed. */
+      if (
+        output &&
+        typeof output === "object" &&
+        "__pause" in (output as Record<string, unknown>)
+      ) {
+        const pause = output as {
+          __pause: string;
+          dueAt?: number;
+          matchKey?: string;
+        };
+
+        outputByNodeId.set(node.id, output);
+
+        const serializedState = JSON.stringify({
+          outputs: Object.fromEntries(outputByNodeId),
+          cursorIndex,
+        });
+
+        await prisma.waitingExecution.create({
+          data: {
+            executionId: context.executionId,
+            workflowId: context.workflowId,
+            nodeId: node.id,
+            pauseType: pause.__pause,
+            matchKey: pause.matchKey ?? null,
+            dueAt: pause.dueAt ? BigInt(pause.dueAt) : null,
+            state: serializedState,
+          },
+        });
+
+        await prisma.execution.update({
+          where: { id: context.executionId },
+          data: { status: "waiting" },
+        });
+
+        await writeLog(
+          context.executionId,
+          "info",
+          `Node "${node.data.label}": eksekusi dijeda (${pause.__pause})`,
+        );
+
+        return { status: "paused", lastOutput };
+      }
+
+      outputByNodeId.set(node.id, output);
+      lastOutput = output;
+
+      /** Stop traversal down a branch when a condition node evaluates false. */
+      if (
+        node.data.kind === "condition" &&
+        output &&
+        typeof output === "object" &&
+        (output as { condition?: boolean }).condition === false
+      ) {
+        await prisma.nodeLog.create({
+          data: {
+            executionId: context.executionId,
+            nodeId: node.id,
+            status: "success",
+            output: JSON.stringify(output),
+          },
+        });
+
+        await writeLog(
+          context.executionId,
+          "info",
+          `Node "${node.data.label}": kondisi tidak terpenuhi, branch dihentikan`,
+        );
+
+        continue;
+      }
+
+      await prisma.nodeLog.create({
+        data: {
+          executionId: context.executionId,
+          nodeId: node.id,
+          status: "success",
+          output: JSON.stringify(output ?? null),
+        },
+      });
+
+      await writeLog(
+        context.executionId,
+        "info",
+        `Node "${node.data.label}" sukses`,
+      );
+    } catch (error) {
+      hasFailed = true;
+
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
+      await prisma.nodeLog.create({
+        data: {
+          executionId: context.executionId,
+          nodeId: node.id,
+          status: "failed",
+          output: JSON.stringify({ error: errorMessage }),
+        },
+      });
+
+      await writeLog(
+        context.executionId,
+        "error",
+        `Node "${node.data.label}" gagal: ${errorMessage}`,
+      );
+
+      break;
+    }
+  }
+
+  return { status: hasFailed ? "failed" : "success", lastOutput };
+}
+
+/**
+ * Executes a single node in isolation with a caller-supplied sample input, for
+ * the editor's per-node "Test Run". No Execution row is created, so this has no
+ * side effects on execution history (though connector nodes still perform their
+ * real external calls). Returns the node output or an error message.
+ */
+export async function runSingleNode(
+  workflowId: string,
+  ownerId: string,
+  node: FlowNode,
+  sampleInput: unknown,
+): Promise<{ ok: boolean; output?: unknown; error?: string }> {
+  const context: RunContext = {
+    executionId: `test-${Date.now()}`,
+    ownerId,
+    workflowId,
+    triggerPayload: sampleInput,
+  };
+
+  try {
+    const output = await runNode(node, sampleInput, context);
+    return { ok: true, output };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+/**
+ * Runs a workflow and records an Execution with logs. The workflow may pause at
+ * a `schedule` or `wait_reply` node, in which case the execution status becomes
+ * "waiting" and is resumed later via `resumeWorkflow`.
  *
  * @param triggerPayload optional data that seeds trigger nodes (e.g. webhook body)
  */
@@ -1366,98 +1599,209 @@ export async function runWorkflow(
 
   const orderedNodes = orderNodes(nodes, edges);
 
-  // Track per-node output so a node can read from its specific upstream node.
-  const outputByNodeId = new Map<string, unknown>();
-  let lastOutput: unknown = null;
-  let hasFailed = false;
+  const outcome = await executeNodes(
+    orderedNodes,
+    edges,
+    context,
+    0,
+    new Map(),
+    null,
+  );
 
-  for (const node of orderedNodes) {
-    // Resolve this node's input: prefer the output of its direct predecessor.
-    const incomingEdge = edges.find((edge) => edge.target === node.id);
-    const nodeInput = incomingEdge
-      ? (outputByNodeId.get(incomingEdge.source) ?? lastOutput)
-      : lastOutput;
+  if (outcome.status !== "paused") {
+    await prisma.execution.update({
+      where: { id: execution.id },
+      data: {
+        status: outcome.status,
+        finishedAt: new Date(),
+        result: JSON.stringify(outcome.lastOutput ?? null),
+      },
+    });
 
-    try {
-      const output = await runNode(node, nodeInput, context);
+    await writeLog(
+      execution.id,
+      outcome.status === "failed" ? "error" : "info",
+      `Eksekusi selesai dengan status ${outcome.status}`,
+    );
+  }
 
-      outputByNodeId.set(node.id, output);
-      lastOutput = output;
+  return execution.id;
+}
 
-      // Stop traversal down a branch when a condition node evaluates false.
-      if (
-        node.data.kind === "condition" &&
-        output &&
-        typeof output === "object" &&
-        (output as { condition?: boolean }).condition === false
-      ) {
-        await prisma.nodeLog.create({
-          data: {
-            executionId: execution.id,
-            nodeId: node.id,
-            status: "success",
-            output: JSON.stringify(output),
-          },
-        });
+/**
+ * Resumes a paused execution from its saved cursor. For `wait_reply` pauses the
+ * incoming reply payload is merged into each held row so downstream nodes can
+ * use {{message}}, {{sender}}, etc.
+ */
+export async function resumeWorkflow(
+  waitingExecutionId: string,
+  replyPayload?: Record<string, unknown>,
+): Promise<void> {
+  const waiting = await prisma.waitingExecution.findUnique({
+    where: { id: waitingExecutionId },
+  });
 
-        await writeLog(
-          execution.id,
-          "info",
-          `Node "${node.data.label}": kondisi tidak terpenuhi, branch dihentikan`,
-        );
+  if (!waiting || waiting.status !== "waiting") {
+    return;
+  }
 
-        continue;
-      }
+  const workflow = await prisma.workflow.findUnique({
+    where: { id: waiting.workflowId },
+  });
 
-      await prisma.nodeLog.create({
-        data: {
-          executionId: execution.id,
-          nodeId: node.id,
-          status: "success",
-          output: JSON.stringify(output ?? null),
-        },
-      });
+  if (!workflow) {
+    return;
+  }
 
-      await writeLog(execution.id, "info", `Node "${node.data.label}" sukses`);
-    } catch (error) {
-      hasFailed = true;
+  const nodes: FlowNode[] = JSON.parse(workflow.nodes || "[]");
+  const edges: FlowEdge[] = JSON.parse(workflow.edges || "[]");
+  const orderedNodes = orderNodes(nodes, edges);
 
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
+  const parsedState = JSON.parse(waiting.state) as {
+    outputs: Record<string, unknown>;
+    cursorIndex: number;
+  };
 
-      await prisma.nodeLog.create({
-        data: {
-          executionId: execution.id,
-          nodeId: node.id,
-          status: "failed",
-          output: JSON.stringify({ error: errorMessage }),
-        },
-      });
+  const outputByNodeId = new Map<string, unknown>(
+    Object.entries(parsedState.outputs),
+  );
 
-      await writeLog(
-        execution.id,
-        "error",
-        `Node "${node.data.label}" gagal: ${errorMessage}`,
-      );
+  const pauseNode = orderedNodes[parsedState.cursorIndex];
 
-      break;
+  if (!pauseNode) {
+    return;
+  }
+
+  const pauseOutput = outputByNodeId.get(pauseNode.id) as
+    | { rows?: Item[] }
+    | undefined;
+  const pauseRows = pauseOutput?.rows ?? [];
+
+  /** Compute the pause node's real output now that it is unblocked. */
+  let resumeOutput: unknown;
+
+  if (waiting.pauseType === "wait_reply") {
+    const reply = replyPayload ?? {};
+
+    const enrichedRows = pauseRows.map((row) => ({
+      ...row,
+      ...reply,
+      reply: reply.message,
+    }));
+
+    resumeOutput = { rows: enrichedRows, ...reply };
+  } else {
+    resumeOutput = {
+      rows: pauseRows,
+      scheduledAt: new Date().toISOString(),
+    };
+  }
+
+  outputByNodeId.set(pauseNode.id, resumeOutput);
+
+  const context: RunContext = {
+    executionId: waiting.executionId,
+    ownerId: workflow.ownerId,
+    workflowId: waiting.workflowId,
+    triggerPayload: replyPayload,
+  };
+
+  await prisma.execution.update({
+    where: { id: waiting.executionId },
+    data: { status: "running" },
+  });
+
+  await prisma.waitingExecution.update({
+    where: { id: waiting.id },
+    data: { status: "resumed" },
+  });
+
+  await writeLog(waiting.executionId, "info", "Eksekusi dilanjutkan");
+
+  const outcome = await executeNodes(
+    orderedNodes,
+    edges,
+    context,
+    parsedState.cursorIndex + 1,
+    outputByNodeId,
+    resumeOutput,
+  );
+
+  if (outcome.status !== "paused") {
+    await prisma.execution.update({
+      where: { id: waiting.executionId },
+      data: {
+        status: outcome.status,
+        finishedAt: new Date(),
+        result: JSON.stringify(outcome.lastOutput ?? null),
+      },
+    });
+
+    await writeLog(
+      waiting.executionId,
+      outcome.status === "failed" ? "error" : "info",
+      `Eksekusi selesai dengan status ${outcome.status}`,
+    );
+  }
+}
+
+/**
+ * Resumes any `wait_reply` executions whose match key corresponds to the sender
+ * of an incoming WhatsApp reply. Phone keys are compared on digits only.
+ */
+export async function resumeWaitingReplies(
+  sender: string,
+  replyPayload: Record<string, unknown>,
+): Promise<number> {
+  const senderDigits = sender.replace(/\D/g, "");
+
+  if (!senderDigits) {
+    return 0;
+  }
+
+  const waitingList = await prisma.waitingExecution.findMany({
+    where: { pauseType: "wait_reply", status: "waiting" },
+  });
+
+  let resumedCount = 0;
+
+  for (const waiting of waitingList) {
+    const keyDigits = (waiting.matchKey ?? "").replace(/\D/g, "");
+
+    const matches =
+      keyDigits.length > 0 &&
+      (keyDigits === senderDigits ||
+        keyDigits.endsWith(senderDigits) ||
+        senderDigits.endsWith(keyDigits));
+
+    if (matches) {
+      await resumeWorkflow(waiting.id, replyPayload);
+      resumedCount += 1;
     }
   }
 
-  await prisma.execution.update({
-    where: { id: execution.id },
-    data: {
-      status: hasFailed ? "failed" : "success",
-      finishedAt: new Date(),
-      result: JSON.stringify(lastOutput ?? null),
-    },
+  return resumedCount;
+}
+
+/**
+ * Resumes all `schedule` executions whose due time has passed. Intended to be
+ * driven by an external cron (Vercel Cron / QStash) on serverless deploys.
+ */
+export async function resumeDueSchedules(): Promise<number> {
+  const now = BigInt(Date.now());
+
+  const waitingList = await prisma.waitingExecution.findMany({
+    where: { pauseType: "schedule", status: "waiting" },
   });
 
-  await writeLog(
-    execution.id,
-    hasFailed ? "error" : "info",
-    `Eksekusi selesai dengan status ${hasFailed ? "failed" : "success"}`,
-  );
+  let resumedCount = 0;
 
-  return execution.id;
+  for (const waiting of waitingList) {
+    if (waiting.dueAt !== null && waiting.dueAt <= now) {
+      await resumeWorkflow(waiting.id);
+      resumedCount += 1;
+    }
+  }
+
+  return resumedCount;
 }

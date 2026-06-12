@@ -31,3 +31,4 @@ export {
 export { Textarea } from "./textarea";
 export { Separator } from "./separator";
 export { MultiSelect } from "./multi-select";
+export { ScrollArea, ScrollBar } from "./scroll-area";

@@ -178,3 +178,35 @@ model Log {
 
     @@index([executionId])
 }
+
+/// Persisted state for a paused workflow execution (Schedule / Wait Reply).
+/// Resumed when the due time passes (scheduler) or a matching reply arrives.
+model WaitingExecution {
+    id          String @id @default(uuid())
+    executionId String
+    workflowId  String
+
+    /// The node id where execution paused (schedule or wait_reply).
+    nodeId String
+
+    /// "schedule" | "wait_reply"
+    pauseType String
+
+    /// For wait_reply: the sender/phone key used to match an incoming reply.
+    matchKey String?
+
+    /// For schedule: epoch ms when the workflow should resume.
+    dueAt BigInt?
+
+    /// "waiting" | "resumed" | "cancelled"
+    status String @default("waiting")
+
+    /// Serialised engine state: per-node outputs + the resume cursor index.
+    state String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([workflowId, status])
+    @@index([matchKey, status])
+}

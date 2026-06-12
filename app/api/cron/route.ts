@@ -132,3 +132,6 @@ export async function GET(request: Request) {
     );
   });
 }
+
+// QStash mengirimkan request POST secara default untuk schedulenya
+export const POST = GET;

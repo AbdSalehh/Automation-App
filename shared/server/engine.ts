@@ -1332,22 +1332,25 @@ async function runNode(
 
     case "wait_reply": {
       const items = toItems(input);
-      const firstItem = items[0] ?? {};
 
       const matchField = String(config.matchField ?? "").trim();
 
-      const matchKey =
-        resolveTemplate(String(config.matchValue ?? ""), firstItem) ||
-        (matchField ? String(firstItem[matchField] ?? "") : "") ||
-        String(
-          firstItem.__waTarget ??
-            firstItem.phone ??
-            firstItem.Nomor ??
-            firstItem.nomor ??
-            "",
-        );
+      /**
+       * Computes the reply match key (usually a phone number) for a single
+       * row. Each target waits independently, so the key is derived per row
+       * rather than from the first row only.
+       */
+      const computeMatchKey = (row: Item): string =>
+        resolveTemplate(String(config.matchValue ?? ""), row) ||
+        (matchField ? String(row[matchField] ?? "") : "") ||
+        String(row.__waTarget ?? row.phone ?? row.Nomor ?? row.nomor ?? "");
 
-      return { __pause: "wait_reply", matchKey, rows: items };
+      /** One wait target per row; rows without a usable key are dropped. */
+      const waitTargets = items
+        .map((row) => ({ matchKey: computeMatchKey(row), row }))
+        .filter((target) => target.matchKey.length > 0);
+
+      return { __pause: "wait_reply", waitTargets, rows: items };
     }
 
     default:
@@ -1457,26 +1460,66 @@ async function executeNodes(
           __pause: string;
           dueAt?: number;
           matchKey?: string;
+          waitTargets?: Array<{ matchKey: string; row: Item }>;
         };
 
         outputByNodeId.set(node.id, output);
 
-        const serializedState = JSON.stringify({
-          outputs: Object.fromEntries(outputByNodeId),
-          cursorIndex,
-        });
+        /**
+         * Wait Reply with multiple targets: each target waits independently so
+         * every person's reply is recorded and the run only completes once the
+         * last target resolves. We persist one WaitingExecution per target, and
+         * scope its saved state to that target's single row so the resumed
+         * downstream nodes act on just that person.
+         */
+        if (
+          pause.__pause === "wait_reply" &&
+          pause.waitTargets &&
+          pause.waitTargets.length > 0
+        ) {
+          for (const target of pause.waitTargets) {
+            const scopedOutputs = new Map(outputByNodeId);
 
-        await prisma.waitingExecution.create({
-          data: {
-            executionId: context.executionId,
-            workflowId: context.workflowId,
-            nodeId: node.id,
-            pauseType: pause.__pause,
-            matchKey: pause.matchKey ?? null,
-            dueAt: pause.dueAt ? BigInt(pause.dueAt) : null,
-            state: serializedState,
-          },
-        });
+            scopedOutputs.set(node.id, {
+              ...(output as Record<string, unknown>),
+              rows: [target.row],
+            });
+
+            const scopedState = JSON.stringify({
+              outputs: Object.fromEntries(scopedOutputs),
+              cursorIndex,
+            });
+
+            await prisma.waitingExecution.create({
+              data: {
+                executionId: context.executionId,
+                workflowId: context.workflowId,
+                nodeId: node.id,
+                pauseType: pause.__pause,
+                matchKey: target.matchKey,
+                dueAt: null,
+                state: scopedState,
+              },
+            });
+          }
+        } else {
+          const serializedState = JSON.stringify({
+            outputs: Object.fromEntries(outputByNodeId),
+            cursorIndex,
+          });
+
+          await prisma.waitingExecution.create({
+            data: {
+              executionId: context.executionId,
+              workflowId: context.workflowId,
+              nodeId: node.id,
+              pauseType: pause.__pause,
+              matchKey: pause.matchKey ?? null,
+              dueAt: pause.dueAt ? BigInt(pause.dueAt) : null,
+              state: serializedState,
+            },
+          });
+        }
 
         await prisma.execution.update({
           where: { id: context.executionId },
@@ -1769,6 +1812,34 @@ export async function resumeWorkflow(
   );
 
   if (outcome.status !== "paused") {
+    /**
+     * With per-target waits, several WaitingExecution rows can share one
+     * executionId. Only finalize the run when no sibling targets are still
+     * waiting; otherwise keep the execution in "waiting" so later replies are
+     * still accepted and recorded.
+     */
+    const remainingWaits = await prisma.waitingExecution.count({
+      where: {
+        executionId: waiting.executionId,
+        status: "waiting",
+      },
+    });
+
+    if (remainingWaits > 0) {
+      await prisma.execution.update({
+        where: { id: waiting.executionId },
+        data: { status: "waiting" },
+      });
+
+      await writeLog(
+        waiting.executionId,
+        "info",
+        `Balasan dicatat. Menunggu ${remainingWaits} target lain membalas`,
+      );
+
+      return;
+    }
+
     await prisma.execution.update({
       where: { id: waiting.executionId },
       data: {

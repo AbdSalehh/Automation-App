@@ -1873,23 +1873,45 @@ export async function resumeWaitingReplies(
 
   const waitingList = await prisma.waitingExecution.findMany({
     where: { pauseType: "wait_reply", status: "waiting" },
+    orderBy: { createdAt: "desc" },
   });
 
-  let resumedCount = 0;
-
-  for (const waiting of waitingList) {
+  const matchedWaits = waitingList.filter((waiting) => {
     const keyDigits = (waiting.matchKey ?? "").replace(/\D/g, "");
 
-    const matches =
+    return (
       keyDigits.length > 0 &&
       (keyDigits === senderDigits ||
         keyDigits.endsWith(senderDigits) ||
-        senderDigits.endsWith(keyDigits));
+        senderDigits.endsWith(keyDigits))
+    );
+  });
 
-    if (matches) {
-      await resumeWorkflow(waiting.id, replyPayload);
-      resumedCount += 1;
+  /**
+   * Unanswered reminders intentionally pile up one waiting row per scheduled
+   * send. When the target finally replies, resuming every matching row would
+   * write the same response to the sheet multiple times. So we resume only the
+   * most recent wait per workflow (the list is sorted newest-first) and cancel
+   * the older duplicates.
+   */
+  const resumedWorkflowIds = new Set<string>();
+
+  let resumedCount = 0;
+
+  for (const waiting of matchedWaits) {
+    if (resumedWorkflowIds.has(waiting.workflowId)) {
+      await prisma.waitingExecution.update({
+        where: { id: waiting.id },
+        data: { status: "cancelled" },
+      });
+
+      continue;
     }
+
+    resumedWorkflowIds.add(waiting.workflowId);
+
+    await resumeWorkflow(waiting.id, replyPayload);
+    resumedCount += 1;
   }
 
   return resumedCount;

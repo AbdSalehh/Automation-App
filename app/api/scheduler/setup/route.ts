@@ -14,7 +14,7 @@ import { getQStashClient } from "@/shared/server/qstash";
  *   DELETE /api/scheduler/setup?secret=...&scheduleId=...   remove a schedule
  */
 
-const SCHEDULE_CRON = "* * * * *";
+const SCHEDULE_CRON = "*/2 * * * *";
 
 function assertSecret(request: Request): string | null {
   const cronSecret = process.env.CRON_SECRET;
@@ -56,13 +56,34 @@ export async function POST(request: Request) {
     const client = getQStashClient();
     const destination = buildCronDestination();
 
+    /**
+     * Idempotency: remove any existing schedules that target /api/cron before
+     * creating a fresh one. Without this, repeat setup calls (e.g. retries
+     * after a 401/405) leave multiple heartbeats that all fire the cron,
+     * causing duplicate workflow runs.
+     */
+    const existing = await client.schedules.list();
+
+    const staleSchedules = existing.filter((schedule) =>
+      schedule.destination.includes("/api/cron"),
+    );
+
+    for (const schedule of staleSchedules) {
+      await client.schedules.delete(schedule.scheduleId);
+    }
+
     const { scheduleId } = await client.schedules.create({
       destination,
       cron: SCHEDULE_CRON,
     });
 
     return ok(
-      { scheduleId, destination, cron: SCHEDULE_CRON },
+      {
+        scheduleId,
+        destination,
+        cron: SCHEDULE_CRON,
+        removedStale: staleSchedules.length,
+      },
       "Schedule QStash berhasil dibuat",
     );
   });

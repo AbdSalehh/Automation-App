@@ -171,7 +171,12 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
 
 const CONDITION_NODE_KINDS = new Set(["condition", "filter"]);
 
-/** Maps the chosen WhatsApp provider to the credential type it requires. */
+/**
+ * Maps the chosen WhatsApp provider to the credential type it requires.
+ * `baileys` sengaja tidak dipetakan karena memakai konfigurasi env (URL service
+ * + API key), bukan kredensial per-user, sehingga pemilih kredensial tidak
+ * ditampilkan untuk provider tersebut.
+ */
 const PROVIDER_TO_CREDENTIAL_TYPE = {
   whapi: "whatsapp_whapi",
   fonnte: "whatsapp_fonnte",
@@ -182,6 +187,7 @@ const WHATSAPP_PROVIDER_OPTIONS = [
   { value: "whapi", label: "Whapi" },
   { value: "fonnte", label: "Fonnte" },
   { value: "meta", label: "WhatsApp Cloud API (Meta)" },
+  { value: "baileys", label: "Self-host (Baileys)" },
 ];
 
 const EMPTY_CONDITION_GROUP: ConditionGroup = { match: "all", rules: [] };

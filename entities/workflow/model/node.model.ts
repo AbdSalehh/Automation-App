@@ -26,7 +26,7 @@ export type NodeKind =
   | "condition";
 
 /** WhatsApp delivery provider, chosen per-node via the provider dropdown. */
-export type WhatsAppProvider = "whapi" | "fonnte" | "meta";
+export type WhatsAppProvider = "whapi" | "fonnte" | "meta" | "baileys";
 
 export interface NodeTypeDef {
   kind: NodeKind;

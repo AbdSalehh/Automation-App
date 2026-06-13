@@ -1,6 +1,7 @@
 import { prisma } from "@/shared/lib/prisma";
 import { decryptJson } from "@/shared/lib/crypto";
 import { requestExternal } from "@/shared/server/httpClient";
+import { baileysClient } from "@/shared/api/baileysClient";
 import {
   resolveTemplate,
   evaluateConditionGroup,
@@ -285,8 +286,42 @@ async function sendMeta(
 }
 
 /**
+ * Sends a WhatsApp message via the self-hosted Baileys service (Express),
+ * memakai sesi multi-login milik `sessionId` (id user pemilik workflow).
+ * Auth & target service URL come from env (BAILEYS_API_BASE_URL / API key),
+ * so no per-user credential is required.
+ */
+async function sendBaileys(
+  sessionId: string,
+  target: string,
+  message: string,
+): Promise<Record<string, unknown>> {
+  const cleanTarget = target.includes("@") ? target : target.replace(/\D/g, "");
+
+  const { data: response } = await baileysClient.post<{
+    success: boolean;
+    message: string;
+    data: { messageId: string | null } | null;
+  }>(`/sessions/${sessionId}/send-message`, {
+    target: cleanTarget,
+    message,
+  });
+
+  if (!response.success) {
+    throw new Error(
+      `WhatsApp Baileys: ${response.message ?? "gagal mengirim pesan"}`,
+    );
+  }
+
+  const messageId = response.data?.messageId ?? null;
+
+  return { provider: "baileys", messageId, raw: response };
+}
+
+/**
  * Provider dispatcher used by the unified `whatsapp_send` node. Routes the send
- * to Whapi, Fonnte, or Meta based on the selected provider.
+ * to Whapi, Fonnte, Meta, or the self-hosted Baileys service based on the
+ * selected provider.
  */
 async function sendWhatsApp(
   provider: WhatsAppProvider,
@@ -294,6 +329,7 @@ async function sendWhatsApp(
   target: string,
   message: string,
   countryCode: string,
+  sessionId: string,
 ): Promise<Record<string, unknown>> {
   if (provider === "fonnte") {
     return sendFonnte(credential, target, message, countryCode);
@@ -301,6 +337,10 @@ async function sendWhatsApp(
 
   if (provider === "meta") {
     return sendMeta(credential, target, message);
+  }
+
+  if (provider === "baileys") {
+    return sendBaileys(sessionId, target, message);
   }
 
   return sendWhapi(credential, target, message);
@@ -313,6 +353,14 @@ function assertWhatsAppCredential(
   provider: WhatsAppProvider,
   credential: Record<string, string> | null,
 ): asserts credential is Record<string, string> {
+  /**
+   * Baileys memakai konfigurasi dari env (URL service + API key), bukan
+   * kredensial per-user, jadi tidak ada field yang perlu divalidasi di sini.
+   */
+  if (provider === "baileys") {
+    return;
+  }
+
   if (provider === "fonnte" && !credential?.apiKey) {
     throw new Error("WhatsApp Fonnte: API key tidak ada");
   }
@@ -515,6 +563,7 @@ async function runNode(
               target,
               message,
               countryCode,
+              context.ownerId,
             );
 
             results.push({
@@ -540,6 +589,7 @@ async function runNode(
               target,
               reminder.message,
               countryCode,
+              context.ownerId,
             );
 
             await clearReminder(reminderScope, rowKey);
@@ -626,6 +676,7 @@ async function runNode(
           target,
           message,
           countryCode,
+          context.ownerId,
         );
 
         results.push({

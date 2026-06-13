@@ -1,126 +1,81 @@
-# AutoFlow — Workflow Automation (n8n-like MVP)
+# AutoFlow — Workflow Automation
 
-Platform automasi workflow berbasis node (mirip n8n) yang dibangun dengan
-**Next.js (App Router)**, **React Flow**, **Prisma**, dan **NextAuth (Auth.js v5)**.
-Backend memakai Next.js Route Handlers (tanpa server Express terpisah).
+AutoFlow adalah platform automasi alur kerja (workflow) berbasis node secara visual. Platform ini dirancang agar pengguna dapat membuat, mengonfigurasi, dan menjalankan otomatisasi proses bisnis mereka sendiri (seperti membaca data dari Spreadsheet, mengevaluasi kondisi, dan mengirim pesan WhatsApp) melalui antarmuka _drag-and-drop_ yang intuitif.
 
-Spesifikasi lengkap ada di [`docs/n8n.md`](docs/n8n.md). Struktur kode mengikuti
-**Feature-Sliced Design** sesuai [`docs/fsd.md`](docs/fsd.md).
+Proyek ini dibangun secara full-stack menggunakan **Next.js (App Router)**, **React Flow**, **Prisma**, dan **NextAuth (Auth.js v5)**, sehingga tidak membutuhkan server backend terpisah; semua API dilayani melalui integrasi _Next.js Route Handlers_.
 
-## Arsitektur (FSD)
+## Arsitektur Proyek (Feature-Sliced Design)
 
-```
-app/        → Next.js App Router (routing + API route handlers)
-views/      → komposisi halaman dari widgets
-widgets/    → blok UI besar (header, list, editor canvas, dll)
-features/   → interaksi user (editor, manage credentials, auth)
-entities/   → model bisnis: model + service + store (Zustand)
-shared/     → kode reusable: ui, api, auth, lib, server (engine & connectors)
-```
+Untuk menjaga kode tetap bersih, mudah dikelola, dan dapat diskalakan, proyek ini menerapkan metodologi **Feature-Sliced Design (FSD)**. Kode dibagi berdasarkan fungsionalitas dan tanggung jawabnya ke dalam folder-folder berikut:
 
-Aturan dependency: `app → views → widgets → features → entities → shared`.
-Zustand hanya dipakai di `entities/*/store`. Import selalu lewat public API
-(`index.ts`) tiap slice.
+- **`app/` (Layer App)**  
+  Berisi konfigurasi Next.js dasar seperti routing sistem (`layout.tsx`, `page.tsx`), inisialisasi gaya global, dan _API Route Handlers_. Layer ini murni sebagai entry-point dan tidak boleh mengandung banyak logika bisnis.
 
-## Stack
+- **`views/` (Layer Views / Pages)**  
+  Bertanggung jawab menyusun struktur suatu halaman secara utuh. View menggabungkan beberapa widget menjadi satu tampilan halaman responsif (misalnya halaman Editor Workflow atau halaman Daftar Kredensial).
 
-- Next.js 16 + React 19, Tailwind CSS v4
-- React Flow (`@xyflow/react`) untuk editor drag-and-drop
-- Prisma ORM (default **SQLite** untuk dev; ganti ke Postgres/Supabase di produksi)
-- NextAuth / Auth.js v5 dengan Google OAuth
-- Zustand untuk state, Axios untuk HTTP (lewat `apiClient`)
-- Redis (ioredis) untuk caching query
+- **`widgets/` (Layer Widgets)**  
+  Komponen UI berskala besar dan independen yang berdiri sendiri (blok fungsional). Contohnya adalah `AppHeader`, daftar tabel, atau komponen kanvas editor utama. Widget menggabungkan fitur dan entitas menjadi sebuah entitas tampilan penuh.
 
-## Setup
+- **`features/` (Layer Features)**  
+  Menangani logika dan interaksi khusus yang difokuskan pada nilai bisnis langsung. Setiap folder dalam layer ini adalah satu fitur tunggal (seperti form pembuatan node, autentikasi login, dsb.) yang dapat dijalankan secara terpisah.
 
-1. Install dependency:
+- **`entities/` (Layer Entities)**  
+  Merupakan model bisnis inti dari aplikasi. Di sinilah tersimpan definisi tipe data, Zod schema (`model`), service pemanggil API eksternal (`api` atau `service`), dan manajemen state lokal (seperti `store` menggunakan Zustand) untuk entitas bisnis spesifik (contoh: `workflow`, `credential`, `execution`).
+
+- **`shared/` (Layer Shared)**  
+  Kumpulan utilitas dan komponen infrastruktur murni yang umum digunakan di seluruh sisi proyek dan tidak terikat pada satu fitur bisnis apa pun. Folder ini menyimpan komponen UI tombol, input (`shared/ui`), konfigurasi HTTP Axios (`shared/api`), utilitas _helper_, maupun modul _engine execution_ dasar di sisi server.
+
+Aturan dependensi pada arsitektur FSD ini berjalan secara hierarkis dan satu arah (hanya boleh memanggil layer ke bawah):  
+`app` → `views` → `widgets` → `features` → `entities` → `shared`
+
+## Stack Teknologi
+
+- **Frontend & Backend:** Next.js 16 + React 19 dengan Tailwind CSS v4.
+- **Visual Node Editor:** React Flow (`@xyflow/react`) untuk interaksi kanvas drag-and-drop.
+- **Database ORM:** Prisma ORM. Secara bawaan di lingkungan pengembangan menggunakan SQLite, yang disiapkan agar mudah dimigrasikan ke PostgreSQL/Supabase untuk _production_.
+- **Autentikasi:** NextAuth / Auth.js v5 dengan integrasi Google OAuth.
+- **State Management:** Zustand untuk UI state lokal yang reaktif.
+- **HTTP Request:** Axios secara terpusat untuk interaksi client ke server.
+- **Caching & Rate Limiting:** Redis (ioredis) untuk memori cache sementara yang performant terhadap _heavy query_.
+
+## Setup & Instalasi
+
+1. **Install dependency:**
 
    ```bash
    npm install
    ```
 
-2. Salin `.env.example` ke `.env` dan isi nilainya:
+2. **Konfigurasi Environment:**  
+   Salin `.env.example` menjadi `.env` lalu isikan nilainya:
 
    ```bash
    cp .env.example .env
    ```
 
-   - `AUTH_SECRET` — `npx auth secret` atau `openssl rand -base64 32`
-   - `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` — dari Google Cloud Console
-     (Authorized redirect URI: `http://localhost:3000/api/auth/callback/google`)
-   - `CREDENTIAL_ENCRYPTION_KEY` — `openssl rand -hex 32` (32 byte hex)
-   - `REDIS_URL` — URL Redis (default `redis://127.0.0.1:6379`)
+   - `AUTH_SECRET` — Gunakan perintah `npx auth secret` atau `openssl rand -base64 32`.
+   - `AUTH_GOOGLE_ID` & `AUTH_GOOGLE_SECRET` — Diperoleh dari Google Cloud Console dengan Callback URI `http://localhost:3000/api/auth/callback/google`.
+   - `CREDENTIAL_ENCRYPTION_KEY` — Kunci 32 byte bentuk heksadesimal (`openssl rand -hex 32`) untuk enkripsi konektor.
+   - `REDIS_URL` — String koneksi server redis (opsional, default ke `redis://127.0.0.1:6379`).
 
-3. Buat database & generate Prisma client:
+3. **Sinkronisasi Database:**
+   Terapkan skema bawaan database agar tabel-tabel terbuat:
 
    ```bash
    npm run db:push
    ```
 
-4. Jalankan dev server:
-
+4. **Jalankan Development Server:**
    ```bash
    npm run dev
    ```
+   Buka `http://localhost:3000` melalui browser lalu login menggunakan kredensial Google.
 
-   Buka http://localhost:3000 dan login dengan Google.
+## Fitur Utama
 
-## Fitur
-
-- **Auth**: Google OAuth via NextAuth, session di database, route group
-  `(app)` dilindungi.
-- **Editor workflow**: kanvas React Flow, palet node (Trigger / Action /
-  Logic), konfigurasi per-node, pemilihan kredensial, simpan + versioning.
-- **Kredensial**: CRUD konektor (WhatsApp, Telegram, Google OAuth/Service
-  Account, HTTP). Disimpan terenkripsi (AES-256-GCM) per user. Tombol uji
-  koneksi.
-- **Engine eksekusi**: menjalankan workflow secara sinkron (in-process),
-  menelusuri graf dari trigger, mencatat `Execution` / `NodeLog` / `Log`.
-- **Executions**: riwayat eksekusi + log audit per node.
-- **Generate case**: `GET /api/generate-case` → `JR-YYYY-XXXX`.
-
-## API Endpoints
-
-| Method           | Endpoint                     | Keterangan                                 |
-| ---------------- | ---------------------------- | ------------------------------------------ |
-| `*`              | `/api/auth/[...nextauth]`    | NextAuth                                   |
-| `GET/POST`       | `/api/workflows`             | List / buat workflow                       |
-| `GET/PUT/DELETE` | `/api/workflows/:id`         | Detail / update / hapus                    |
-| `POST`           | `/api/workflows/:id/execute` | Jalankan workflow                          |
-| `GET/POST`       | `/api/credentials`           | List / tambah kredensial                   |
-| `DELETE`         | `/api/credentials/:id`       | Hapus kredensial                           |
-| `POST`           | `/api/connectors/test`       | Uji koneksi konektor                       |
-| `GET`            | `/api/executions`            | List eksekusi                              |
-| `GET`            | `/api/executions/:id`        | Detail + log                               |
-| `GET`            | `/api/logs`                  | Log runtime (filter `workflowId`, `level`) |
-| `GET`            | `/api/generate-case`         | Nomor kasus baru                           |
-
-## Caching (Redis)
-
-Query yang sering dibaca di-cache di Redis lewat helper `shared/lib/cache.ts`:
-
-- `cacheQuery(key, loader, ttl)` — baca dari cache, atau jalankan loader lalu
-  simpan dengan TTL.
-- `invalidateKeys(...)` / `invalidatePattern(...)` — hapus cache setelah mutasi.
-
-Endpoint yang di-cache: list & detail workflow, list kredensial, list eksekusi.
-Cache bersifat **best-effort** — jika Redis mati, request otomatis fallback ke
-database tanpa error (lihat warning `[redis] connection error` saat Redis tidak
-tersedia). Jalankan Redis lokal dengan Docker:
-
-```bash
-docker run -d -p 6379:6379 redis:7-alpine
-```
-
-## Catatan & batasan MVP
-
-- **SQLite** dipakai agar jalan tanpa konfigurasi. Untuk produksi, ubah
-  `provider` di `prisma/schema.prisma` ke `postgresql`, set `DATABASE_URL` ke
-  Supabase/Postgres, lalu `npm run db:push`. Kolom JSON/enum disimpan sebagai
-  `String` agar portabel; bisa dikonversi ke tipe native Postgres bila perlu.
-- **Engine** berjalan in-process di route handler (bukan worker + Redis/Bull
-  seperti pada spec penuh). Untuk skala, pindahkan `runWorkflow` ke job queue.
-- **Schedule/cron & webhook trigger** sudah ada sebagai tipe node, namun
-  scheduler/endpoint webhook eksternal belum diaktifkan di MVP ini.
-- Node **Google Sheets** disimulasikan (mencatat payload) karena butuh
-  pertukaran token OAuth penuh.
+- **Workspaces & Editor Visual:** Membuat, menyusun, dan menyimpan logika _node_ (Trigger seperti _Cron_ vs Action seperti _WhatsApp Send_).
+- **Manajemen Kredensial Terenkripsi:** Menyimpan kunci akses (WhatsApp Provider, Service Accounts, dll) dalam database setelah dienkripsi dengan standar AES-256-GCM tingkat sisi server, membuat data tidak berwujud teks jelas _(plaintext)_.
+- **In-process Execution Engine:** Mesin _parser_ server-side graf untuk memproses alur logika yang dibangun _user_, meresolusi template tag `{{var}}`, serta melakukan transisi state.
+- **History Eksekusi & Audit:** Merekam jejak eksekusi (_success / error_), dengan rincian balasan waktu tunggu tiap blok di dalam antarmuka _Executions_.
+- **Cache Berbasis Redis:** Mengoptimalkan waktu pembacaan _read-heavy endpoint_ dalam manajemen memori di _Shared Server Caching_. (Catatan: cache bersifat _best-effort_; apabila Redis padam, request tetap dialihkan ke mode _fallback database_ secara otomatis).

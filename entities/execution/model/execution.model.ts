@@ -30,12 +30,3 @@ export interface ExecutionDetail extends Execution {
   nodeLogs: NodeLog[];
   logs: LogEntry[];
 }
-
-/** Balasan WhatsApp masuk untuk sebuah workflow (dibaca dari log penanda). */
-export interface InboundReply {
-  id: string;
-  sender: string;
-  name: string;
-  message: string;
-  receivedAt: string;
-}

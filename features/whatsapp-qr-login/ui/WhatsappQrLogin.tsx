@@ -2,27 +2,44 @@
 
 import { useEffect } from "react";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
 
 import { useWhatsappSessionStore } from "@/entities/whatsapp-session";
 import { cn } from "@/shared/lib/utils";
 
 /**
- * Menampilkan QR code untuk menautkan WhatsApp ke service Baileys, lalu
- * melakukan polling status sesi secara berkala sampai tersambung.
+ * Menampilkan QR code untuk menautkan WhatsApp ke service Baileys. Status sesi
+ * diambil sekali di awal, lalu perubahan (QR/koneksi) diterima realtime lewat
+ * Ably tanpa polling berulang.
  */
 export const WhatsappQrLogin = () => {
-  const { status, qrDataUrl, isReady, pollSessionStatus } =
-    useWhatsappSessionStore();
+  const {
+    status,
+    qrDataUrl,
+    isReady,
+    pollSessionStatus,
+    subscribeSession,
+    unsubscribeSession,
+  } = useWhatsappSessionStore();
+
+  const { data: session } = useSession();
+
+  const sessionId = session?.user?.id ?? "";
 
   useEffect(() => {
+    if (!sessionId) {
+      return;
+    }
+
+    /** Fetch awal sekali untuk state saat halaman dibuka. */
     pollSessionStatus();
 
-    const intervalId = setInterval(() => {
-      pollSessionStatus();
-    }, 3000);
+    subscribeSession(sessionId);
 
-    return () => clearInterval(intervalId);
-  }, [pollSessionStatus]);
+    return () => {
+      unsubscribeSession();
+    };
+  }, [sessionId, pollSessionStatus, subscribeSession, unsubscribeSession]);
 
   return (
     <div className="flex flex-col items-center gap-4 rounded-xl border border-border bg-card p-6">

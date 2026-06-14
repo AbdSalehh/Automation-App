@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSession } from "next-auth/react";
 import {
   ReactFlow,
   Background,
@@ -23,6 +24,7 @@ import {
 } from "@/entities/workflow";
 import { Modal, toast } from "@/shared/ui";
 import { useExecutionStore } from "@/entities/execution";
+import { useWhatsappReplyStore } from "@/entities/whatsapp-reply";
 import { WorkflowNode } from "./WorkflowNode";
 import { LabeledEdge } from "./LabeledEdge";
 import { CanvasControls } from "./CanvasControls";
@@ -34,8 +36,17 @@ export function WorkflowEditor() {
   const { nodes, edges, setNodes, setEdges, workflowId, isExecuting } =
     useWorkflowStore();
 
-  const { latestStatus, pollLatestStatus, pollInboundReplies } =
-    useExecutionStore();
+  const { latestStatus, pollLatestStatus } = useExecutionStore();
+
+  const { replies, subscribeReplies, unsubscribeReplies } =
+    useWhatsappReplyStore();
+
+  const { data: session } = useSession();
+
+  const sessionId = session?.user?.id ?? "";
+
+  /** Jumlah balasan yang sudah ditoast, agar hanya balasan baru yang muncul. */
+  const toastedReplyCountRef = useRef(0);
 
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [isMiniMapVisible, setIsMiniMapVisible] = useState(true);
@@ -85,31 +96,43 @@ export function WorkflowEditor() {
   }, [workflowId, isRunning, pollLatestStatus]);
 
   /**
-   * Polling balasan WhatsApp masuk selama editor terbuka. Tiap balasan baru
-   * memunculkan toast agar pengguna tahu balasan tiba saat workflow berjalan.
+   * Berlangganan balasan WhatsApp realtime via Ably selama editor terbuka,
+   * lalu berhenti berlangganan saat editor dilepas. Menggantikan polling.
    */
   useEffect(() => {
-    if (!workflowId) {
+    if (!sessionId) {
       return;
     }
 
-    /** Panggilan pertama menetapkan garis dasar (tanpa toast balasan lama). */
-    pollInboundReplies(workflowId);
+    subscribeReplies(sessionId);
 
-    const intervalId = setInterval(async () => {
-      const replies = await pollInboundReplies(workflowId);
+    return () => {
+      unsubscribeReplies();
+    };
+  }, [sessionId, subscribeReplies, unsubscribeReplies]);
 
-      for (const reply of replies) {
-        const senderLabel = reply.name || reply.sender || "WhatsApp";
+  /**
+   * Memunculkan toast untuk tiap balasan baru yang diterima lewat Ably. Hanya
+   * balasan yang belum pernah ditoast (di luar baseline awal) yang ditampilkan.
+   */
+  useEffect(() => {
+    if (replies.length <= toastedReplyCountRef.current) {
+      toastedReplyCountRef.current = replies.length;
+      return;
+    }
 
-        toast.info(`📩 Balasan dari ${senderLabel}`, {
-          description: reply.message,
-        });
-      }
-    }, 3000);
+    const newReplies = replies.slice(toastedReplyCountRef.current);
 
-    return () => clearInterval(intervalId);
-  }, [workflowId, pollInboundReplies]);
+    for (const reply of newReplies) {
+      const senderLabel = reply.name || reply.sender || "WhatsApp";
+
+      toast.info(`📩 Balasan dari ${senderLabel}`, {
+        description: reply.message,
+      });
+    }
+
+    toastedReplyCountRef.current = replies.length;
+  }, [replies]);
 
   /** Animasikan hanya edge yang sedang aktif (berurutan), bukan semua edge. */
   const displayEdges = useMemo(() => {

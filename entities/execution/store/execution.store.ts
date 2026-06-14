@@ -5,7 +5,6 @@ import type {
   ExecutionDetail,
   ExecutionStatus,
   NodeLog,
-  InboundReply,
 } from "../model/execution.model";
 
 /**
@@ -26,15 +25,8 @@ interface ExecutionState {
   fetchExecutionDetail: (executionId: string) => Promise<void>;
   pollLatestStatus: (workflowId: string) => Promise<void>;
   loadNodeLogs: (executionId: string) => Promise<NodeLog[]>;
-  pollInboundReplies: (workflowId: string) => Promise<InboundReply[]>;
   clearDetail: () => void;
 }
-
-/**
- * Penanda waktu balasan terakhir yang sudah ditampilkan, per workflow. Disimpan
- * di luar state Zustand karena hanya dipakai untuk deduplikasi toast, bukan UI.
- */
-const lastReplyTimestampByWorkflow = new Map<string, string>();
 
 export const useExecutionStore = create<ExecutionState>((set) => ({
   executions: [],
@@ -94,29 +86,6 @@ export const useExecutionStore = create<ExecutionState>((set) => ({
     try {
       const detail = await executionService.getById(executionId);
       return detail.nodeLogs;
-    } catch {
-      return [];
-    }
-  },
-
-  /**
-   * Mengambil balasan WhatsApp masuk yang BARU untuk sebuah workflow sejak
-   * pemanggilan terakhir. Penanda waktu dilacak per workflow agar editor hanya
-   * memunculkan toast untuk balasan yang belum pernah ditampilkan.
-   */
-  pollInboundReplies: async (workflowId) => {
-    try {
-      const since = lastReplyTimestampByWorkflow.get(workflowId);
-
-      const response = await executionService.listReplies(workflowId, since);
-
-      lastReplyTimestampByWorkflow.set(workflowId, response.serverTime);
-
-      if (since) {
-        return response.replies;
-      }
-
-      return [];
     } catch {
       return [];
     }

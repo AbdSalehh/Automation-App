@@ -479,7 +479,24 @@ async function runNode(
        */
       const payload = (context.triggerPayload ?? {}) as Record<string, unknown>;
 
-      return { rows: [payload], ...payload };
+      /**
+       * Waktu balasan terformat (lokal Asia/Jakarta) agar template tulis bisa
+       * mencatat kapan target membalas, mis. "{{message}} ({{__replyAt}})".
+       * Selaras dengan jalur `wait_reply` di `resumeWorkflow`.
+       */
+      const replyAt = new Date().toLocaleString("id-ID", {
+        timeZone: "Asia/Jakarta",
+        dateStyle: "medium",
+        timeStyle: "short",
+      });
+
+      const enrichedRow = {
+        ...payload,
+        reply: payload.message,
+        __replyAt: replyAt,
+      };
+
+      return { rows: [enrichedRow], ...enrichedRow };
     }
 
     case "http_request": {
@@ -1505,26 +1522,29 @@ async function runNode(
   }
 }
 
-/** Orders nodes starting from triggers following edges (BFS). */
-function orderNodes(nodes: FlowNode[], edges: FlowEdge[]): FlowNode[] {
+/**
+ * Scope eksekusi: `"main"` untuk run manual/terjadwal/trigger non-balasan,
+ * `"reply"` untuk run yang dipicu balasan WhatsApp masuk (webhook).
+ */
+type TriggerScope = "main" | "reply";
+
+/**
+ * Mengurutkan node mulai dari `entryIds` dengan menelusuri edge (BFS), dan
+ * HANYA mengembalikan node yang terjangkau dari entri tersebut. Node di chain
+ * lain (mis. chain penangkap balasan yang terpisah) tidak ikut dijalankan,
+ * sehingga tiap trigger hanya menjalankan subgraph-nya sendiri.
+ */
+function orderNodes(
+  nodes: FlowNode[],
+  edges: FlowEdge[],
+  entryIds: string[],
+): FlowNode[] {
   const nodesById = new Map(nodes.map((node) => [node.id, node]));
-  const incomingCount = new Map<string, number>();
-
-  nodes.forEach((node) => incomingCount.set(node.id, 0));
-  edges.forEach((edge) =>
-    incomingCount.set(edge.target, (incomingCount.get(edge.target) ?? 0) + 1),
-  );
-
-  const pendingQueue = nodes
-    .filter(
-      (node) =>
-        (incomingCount.get(node.id) ?? 0) === 0 ||
-        node.data.kind.endsWith("_trigger"),
-    )
-    .map((node) => node.id);
 
   const orderedNodes: FlowNode[] = [];
   const visitedIds = new Set<string>();
+
+  const pendingQueue = [...entryIds];
 
   while (pendingQueue.length > 0) {
     const currentId = pendingQueue.shift()!;
@@ -1550,13 +1570,47 @@ function orderNodes(nodes: FlowNode[], edges: FlowEdge[]): FlowNode[] {
       });
   }
 
-  nodes.forEach((node) => {
-    if (!visitedIds.has(node.id)) {
-      orderedNodes.push(node);
-    }
-  });
-
   return orderedNodes;
+}
+
+/**
+ * Menentukan node entri untuk sebuah eksekusi sesuai scope trigger.
+ *
+ * - `"reply"`: hanya node `whatsapp_trigger` (dipicu webhook balasan WA).
+ * - `"main"`: trigger lain + node tanpa incoming-edge, TAPI bukan
+ *   `whatsapp_trigger`. Dengan begitu run manual/terjadwal tidak ikut
+ *   menjalankan chain penangkap balasan.
+ */
+function resolveEntryIds(
+  nodes: FlowNode[],
+  edges: FlowEdge[],
+  triggerScope: TriggerScope,
+): string[] {
+  if (triggerScope === "reply") {
+    return nodes
+      .filter((node) => node.data.kind === "whatsapp_trigger")
+      .map((node) => node.id);
+  }
+
+  const incomingCount = new Map<string, number>();
+
+  nodes.forEach((node) => incomingCount.set(node.id, 0));
+  edges.forEach((edge) =>
+    incomingCount.set(edge.target, (incomingCount.get(edge.target) ?? 0) + 1),
+  );
+
+  return nodes
+    .filter((node) => {
+      if (node.data.kind === "whatsapp_trigger") {
+        return false;
+      }
+
+      return (
+        (incomingCount.get(node.id) ?? 0) === 0 ||
+        node.data.kind.endsWith("_trigger")
+      );
+    })
+    .map((node) => node.id);
 }
 
 interface ExecOutcome {
@@ -1788,10 +1842,14 @@ export async function runSingleNode(
  * "waiting" and is resumed later via `resumeWorkflow`.
  *
  * @param triggerPayload optional data that seeds trigger nodes (e.g. webhook body)
+ * @param triggerScope `"main"` (manual/jadwal) atau `"reply"` (balasan WA via
+ *        webhook). Menentukan chain mana yang dijalankan saat satu workflow
+ *        memuat beberapa chain terpisah.
  */
 export async function runWorkflow(
   workflowId: string,
   triggerPayload?: unknown,
+  triggerScope: TriggerScope = "main",
 ): Promise<string> {
   const workflow = await prisma.workflow.findUnique({
     where: { id: workflowId },
@@ -1817,7 +1875,8 @@ export async function runWorkflow(
 
   await writeLog(execution.id, "info", `Mulai eksekusi "${workflow.name}"`);
 
-  const orderedNodes = orderNodes(nodes, edges);
+  const entryIds = resolveEntryIds(nodes, edges, triggerScope);
+  const orderedNodes = orderNodes(nodes, edges, entryIds);
 
   const outcome = await executeNodes(
     orderedNodes,
@@ -1875,7 +1934,14 @@ export async function resumeWorkflow(
 
   const nodes: FlowNode[] = JSON.parse(workflow.nodes || "[]");
   const edges: FlowEdge[] = JSON.parse(workflow.edges || "[]");
-  const orderedNodes = orderNodes(nodes, edges);
+
+  /**
+   * Pause `wait_reply`/`schedule` selalu berada di chain utama, jadi pakai
+   * scope `"main"` agar urutan node (dan `cursorIndex` tersimpan) tetap sama
+   * seperti saat eksekusi dijeda.
+   */
+  const entryIds = resolveEntryIds(nodes, edges, "main");
+  const orderedNodes = orderNodes(nodes, edges, entryIds);
 
   const parsedState = JSON.parse(waiting.state) as {
     outputs: Record<string, unknown>;

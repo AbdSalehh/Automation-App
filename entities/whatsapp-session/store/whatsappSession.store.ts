@@ -1,6 +1,7 @@
 import { create } from "zustand";
-import * as Ably from "ably";
+import type * as Ably from "ably";
 import { apiClient } from "@/shared/api/apiClient";
+import { acquireAblyClient, releaseAblyClient } from "@/shared/lib/ablyClient";
 import type { ApiResponse } from "@/shared/api/http";
 import type {
   WhatsappSessionStatus,
@@ -13,7 +14,7 @@ interface WhatsappSessionState {
   isReady: boolean;
   isPolling: boolean;
   isSubscribed: boolean;
-  ablyClient: Ably.Realtime | null;
+  channel: Ably.RealtimeChannel | null;
   pollSessionStatus: () => Promise<void>;
   checkIsSessionActive: () => Promise<boolean>;
   subscribeSession: (sessionId: string) => void;
@@ -27,7 +28,7 @@ export const useWhatsappSessionStore = create<WhatsappSessionState>(
     isReady: false,
     isPolling: false,
     isSubscribed: false,
-    ablyClient: null,
+    channel: null,
 
     /**
      * Mengambil status sesi terbaru dari API route proxy Next.js (bukan Express
@@ -80,28 +81,15 @@ export const useWhatsappSessionStore = create<WhatsappSessionState>(
     },
 
     /**
-     * Membuka koneksi Ably dan men-subscribe event `session-update` milik sesi
-     * agar perubahan QR/status diterima realtime tanpa polling. Token diambil
-     * dari endpoint BFF agar API key tetap aman di server.
+     * Men-subscribe event `session-update` milik sesi lewat koneksi Ably
+     * bersama agar perubahan QR/status diterima realtime tanpa polling.
      */
     subscribeSession: (sessionId) => {
       if (get().isSubscribed) {
         return;
       }
 
-      const ablyClient = new Ably.Realtime({
-        authCallback: async (_tokenParams, callback) => {
-          try {
-            const { data: response } = await apiClient.get<
-              ApiResponse<Ably.TokenRequest>
-            >("/whatsapp/ably-token");
-
-            callback(null, response.data);
-          } catch (error) {
-            callback(error as string, null);
-          }
-        },
-      });
+      const ablyClient = acquireAblyClient();
 
       const channel = ablyClient.channels.get(`session:${sessionId}`);
 
@@ -115,20 +103,22 @@ export const useWhatsappSessionStore = create<WhatsappSessionState>(
         });
       });
 
-      set({ ablyClient, isSubscribed: true });
+      set({ channel, isSubscribed: true });
     },
 
     /**
-     * Menutup koneksi Ably dan mereset flag langganan saat komponen dilepas.
+     * Berhenti berlangganan dan melepas satu referensi koneksi bersama saat
+     * komponen dilepas.
      */
     unsubscribeSession: () => {
-      const { ablyClient } = get();
+      const { channel } = get();
 
-      if (ablyClient) {
-        ablyClient.close();
+      if (channel) {
+        channel.unsubscribe();
+        releaseAblyClient();
       }
 
-      set({ ablyClient: null, isSubscribed: false });
+      set({ channel: null, isSubscribed: false });
     },
   }),
 );

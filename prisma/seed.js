@@ -342,6 +342,147 @@ const SCHEDULE_REMINDER_EDGES = JSON.stringify([
   },
 ]);
 
+const SPLIT_REPLY_WORKFLOW_NAME = "Reminder + Tangkap Balasan (Chain Terpisah)";
+
+/**
+ * Workflow dengan DUA chain terpisah dalam satu kanvas:
+ *
+ * Chain A (kirim): Jadwal -> Baca Sheet -> Kondisi (Belum Bayar) -> Kirim WA.
+ * Chain B (tangkap): WhatsApp Reply -> Catat Respon ke sheet.
+ *
+ * Keduanya tidak terhubung edge. Berkat eksekusi ber-scope trigger, run
+ * terjadwal hanya menjalankan Chain A, dan balasan masuk hanya menjalankan
+ * Chain B (mencocokkan {{sender}} ke kolom Nomor lalu menulis kolom Respon).
+ */
+const SPLIT_REPLY_NODES = JSON.stringify([
+  {
+    id: "node-schedule-trigger",
+    type: "workflowNode",
+    position: { x: 40, y: 160 },
+    data: {
+      kind: "schedule_trigger",
+      label: "Jadwal Reminder",
+      config: {
+        scheduleMode: "daily",
+        dailyTime: "09:00",
+        cron: "0 9 * * *",
+      },
+    },
+  },
+  {
+    id: "node-read-sheet",
+    type: "workflowNode",
+    position: { x: 320, y: 160 },
+    data: {
+      kind: "google_sheets_read",
+      label: "Baca Baris",
+      config: {
+        spreadsheetId: "",
+        sheetName: "Orders",
+      },
+      credentialId: "",
+    },
+  },
+  {
+    id: "node-condition",
+    type: "workflowNode",
+    position: { x: 600, y: 160 },
+    data: {
+      kind: "condition",
+      label: "Status Belum Bayar?",
+      config: {
+        conditions: {
+          match: "all",
+          rules: [
+            { field: "Status", operator: "equals", value: "Belum Bayar" },
+          ],
+        },
+      },
+    },
+  },
+  {
+    id: "node-send-wa",
+    type: "workflowNode",
+    position: { x: 880, y: 160 },
+    data: {
+      kind: "whatsapp_send",
+      label: "Kirim Reminder WA",
+      config: {
+        provider: "baileys",
+        targetField: "Nomor",
+        message:
+          "Halo {{Nama}} 👋\n\nPembayaran Anda belum kami terima. Mohon segera melakukan pembayaran.\nBalas pesan ini setelah transfer ya. Terima kasih 🙏",
+      },
+      credentialId: "",
+    },
+  },
+  {
+    id: "node-whatsapp-trigger",
+    type: "workflowNode",
+    position: { x: 320, y: 440 },
+    data: {
+      kind: "whatsapp_trigger",
+      label: "Balasan WhatsApp Masuk",
+      config: {},
+    },
+  },
+  {
+    id: "node-update-sheet",
+    type: "workflowNode",
+    position: { x: 640, y: 440 },
+    data: {
+      kind: "google_sheets_update",
+      label: "Catat Respon",
+      config: {
+        spreadsheetId: "",
+        sheetName: "Orders",
+        matchColumn: "Nomor",
+        matchValue: "{{sender}}",
+        writeTargets: [
+          {
+            column: "Respon",
+            value: "{{message}} ({{__replyAt}})",
+            append: true,
+          },
+        ],
+      },
+      credentialId: "",
+    },
+  },
+]);
+
+const SPLIT_REPLY_EDGES = JSON.stringify([
+  {
+    id: "e-trigger-read",
+    source: "node-schedule-trigger",
+    target: "node-read-sheet",
+    sourceHandle: null,
+    targetHandle: null,
+  },
+  {
+    id: "e-read-condition",
+    source: "node-read-sheet",
+    target: "node-condition",
+    sourceHandle: null,
+    targetHandle: null,
+  },
+  {
+    id: "e-condition-send",
+    source: "node-condition",
+    target: "node-send-wa",
+    sourceHandle: "true",
+    targetHandle: null,
+    label: "true",
+  },
+  {
+    id: "e-reply-update",
+    source: "node-whatsapp-trigger",
+    target: "node-update-sheet",
+    sourceHandle: null,
+    targetHandle: null,
+  },
+]);
+
 async function main() {
   console.log("🌱  Starting seed…");
 
@@ -413,6 +554,29 @@ async function main() {
 
     console.log(
       `   ↳ Schedule reminder workflow created: "${fw.name}" (${fw.id})`,
+    );
+  }
+
+  const existingSplitReply = await prisma.workflow.findFirst({
+    where: { name: SPLIT_REPLY_WORKFLOW_NAME, ownerId: adminUser.id },
+  });
+
+  if (existingSplitReply) {
+    console.log("   ↳ Split reply workflow already exists, skipping.");
+  } else {
+    const splitReplyWorkflow = await prisma.workflow.create({
+      data: {
+        name: SPLIT_REPLY_WORKFLOW_NAME,
+        ownerId: adminUser.id,
+        nodes: SPLIT_REPLY_NODES,
+        edges: SPLIT_REPLY_EDGES,
+        version: 1,
+        isPublished: true,
+      },
+    });
+
+    console.log(
+      `   ↳ Split reply workflow created: "${splitReplyWorkflow.name}" (${splitReplyWorkflow.id})`,
     );
   }
 

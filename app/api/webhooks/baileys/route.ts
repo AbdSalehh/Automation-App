@@ -72,7 +72,7 @@ export async function POST(request: Request) {
         continue;
       }
 
-      const executionId = await runWorkflow(workflow.id, payload);
+      const executionId = await runWorkflow(workflow.id, payload, "reply");
       triggered.push(executionId);
     }
 

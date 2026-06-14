@@ -1,46 +1,33 @@
 import { create } from "zustand";
-import * as Ably from "ably";
+import type * as Ably from "ably";
 import { v4 as uuidv4 } from "uuid";
 
-import { apiClient } from "@/shared/api/apiClient";
-import type { ApiResponse } from "@/shared/api/http";
+import { acquireAblyClient, releaseAblyClient } from "@/shared/lib/ablyClient";
 import type { InboundReply } from "../model/whatsappReply.model";
 
 interface WhatsappReplyState {
   replies: InboundReply[];
   isSubscribed: boolean;
-  ablyClient: Ably.Realtime | null;
-  subscribeReplies: (sessionId: string) => Promise<void>;
+  channel: Ably.RealtimeChannel | null;
+  subscribeReplies: (sessionId: string) => void;
   unsubscribeReplies: () => void;
 }
 
 export const useWhatsappReplyStore = create<WhatsappReplyState>((set, get) => ({
   replies: [],
   isSubscribed: false,
-  ablyClient: null,
+  channel: null,
 
   /**
-   * Membuka koneksi Ably dan men-subscribe channel milik sesi tertentu.
-   * Token diambil dari endpoint BFF agar API key tetap aman di server.
+   * Men-subscribe channel milik sesi lewat koneksi Ably bersama. Tiap balasan
+   * masuk ditambahkan ke daftar `replies`.
    */
-  subscribeReplies: async (sessionId) => {
+  subscribeReplies: (sessionId) => {
     if (get().isSubscribed) {
       return;
     }
 
-    const ablyClient = new Ably.Realtime({
-      authCallback: async (_tokenParams, callback) => {
-        try {
-          const { data: response } = await apiClient.get<
-            ApiResponse<Ably.TokenRequest>
-          >("/whatsapp/ably-token");
-
-          callback(null, response.data);
-        } catch (error) {
-          callback(error as string, null);
-        }
-      },
-    });
+    const ablyClient = acquireAblyClient();
 
     const channel = ablyClient.channels.get(`session:${sessionId}`);
 
@@ -52,20 +39,21 @@ export const useWhatsappReplyStore = create<WhatsappReplyState>((set, get) => ({
       }));
     });
 
-    set({ ablyClient, isSubscribed: true });
+    set({ channel, isSubscribed: true });
   },
 
   /**
-   * Menutup koneksi Ably dan mereset state saat komponen tidak lagi
-   * membutuhkan balasan realtime (mis. saat unmount).
+   * Berhenti berlangganan dan melepas satu referensi koneksi bersama saat
+   * komponen tidak lagi membutuhkan balasan realtime (mis. saat unmount).
    */
   unsubscribeReplies: () => {
-    const { ablyClient } = get();
+    const { channel } = get();
 
-    if (ablyClient) {
-      ablyClient.close();
+    if (channel) {
+      channel.unsubscribe();
+      releaseAblyClient();
     }
 
-    set({ ablyClient: null, isSubscribed: false });
+    set({ channel: null, isSubscribed: false });
   },
 }));

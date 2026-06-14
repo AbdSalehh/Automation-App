@@ -108,20 +108,15 @@ export const useExecutionStore = create<ExecutionState>((set) => ({
     try {
       const since = lastReplyTimestampByWorkflow.get(workflowId);
 
-      const replies = await executionService.listReplies(workflowId, since);
+      const response = await executionService.listReplies(workflowId, since);
 
-      if (replies.length > 0) {
-        const latest = replies[replies.length - 1];
-        lastReplyTimestampByWorkflow.set(workflowId, latest.receivedAt);
-      } else if (!since) {
-        /**
-         * Panggilan pertama tanpa balasan: tandai "sekarang" sebagai garis
-         * dasar agar balasan lama tidak ikut di-toast saat editor dibuka.
-         */
-        lastReplyTimestampByWorkflow.set(workflowId, new Date().toISOString());
+      lastReplyTimestampByWorkflow.set(workflowId, response.serverTime);
+
+      if (since) {
+        return response.replies;
       }
 
-      return replies;
+      return [];
     } catch {
       return [];
     }

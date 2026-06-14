@@ -45,25 +45,40 @@ export async function GET(request: Request, { params }: RouteParams) {
       take: 50,
     });
 
+    console.log("logs", logs);
+
     /**
      * Format penanda: __REPLY__|sender|name|message. Pisahkan jadi maksimal 4
      * bagian agar pesan yang memuat karakter "|" tetap utuh.
      */
     const replies = logs.map((log) => {
-      const [, sender = "", name = "", message = ""] = log.message.split(
-        "|",
-        4,
-      );
+      const parts = log.message.split("|", 4);
+
+      const senderPhoneNumber = parts[1] ?? "";
+
+      const senderName = parts[2] ?? "";
+
+      const messageContent = parts[3] ?? "";
 
       return {
         id: log.id,
-        sender,
-        name,
-        message,
+        sender: senderPhoneNumber,
+        name: senderName,
+        message: messageContent,
         receivedAt: log.timestamp.toISOString(),
       };
     });
 
-    return ok(replies, "Balasan masuk berhasil diambil");
+    const [{ serverTime }] = await prisma.$queryRaw<
+      Array<{ serverTime: Date }>
+    >`SELECT LOCALTIMESTAMP as "serverTime"`;
+
+    return ok(
+      {
+        replies,
+        serverTime: serverTime.toISOString(),
+      },
+      "Balasan masuk berhasil diambil",
+    );
   });
 }

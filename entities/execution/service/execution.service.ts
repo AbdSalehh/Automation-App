@@ -7,6 +7,11 @@ import type {
   InboundReply,
 } from "../model/execution.model";
 
+export interface InboundRepliesResponse {
+  replies: InboundReply[];
+  serverTime: string;
+}
+
 export const executionService = {
   list: async (workflowId?: string): Promise<Execution[]> => {
     const { data: response } = await apiClient.get<
@@ -33,11 +38,12 @@ export const executionService = {
   listReplies: async (
     workflowId: string,
     since?: string,
-  ): Promise<InboundReply[]> => {
-    const { data: response } = await apiClient.get<ApiResponse<InboundReply[]>>(
-      `${API_ROUTES.workflow(workflowId)}/replies`,
-      { params: since ? { since } : undefined },
-    );
+  ): Promise<InboundRepliesResponse> => {
+    const { data: response } = await apiClient.get<
+      ApiResponse<InboundRepliesResponse>
+    >(`${API_ROUTES.workflow(workflowId)}/replies`, {
+      params: since ? { since } : undefined,
+    });
 
     return response.data;
   },

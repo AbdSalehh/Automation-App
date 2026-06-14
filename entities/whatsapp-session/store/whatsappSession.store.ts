@@ -9,6 +9,7 @@ interface WhatsappSessionState {
   isReady: boolean;
   isPolling: boolean;
   pollSessionStatus: () => Promise<void>;
+  checkIsSessionActive: () => Promise<boolean>;
 }
 
 export const useWhatsappSessionStore = create<WhatsappSessionState>((set) => ({
@@ -38,6 +39,31 @@ export const useWhatsappSessionStore = create<WhatsappSessionState>((set) => ({
       });
     } finally {
       set({ isPolling: false });
+    }
+  },
+
+  /**
+   * Memeriksa sekali apakah sesi WhatsApp sedang tersambung (`open`). Dipakai
+   * sebelum menjalankan workflow yang memuat node WhatsApp agar bisa memberi
+   * tahu pengguna untuk login ulang bila sesi sudah habis.
+   */
+  checkIsSessionActive: async () => {
+    try {
+      const { data: response } = await apiClient.get<
+        ApiResponse<WhatsappSessionStatus>
+      >("/whatsapp/session-status");
+
+      const session = response.data;
+
+      set({
+        status: session.status,
+        qrDataUrl: session.qr,
+        isReady: session.isReady,
+      });
+
+      return session.status === "open" && session.isReady;
+    } catch {
+      return false;
     }
   },
 }));

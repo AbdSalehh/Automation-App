@@ -1,7 +1,7 @@
 "use client";
 
 import { Handle, Position, type NodeProps } from "@xyflow/react";
-import { Icon } from "@/shared/ui";
+import { Icon, Spinner } from "@/shared/ui";
 import { cn } from "@/shared/lib/utils";
 import {
   getNodeTypeDef,
@@ -289,10 +289,30 @@ export function WorkflowNode({ data, selected }: NodeProps) {
       ? (nodeData.config.__previewSummary as string)
       : "";
 
+  /**
+   * Status animasi run yang di-inject editor: idle | running | done | failed.
+   * Menentukan spinner dan warna ring di sekeliling node.
+   */
+  const runState =
+    (data as { __runState?: "idle" | "running" | "done" | "failed" })
+      ?.__runState ?? "idle";
+
+  const isNodeRunning = runState === "running";
+
+  const runRingStyle =
+    runState === "running"
+      ? "ring-2 ring-indigo-400 ring-offset-2 animate-pulse"
+      : runState === "done"
+        ? "ring-2 ring-emerald-400 ring-offset-2"
+        : runState === "failed"
+          ? "ring-2 ring-rose-400 ring-offset-2"
+          : "";
+
   return (
     <div
       className={cn(
         "w-[280px] overflow-hidden rounded-xl border border-border bg-card shadow-md transition-shadow hover:shadow-lg",
+        runRingStyle,
         selected && "ring-2 ring-primary ring-offset-2",
       )}
     >
@@ -327,14 +347,18 @@ export function WorkflowNode({ data, selected }: NodeProps) {
           </span>
         </div>
 
-        <span
-          className={cn(
-            "shrink-0 rounded-md border px-1.5 py-0.5 text-[10px] font-semibold",
-            CATEGORY_BADGE_STYLES[badgeKey],
-          )}
-        >
-          {CATEGORY_BADGE_LABEL[badgeKey]}
-        </span>
+        {isNodeRunning ? (
+          <Spinner className="size-4 shrink-0 text-indigo-500" />
+        ) : (
+          <span
+            className={cn(
+              "shrink-0 rounded-md border px-1.5 py-0.5 text-[10px] font-semibold",
+              CATEGORY_BADGE_STYLES[badgeKey],
+            )}
+          >
+            {CATEGORY_BADGE_LABEL[badgeKey]}
+          </span>
+        )}
       </div>
 
       {/* Kind-specific body */}

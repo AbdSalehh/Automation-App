@@ -165,6 +165,14 @@ function resolveActionItems(value: unknown): {
 // Connector senders (one message per item)
 // ---------------------------------------------------------------------------
 
+/**
+ * Jeda eksekusi selama `ms` milidetik. Dipakai sebagai antrian sederhana agar
+ * pengiriman ke banyak nomor tidak terjadi di detik yang sama.
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function sendFonnte(
   credential: Record<string, string>,
   target: string,
@@ -497,6 +505,12 @@ async function runNode(
       const targetField = String(config.targetField ?? "").trim();
       const messageTemplate = String(config.message ?? config.text ?? "");
 
+      /**
+       * Jeda antrian antar pengiriman (detik). Mencegah banyak nomor terkirim
+       * di detik yang sama. Default 2 detik bila tidak diatur.
+       */
+      const sendDelaySeconds = Number(config.sendDelaySeconds ?? 2);
+
       /** If an upstream collection is empty, there's nothing to send. */
       if (isCollection && items.length === 0) {
         return { sent: 0, results: [], rows: [] };
@@ -654,6 +668,8 @@ async function runNode(
 
       const enrichedRows: Item[] = [];
 
+      let sentIndex = 0;
+
       for (const item of items) {
         const target = resolveTarget(item);
 
@@ -669,6 +685,17 @@ async function runNode(
         const message = messageTemplate
           ? resolveTemplate(messageTemplate, item)
           : JSON.stringify(item);
+
+        /**
+         * Antrian: beri jeda sebelum pengiriman kedua dan seterusnya, dengan
+         * sedikit jitter agar tidak presisi di detik yang sama.
+         */
+        if (sentIndex > 0 && sendDelaySeconds > 0) {
+          const jitterMs = Math.floor(Math.random() * 400);
+          await sleep(sendDelaySeconds * 1000 + jitterMs);
+        }
+
+        sentIndex += 1;
 
         const sendResult = await sendWhatsApp(
           provider,
@@ -992,9 +1019,9 @@ async function runNode(
             let finalValue = newValue;
 
             /**
-             * Append mode: read the existing cell and, when it already has
-             * content, join the old value and the new one with a comma so we
-             * never overwrite prior data.
+             * Append mode: baca isi sel saat ini, lalu tambahkan balasan baru
+             * sebagai item daftar berpenanda strip ("- ") di baris baru, agar
+             * data lama tidak tertimpa dan balasan tampil sebagai list.
              */
             if (target.append) {
               const existingResponse = await requestExternal(
@@ -1007,9 +1034,11 @@ async function runNode(
                   ?.values?.[0]?.[0] ?? "",
               ).trim();
 
+              const listItem = `- ${newValue}`;
+
               finalValue = existingValue
-                ? `${existingValue}, ${newValue}`
-                : newValue;
+                ? `${existingValue}\n${listItem}`
+                : listItem;
             }
 
             updates.push({
@@ -1924,7 +1953,7 @@ export async function resumeWaitingReplies(
 
   const waitingList = await prisma.waitingExecution.findMany({
     where: { pauseType: "wait_reply", status: "waiting" },
-    orderBy: { createdAt: "desc" },
+    orderBy: { createdAt: "asc" },
   });
 
   const matchedWaits = waitingList.filter((waiting) => {
@@ -1939,11 +1968,10 @@ export async function resumeWaitingReplies(
   });
 
   /**
-   * Unanswered reminders intentionally pile up one waiting row per scheduled
-   * send. When the target finally replies, resuming every matching row would
-   * write the same response to the sheet multiple times. So we resume only the
-   * most recent wait per workflow (the list is sorted newest-first) and cancel
-   * the older duplicates.
+   * Tanpa batasan jumlah balasan: tiap balasan masuk melanjutkan SATU wait
+   * tertua per workflow (tanpa membatalkan sisanya). Dengan begitu target bisa
+   * membalas berkali-kali, dan setiap balasan tercatat ke reminder berikutnya
+   * yang masih menunggu (lihat mode append daftar pada Google Sheets Update).
    */
   const resumedWorkflowIds = new Set<string>();
 
@@ -1951,11 +1979,6 @@ export async function resumeWaitingReplies(
 
   for (const waiting of matchedWaits) {
     if (resumedWorkflowIds.has(waiting.workflowId)) {
-      await prisma.waitingExecution.update({
-        where: { id: waiting.id },
-        data: { status: "cancelled" },
-      });
-
       continue;
     }
 

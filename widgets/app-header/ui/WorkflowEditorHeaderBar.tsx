@@ -8,9 +8,10 @@ import {
   InfoIcon,
   SettingsIcon,
 } from "lucide-react";
-import { Button, Badge, Spinner } from "@/shared/ui";
+import { Button, Badge, Spinner, toast } from "@/shared/ui";
 import { ROUTES } from "@/shared/config/constants";
 import { useWorkflowStore } from "@/entities/workflow";
+import { useWhatsappSessionStore } from "@/entities/whatsapp-session";
 
 /**
  * Renders workflow editor toolbar controls inside the shared AppHeader.
@@ -23,12 +24,50 @@ export function WorkflowEditorHeaderBar() {
 
   const isEditorPage = /^\/workflows\/[^/]+$/.test(pathname ?? "");
 
-  const { name, isDirty, isExecuting, errorMessage, executeWorkflow } =
+  const { name, isDirty, isExecuting, errorMessage, executeWorkflow, nodes } =
     useWorkflowStore();
+
+  const { checkIsSessionActive } = useWhatsappSessionStore();
 
   if (!isEditorPage) {
     return null;
   }
+
+  /**
+   * Menjalankan workflow. Bila terdapat node kirim/terima pesan WhatsApp yang
+   * memakai Baileys, sesi WhatsApp diperiksa lebih dulu. Jika sesi sudah habis,
+   * pengguna diberi tahu lewat toast agar login ulang dan workflow tidak
+   * dijalankan.
+   */
+  const handleRun = async () => {
+    const hasBaileysWhatsappNode = nodes.some((node) => {
+      if (node.data.kind === "whatsapp_trigger") {
+        return true;
+      }
+
+      if (node.data.kind === "whatsapp_send") {
+        const provider = String(node.data.config?.provider ?? "whapi");
+        return provider === "baileys";
+      }
+
+      return false;
+    });
+
+    if (hasBaileysWhatsappNode) {
+      const isSessionActive = await checkIsSessionActive();
+
+      if (!isSessionActive) {
+        toast.warning("Sesi WhatsApp sudah habis", {
+          description:
+            "Hubungkan ulang WhatsApp di halaman Credentials sebelum menjalankan workflow ini.",
+        });
+
+        return;
+      }
+    }
+
+    await executeWorkflow();
+  };
 
   return (
     <div className="flex flex-1 items-center gap-3">
@@ -64,7 +103,7 @@ export function WorkflowEditorHeaderBar() {
           variant="outline"
           size="sm"
           disabled={isExecuting}
-          onClick={executeWorkflow}
+          onClick={handleRun}
         >
           {isExecuting ? <Spinner /> : <PlayIcon />}
           Run

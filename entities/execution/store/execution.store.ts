@@ -4,6 +4,7 @@ import type {
   Execution,
   ExecutionDetail,
   ExecutionStatus,
+  NodeLog,
 } from "../model/execution.model";
 
 /**
@@ -23,6 +24,7 @@ interface ExecutionState {
   fetchExecutions: (workflowId?: string) => Promise<void>;
   fetchExecutionDetail: (executionId: string) => Promise<void>;
   pollLatestStatus: (workflowId: string) => Promise<void>;
+  loadNodeLogs: (executionId: string) => Promise<NodeLog[]>;
   clearDetail: () => void;
 }
 
@@ -72,6 +74,20 @@ export const useExecutionStore = create<ExecutionState>((set) => ({
       set({ latestStatus: latest ? latest.status : null });
     } catch {
       set({ latestStatus: null });
+    }
+  },
+
+  /**
+   * Mengambil nodeLogs (terurut) dari sebuah eksekusi tanpa mengubah
+   * `selectedDetail`. Dipakai animasi run untuk memutar urutan node yang
+   * benar-benar dieksekusi.
+   */
+  loadNodeLogs: async (executionId) => {
+    try {
+      const detail = await executionService.getById(executionId);
+      return detail.nodeLogs;
+    } catch {
+      return [];
     }
   },
 

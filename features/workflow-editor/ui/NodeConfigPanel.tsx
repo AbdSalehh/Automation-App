@@ -89,6 +89,12 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
       placeholder: "0 = kirim langsung",
       hint: "Jika diisi, pesan dijadwalkan setelah N menit. Saat jatuh tempo, data dicek ulang — jika kondisi sudah tidak terpenuhi (mis. sudah bayar), pengiriman dibatalkan otomatis.",
     },
+    {
+      key: "sendDelaySeconds",
+      label: "Jeda Antar Pengiriman (detik)",
+      placeholder: "2",
+      hint: "Saat mengirim ke banyak nomor sekaligus, beri jeda antar pesan agar tidak terkirim di detik yang sama. Default 2 detik.",
+    },
   ],
   whatsapp_trigger: [
     {

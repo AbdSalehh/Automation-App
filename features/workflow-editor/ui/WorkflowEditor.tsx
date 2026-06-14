@@ -28,6 +28,7 @@ import { LabeledEdge } from "./LabeledEdge";
 import { CanvasControls } from "./CanvasControls";
 import { NodeConfigPanel } from "./NodeConfigPanel";
 import { FlowInfoPanel } from "./FlowInfoPanel";
+import { useRunAnimation } from "../model/useRunAnimation";
 
 export function WorkflowEditor() {
   const { nodes, edges, setNodes, setEdges, workflowId, isExecuting } =
@@ -44,8 +45,21 @@ export function WorkflowEditor() {
 
   const { fetchPreview, fetchSheetList } = useSheetPreviewStore();
 
+  const { lastExecutionId } = useWorkflowStore();
+
   /** True while the most recent run (manual or scheduled) is in progress. */
   const isRunning = isExecuting || latestStatus === "running";
+
+  /**
+   * State animasi run berurutan: node yang sedang berjalan (spinner), edge yang
+   * sedang dilewati, dan status akhir tiap node (done/failed).
+   */
+  const { activeEdgeId, nodeStateById } = useRunAnimation(
+    nodes,
+    edges,
+    isExecuting,
+    lastExecutionId,
+  );
 
   /**
    * Poll the latest execution status while a run is active so edges keep
@@ -69,19 +83,25 @@ export function WorkflowEditor() {
     return () => clearInterval(intervalId);
   }, [workflowId, isRunning, pollLatestStatus]);
 
-  /** Inject the animated flag into edges while running, without mutating store. */
+  /** Animasikan hanya edge yang sedang aktif (berurutan), bukan semua edge. */
   const displayEdges = useMemo(() => {
     const baseEdges = edges as unknown as Edge[];
 
-    if (!isRunning) {
-      return baseEdges;
-    }
-
     return baseEdges.map((edge) => ({
       ...edge,
-      data: { ...edge.data, animated: true },
+      data: { ...edge.data, animated: edge.id === activeEdgeId },
     }));
-  }, [edges, isRunning]);
+  }, [edges, activeEdgeId]);
+
+  /** Inject run-state ke tiap node agar bisa menampilkan spinner / status. */
+  const displayNodes = useMemo(() => {
+    const baseNodes = nodes as unknown as Node[];
+
+    return baseNodes.map((node) => ({
+      ...node,
+      data: { ...node.data, __runState: nodeStateById[node.id] ?? "idle" },
+    }));
+  }, [nodes, nodeStateById]);
 
   /** Sheets nodes whose data can be previewed in the bottom drawer. */
   const SHEET_NODE_KINDS = useMemo(
@@ -166,7 +186,7 @@ export function WorkflowEditor() {
     <div className="flex h-full flex-1">
       <div className="relative flex-1 bg-muted/30">
         <ReactFlow
-          nodes={nodes as unknown as Node[]}
+          nodes={displayNodes}
           edges={displayEdges}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}

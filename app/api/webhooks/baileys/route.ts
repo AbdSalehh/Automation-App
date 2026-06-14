@@ -19,6 +19,7 @@ interface BaileysWebhookPayload {
   sender: string;
   message: string;
   name?: string;
+  sentAt?: string;
   receivedAt?: string;
 }
 
@@ -43,6 +44,7 @@ export async function POST(request: Request) {
       sender: String(raw.sender),
       message: String(raw.message),
       name: String(raw.name ?? ""),
+      sentAt: raw.sentAt ?? "",
       receivedAt: raw.receivedAt ?? new Date().toISOString(),
     };
 

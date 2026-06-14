@@ -173,6 +173,58 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/**
+ * Menghasilkan kunci telepon kanonik agar nomor format lokal dan internasional
+ * dianggap sama. Langkah: buang semua non-digit, buang kode negara di depan
+ * bila ada, lalu buang `0` di depan.
+ *
+ * Contoh dengan countryCode "62": "08123456789", "628123456789",
+ * dan "+62 812-3456-789" semuanya menjadi "8123456789".
+ */
+function normalizePhoneKey(value: string, countryCode = "62"): string {
+  let digits = String(value ?? "").replace(/\D/g, "");
+
+  if (!digits) {
+    return "";
+  }
+
+  const code = countryCode.replace(/\D/g, "");
+
+  /** Buang kode negara di depan (mis. 62) bila masih tersisa digit di belakangnya. */
+  if (code && digits.startsWith(code) && digits.length > code.length) {
+    digits = digits.slice(code.length);
+  }
+
+  /** Buang trunk prefix "0" di depan (format lokal). */
+  digits = digits.replace(/^0+/, "");
+
+  return digits;
+}
+
+/**
+ * Membandingkan dua nomor telepon setelah dinormalisasi ke kunci kanonik.
+ * Mengizinkan kecocokan saling-suffix untuk mengakomodasi sisa kode negara
+ * yang tak terduga.
+ */
+function isSamePhoneKey(
+  left: string,
+  right: string,
+  countryCode = "62",
+): boolean {
+  const leftKey = normalizePhoneKey(left, countryCode);
+  const rightKey = normalizePhoneKey(right, countryCode);
+
+  if (!leftKey || !rightKey) {
+    return false;
+  }
+
+  return (
+    leftKey === rightKey ||
+    leftKey.endsWith(rightKey) ||
+    rightKey.endsWith(leftKey)
+  );
+}
+
 async function sendFonnte(
   credential: Record<string, string>,
   target: string,
@@ -962,9 +1014,16 @@ async function runNode(
           item,
         );
 
-        // Normalise phone-ish values (strip non-digits) for robust matching.
+        /**
+         * Samakan nomor format lokal/internasional memakai kunci telepon
+         * kanonik. Untuk nilai non-telepon (tanpa digit), jatuh ke string
+         * yang sudah dipangkas agar kecocokan teks biasa tetap bekerja.
+         */
+        const matchCountryCode = String(config.countryCode ?? "62");
+
         const normalise = (value: string) =>
-          value.replace(/\D/g, "") || value.trim();
+          normalizePhoneKey(value, matchCountryCode) || value.trim();
+
         const wanted = normalise(wantedRaw);
 
         const columnResponse = await requestExternal(
@@ -1415,15 +1474,23 @@ async function runNode(
 
       const matchField = String(config.matchField ?? "").trim();
 
+      /** Kode negara untuk menormalkan nomor (default Indonesia 62). */
+      const replyCountryCode = String(config.countryCode ?? "62");
+
       /**
        * Computes the reply match key (usually a phone number) for a single
        * row. Each target waits independently, so the key is derived per row
-       * rather than from the first row only.
+       * rather than from the first row only. Nomor dinormalkan ke kunci
+       * kanonik agar cocok dengan balasan yang tiba dalam format internasional.
        */
-      const computeMatchKey = (row: Item): string =>
-        resolveTemplate(String(config.matchValue ?? ""), row) ||
-        (matchField ? String(row[matchField] ?? "") : "") ||
-        String(row.__waTarget ?? row.phone ?? row.Nomor ?? row.nomor ?? "");
+      const computeMatchKey = (row: Item): string => {
+        const rawKey =
+          resolveTemplate(String(config.matchValue ?? ""), row) ||
+          (matchField ? String(row[matchField] ?? "") : "") ||
+          String(row.__waTarget ?? row.phone ?? row.Nomor ?? row.nomor ?? "");
+
+        return normalizePhoneKey(rawKey, replyCountryCode) || rawKey.trim();
+      };
 
       /** One wait target per row; rows without a usable key are dropped. */
       const waitTargets = items
@@ -1854,6 +1921,23 @@ export async function resumeWorkflow(
     }));
 
     resumeOutput = { rows: enrichedRows, ...reply, __replyAt: replyAt };
+
+    /**
+     * Catat penanda balasan terstruktur agar editor bisa memunculkan toast
+     * "balasan masuk" saat workflow berjalan. Format: __REPLY__|sender|name|message
+     * (message dipangkas agar log tetap ringkas).
+     */
+    const replySender = String(reply.sender ?? "");
+    const replyName = String(reply.name ?? "");
+    const replyMessage = String(reply.message ?? "")
+      .replace(/\s+/g, " ")
+      .slice(0, 200);
+
+    await writeLog(
+      waiting.executionId,
+      "info",
+      `__REPLY__|${replySender}|${replyName}|${replyMessage}`,
+    );
   } else {
     resumeOutput = {
       rows: pauseRows,
@@ -1956,16 +2040,9 @@ export async function resumeWaitingReplies(
     orderBy: { createdAt: "asc" },
   });
 
-  const matchedWaits = waitingList.filter((waiting) => {
-    const keyDigits = (waiting.matchKey ?? "").replace(/\D/g, "");
-
-    return (
-      keyDigits.length > 0 &&
-      (keyDigits === senderDigits ||
-        keyDigits.endsWith(senderDigits) ||
-        senderDigits.endsWith(keyDigits))
-    );
-  });
+  const matchedWaits = waitingList.filter((waiting) =>
+    isSamePhoneKey(waiting.matchKey ?? "", senderDigits),
+  );
 
   /**
    * Tanpa batasan jumlah balasan: tiap balasan masuk melanjutkan SATU wait

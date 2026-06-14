@@ -55,8 +55,27 @@ interface ConfigFieldDef {
   placeholder?: string;
   /** Render as a dropdown of live spreadsheet columns. */
   columnSelect?: boolean;
+  /** Render as a dropdown with a fixed set of options. */
+  selectOptions?: { value: string; label: string }[];
   hint?: string;
 }
+
+/**
+ * Pilihan kode negara untuk normalisasi nomor pada node Wait Reply. Indonesia
+ * didahulukan; sisanya negara yang umum dipakai.
+ */
+const COUNTRY_CODE_OPTIONS = [
+  { value: "62", label: "\uD83C\uDDEE\uD83C\uDDE9 Indonesia (+62)" },
+  { value: "60", label: "\uD83C\uDDF2\uD83C\uDDFE Malaysia (+60)" },
+  { value: "65", label: "\uD83C\uDDF8\uD83C\uDDEC Singapura (+65)" },
+  { value: "63", label: "\uD83C\uDDF5\uD83C\uDDED Filipina (+63)" },
+  { value: "66", label: "\uD83C\uDDF9\uD83C\uDDED Thailand (+66)" },
+  { value: "84", label: "\uD83C\uDDFB\uD83C\uDDF3 Vietnam (+84)" },
+  { value: "91", label: "\uD83C\uDDEE\uD83C\uDDF3 India (+91)" },
+  { value: "1", label: "\uD83C\uDDFA\uD83C\uDDF8 US / Canada (+1)" },
+  { value: "44", label: "\uD83C\uDDEC\uD83C\uDDE7 UK (+44)" },
+  { value: "61", label: "\uD83C\uDDE6\uD83C\uDDFA Australia (+61)" },
+];
 
 const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
   http_request: [
@@ -128,6 +147,12 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
       key: "matchValue",
       label: "Atau Nomor Manual / Template",
       placeholder: "{{Nomor}}",
+    },
+    {
+      key: "countryCode",
+      label: "Kode Negara",
+      selectOptions: COUNTRY_CODE_OPTIONS,
+      hint: "Dipakai menyamakan format nomor lokal (mis. 08xxx) dengan balasan internasional (mis. 628xxx).",
     },
   ],
   telegram_send: [
@@ -760,7 +785,30 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                   {configField.label}
                 </label>
 
-                {configField.columnSelect ? (
+                {configField.selectOptions ? (
+                  <Select
+                    value={String(
+                      node.data.config[configField.key] ??
+                        configField.selectOptions[0]?.value ??
+                        "",
+                    )}
+                    onValueChange={(value) =>
+                      updateConfigValue(configField.key, value)
+                    }
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="\u2014 pilih \u2014" />
+                    </SelectTrigger>
+
+                    <SelectContent>
+                      {configField.selectOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : configField.columnSelect ? (
                   <div className="flex items-center gap-2">
                     <Select
                       value={String(node.data.config[configField.key] ?? "")}

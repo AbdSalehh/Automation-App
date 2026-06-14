@@ -21,7 +21,7 @@ import {
   useSheetPreviewStore,
   type FlowNode,
 } from "@/entities/workflow";
-import { Modal } from "@/shared/ui";
+import { Modal, toast } from "@/shared/ui";
 import { useExecutionStore } from "@/entities/execution";
 import { WorkflowNode } from "./WorkflowNode";
 import { LabeledEdge } from "./LabeledEdge";
@@ -34,7 +34,8 @@ export function WorkflowEditor() {
   const { nodes, edges, setNodes, setEdges, workflowId, isExecuting } =
     useWorkflowStore();
 
-  const { latestStatus, pollLatestStatus } = useExecutionStore();
+  const { latestStatus, pollLatestStatus, pollInboundReplies } =
+    useExecutionStore();
 
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [isMiniMapVisible, setIsMiniMapVisible] = useState(true);
@@ -82,6 +83,33 @@ export function WorkflowEditor() {
 
     return () => clearInterval(intervalId);
   }, [workflowId, isRunning, pollLatestStatus]);
+
+  /**
+   * Polling balasan WhatsApp masuk selama editor terbuka. Tiap balasan baru
+   * memunculkan toast agar pengguna tahu balasan tiba saat workflow berjalan.
+   */
+  useEffect(() => {
+    if (!workflowId) {
+      return;
+    }
+
+    /** Panggilan pertama menetapkan garis dasar (tanpa toast balasan lama). */
+    pollInboundReplies(workflowId);
+
+    const intervalId = setInterval(async () => {
+      const replies = await pollInboundReplies(workflowId);
+
+      for (const reply of replies) {
+        const senderLabel = reply.name || reply.sender || "WhatsApp";
+
+        toast.info(`📩 Balasan dari ${senderLabel}`, {
+          description: reply.message,
+        });
+      }
+    }, 3000);
+
+    return () => clearInterval(intervalId);
+  }, [workflowId, pollInboundReplies]);
 
   /** Animasikan hanya edge yang sedang aktif (berurutan), bukan semua edge. */
   const displayEdges = useMemo(() => {

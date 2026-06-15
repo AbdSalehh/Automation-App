@@ -1,13 +1,17 @@
 import { prisma } from "@/shared/lib/prisma";
 import { handleRoute, ok, badRequest } from "@/shared/api/http";
 import { runWorkflow, resumeWaitingReplies } from "@/shared/server/engine";
+import { decryptWebhookJson } from "@/shared/lib/webhookCrypto";
 import type { FlowNode } from "@/entities/workflow/model/workflow.model";
 
 /**
  * Webhook pesan masuk dari WhatsApp API Service (Express + Baileys) multi-session.
  *
- * Express meneruskan tiap pesan masuk ke endpoint ini dengan payload:
- *   { sessionId, sender, message, name?, receivedAt? }
+ * Express meneruskan tiap pesan masuk ke endpoint ini. Format baru (disarankan)
+ * mengirim satu field `payload` berisi token terenkripsi (AES-256-GCM) yang
+ * berisi `{ sessionId, sender, message, name?, ... }`, dengan `sender` sudah
+ * berupa nomor telepon asli (LID sudah diresolusi di backend). Format lama
+ * (field plaintext) tetap didukung sebagai fallback.
  *
  * `sessionId` menandakan akun (user) mana yang menerima pesan. Hanya workflow
  * milik user tersebut yang dilanjutkan/dipicu, sehingga balasan satu user tidak
@@ -15,12 +19,14 @@ import type { FlowNode } from "@/entities/workflow/model/workflow.model";
  * tepercaya (tanpa auth header).
  */
 interface BaileysWebhookPayload {
-  sessionId: string;
-  sender: string;
-  message: string;
+  sessionId?: string;
+  sender?: string;
+  message?: string;
   name?: string;
   sentAt?: string;
   receivedAt?: string;
+  /** Token terenkripsi berisi field di atas (format baru). */
+  payload?: string;
 }
 
 export async function POST(request: Request) {
@@ -33,19 +39,33 @@ export async function POST(request: Request) {
       return badRequest("Body bukan JSON yang valid");
     }
 
-    if (!raw.sessionId || !raw.sender || !raw.message) {
+    /**
+     * Format baru: payload terenkripsi. Di-decrypt memakai kunci bersama
+     * `WEBHOOK_ENCRYPTION_KEY`. Bila gagal, anggap body tidak sah.
+     */
+    let source: BaileysWebhookPayload = raw;
+
+    if (raw.payload) {
+      try {
+        source = decryptWebhookJson<BaileysWebhookPayload>(raw.payload);
+      } catch {
+        return badRequest("Payload terenkripsi tidak dapat di-decrypt");
+      }
+    }
+
+    if (!source.sessionId || !source.sender || !source.message) {
       return badRequest(
         "Payload tidak lengkap: sessionId, sender, dan message wajib diisi",
       );
     }
 
     const payload = {
-      sessionId: String(raw.sessionId),
-      sender: String(raw.sender),
-      message: String(raw.message),
-      name: String(raw.name ?? ""),
-      sentAt: raw.sentAt ?? "",
-      receivedAt: raw.receivedAt ?? new Date().toISOString(),
+      sessionId: String(source.sessionId),
+      sender: String(source.sender),
+      message: String(source.message),
+      name: String(source.name ?? ""),
+      sentAt: source.sentAt ?? "",
+      receivedAt: source.receivedAt ?? new Date().toISOString(),
     };
 
     /** Lanjutkan eksekusi wait_reply yang menunggu balasan dari pengirim ini. */

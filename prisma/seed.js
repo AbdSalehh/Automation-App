@@ -110,7 +110,7 @@ const REMINDER_NODES = JSON.stringify([
       kind: "whatsapp_send",
       label: "Kirim Reminder WA",
       config: {
-        provider: "whapi",
+        provider: "baileys",
         targetField: "Nomor",
         message:
           "Halo {{Nama}} 👋\n\nPembayaran Anda belum kami terima. Batas waktu pembayaran {{Deadline}}.\nBalas pesan ini setelah melakukan pembayaran ya. Terima kasih 🙏",
@@ -258,7 +258,7 @@ const SCHEDULE_REMINDER_NODES = JSON.stringify([
       kind: "whatsapp_send",
       label: "Kirim Reminder WA",
       config: {
-        provider: "whapi",
+        provider: "baileys",
         targetField: "Nomor",
         message:
           "Halo {{Nama}} 👋\n\nPembayaran Anda belum kami terima. Mohon segera melakukan pembayaran.\nBalas pesan ini setelah transfer ya. Terima kasih 🙏",

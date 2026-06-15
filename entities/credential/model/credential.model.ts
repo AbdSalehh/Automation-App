@@ -29,32 +29,35 @@ export const CREDENTIAL_FIELDS: Record<CredentialType, CredentialFieldDef[]> = {
     { key: "businessAccountId", label: "Business Account ID" },
     { key: "phoneNumberId", label: "Phone Number ID" },
   ],
-  whatsapp_fonnte: [
-    {
-      key: "apiKey",
-      label: "API Key Fonnte",
-      secret: true,
-      placeholder: "Salin dari dashboard.fonnte.com → Device",
-    },
-  ],
-  whatsapp_whapi: [
-    {
-      key: "apiToken",
-      label: "API Token Whapi",
-      secret: true,
-      placeholder: "Salin dari panel.whapi.cloud → Channel → Token",
-    },
-  ],
   whatsapp_oauth: [
     { key: "clientId", label: "Client ID" },
     { key: "clientSecret", label: "Client Secret", secret: true },
   ],
   telegram: [{ key: "botToken", label: "Bot Token", secret: true }],
+  telegram_personal: [
+    {
+      key: "apiId",
+      label: "API ID",
+      placeholder: "Dari my.telegram.org → API development tools",
+    },
+    { key: "apiHash", label: "API Hash", secret: true },
+    {
+      key: "phoneNumber",
+      label: "Nomor Telegram",
+      placeholder: "+628123456789",
+    },
+  ],
+  gemini: [
+    {
+      key: "apiKey",
+      label: "API Key Gemini",
+      secret: true,
+      placeholder: "Dari aistudio.google.com → Get API key",
+    },
+  ],
   google_oauth: [
     { key: "clientId", label: "Client ID" },
     { key: "clientSecret", label: "Client Secret", secret: true },
-    { key: "refreshToken", label: "Refresh Token", secret: true },
-    { key: "scopes", label: "Scopes (comma separated)" },
   ],
   google_service_account: [
     { key: "clientEmail", label: "Client Email" },

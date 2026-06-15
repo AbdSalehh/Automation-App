@@ -11,6 +11,11 @@ export type NodeKind =
   | "whatsapp_send"
   | "whatsapp_trigger"
   | "telegram_send"
+  | "telegram_trigger"
+  | "gmail_send"
+  | "google_drive_upload"
+  | "google_drive_list"
+  | "ai_gemini"
   | "google_sheets_append"
   | "google_sheets_read"
   | "google_sheets_update"
@@ -26,7 +31,7 @@ export type NodeKind =
   | "condition";
 
 /** WhatsApp delivery provider, chosen per-node via the provider dropdown. */
-export type WhatsAppProvider = "whapi" | "fonnte" | "meta" | "baileys";
+export type WhatsAppProvider = "meta" | "baileys";
 
 export interface NodeTypeDef {
   kind: NodeKind;
@@ -101,7 +106,7 @@ export const NODE_TYPES: NodeTypeDef[] = [
     category: "action",
     label: "Send WhatsApp",
     description:
-      "Kirim pesan WhatsApp. Pilih provider: Whapi, Fonnte, atau Meta.",
+      "Kirim pesan WhatsApp via Baileys (self-hosted) atau Meta Business API.",
     icon: "MessageCircle",
     outputs: ["sent", "pending", "rows"],
   },
@@ -109,8 +114,7 @@ export const NODE_TYPES: NodeTypeDef[] = [
     kind: "whatsapp_trigger",
     category: "trigger",
     label: "WhatsApp Reply",
-    description:
-      "Trigger saat ada balasan WhatsApp masuk (via webhook Whapi/Fonnte).",
+    description: "Trigger saat ada balasan WhatsApp masuk (via Baileys).",
     icon: "MessageSquareReply",
     outputs: ["sender", "message", "name"],
   },
@@ -118,10 +122,19 @@ export const NODE_TYPES: NodeTypeDef[] = [
     kind: "telegram_send",
     category: "action",
     label: "Send Telegram",
-    description: "Send a message via Telegram Bot.",
+    description: "Kirim pesan via Telegram Bot atau nomor pribadi.",
     icon: "Send",
     credentialType: "telegram",
     outputs: ["sent", "results"],
+  },
+  {
+    kind: "telegram_trigger",
+    category: "trigger",
+    label: "Telegram Reply",
+    description: "Trigger saat ada pesan/balasan Telegram masuk.",
+    icon: "MessageSquareReply",
+    credentialType: "telegram",
+    outputs: ["sender", "message", "name"],
   },
   {
     kind: "google_sheets_append",
@@ -158,7 +171,7 @@ export const NODE_TYPES: NodeTypeDef[] = [
     description:
       "Triggers when a calendar event is created, updated, or deleted.",
     icon: "CalendarClock",
-    credentialType: "google_calendar",
+    credentialType: "google_oauth",
     outputs: ["event", "at"],
   },
   {
@@ -167,7 +180,7 @@ export const NODE_TYPES: NodeTypeDef[] = [
     label: "Create Calendar Event",
     description: "Create a new event in Google Calendar.",
     icon: "CalendarPlus",
-    credentialType: "google_calendar",
+    credentialType: "google_oauth",
     outputs: ["eventId", "htmlLink"],
   },
   {
@@ -176,8 +189,44 @@ export const NODE_TYPES: NodeTypeDef[] = [
     label: "List Calendar Events",
     description: "Fetch a list of upcoming events from Google Calendar.",
     icon: "CalendarDays",
-    credentialType: "google_calendar",
+    credentialType: "google_oauth",
     outputs: ["events", "count"],
+  },
+  {
+    kind: "gmail_send",
+    category: "action",
+    label: "Send Gmail",
+    description: "Kirim email lewat akun Gmail yang terhubung.",
+    icon: "Mail",
+    credentialType: "google_oauth",
+    outputs: ["messageId", "threadId"],
+  },
+  {
+    kind: "google_drive_upload",
+    category: "action",
+    label: "Google Drive Upload",
+    description: "Unggah file teks ke Google Drive.",
+    icon: "Upload",
+    credentialType: "google_oauth",
+    outputs: ["fileId", "webViewLink"],
+  },
+  {
+    kind: "google_drive_list",
+    category: "action",
+    label: "Google Drive List",
+    description: "Daftar file di Google Drive (opsional dalam satu folder).",
+    icon: "FolderOpen",
+    credentialType: "google_oauth",
+    outputs: ["files", "count"],
+  },
+  {
+    kind: "ai_gemini",
+    category: "action",
+    label: "AI Gemini",
+    description: "Hasilkan teks dengan Google Gemini dari prompt.",
+    icon: "Sparkles",
+    credentialType: "gemini",
+    outputs: ["text", "raw"],
   },
   {
     kind: "date_calculator",

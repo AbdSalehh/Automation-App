@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useSession } from "next-auth/react";
 
 import { useWhatsappSessionStore } from "@/entities/whatsapp-session";
+import { Spinner } from "@/shared/ui";
 import { cn } from "@/shared/lib/utils";
 
 /**
@@ -17,6 +18,7 @@ export const WhatsappQrLogin = () => {
     status,
     qrDataUrl,
     isReady,
+    isPolling,
     pollSessionStatus,
     subscribeSession,
     unsubscribeSession,
@@ -77,9 +79,12 @@ export const WhatsappQrLogin = () => {
       )}
 
       {!isReady && !qrDataUrl && (
-        <p className="text-sm text-muted-foreground">
-          Menyiapkan QR code, mohon tunggu...
-        </p>
+        <div className="flex h-[264px] w-[264px] flex-col items-center justify-center gap-3 rounded-xl border border-border bg-muted/30">
+          <Spinner className="h-8 w-8 text-muted-foreground" />
+          <p className="text-xs text-muted-foreground">
+            {isPolling ? "Memuat status sesi..." : "Menyiapkan QR code..."}
+          </p>
+        </div>
       )}
 
       <p className="max-w-xs text-center text-xs text-muted-foreground">

@@ -46,7 +46,7 @@ export function WorkflowEditorHeaderBar() {
       }
 
       if (node.data.kind === "whatsapp_send") {
-        const provider = String(node.data.config?.provider ?? "whapi");
+        const provider = String(node.data.config?.provider ?? "baileys");
         return provider === "baileys";
       }
 

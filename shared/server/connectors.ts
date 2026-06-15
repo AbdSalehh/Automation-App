@@ -65,184 +65,6 @@ export const CONNECTORS: Record<string, Connector> = {
     },
   },
 
-  whatsapp_fonnte: {
-    type: "whatsapp_fonnte",
-    test: async (credential) => {
-      if (!credential.apiKey) {
-        return { ok: false, message: "apiKey Fonnte wajib diisi" };
-      }
-
-      const apiKey = credential.apiKey.trim();
-
-      const deviceResponse = await requestExternal(
-        "https://api.fonnte.com/device",
-        {
-          method: "POST",
-          headers: {
-            Authorization: apiKey,
-            "Content-Type": "application/json",
-          },
-          data: {},
-        },
-      );
-
-      if (deviceResponse.status === 401 || deviceResponse.status === 403) {
-        return {
-          ok: false,
-          message:
-            "API key tidak valid — salin ulang token dari dashboard.fonnte.com → Device → Token",
-        };
-      }
-
-      if (deviceResponse.ok) {
-        const body = deviceResponse.body as {
-          status?: boolean;
-          message?: string;
-          data?: Array<{
-            name?: string;
-            device?: string;
-            status?: string;
-            quota?: number;
-          }>;
-        };
-
-        // status: false means auth failed in Fonnte's own envelope
-        if (body.status === false) {
-          return {
-            ok: false,
-            message: body.message ?? "API key tidak valid",
-          };
-        }
-
-        const devices = body.data ?? [];
-        const firstDevice = devices[0];
-        const deviceName = firstDevice?.name ?? firstDevice?.device ?? "";
-        const quota = firstDevice?.quota;
-
-        const resultMessage = [
-          "Koneksi Fonnte berhasil",
-          deviceName && `device: ${deviceName}`,
-          quota !== undefined && `sisa kuota: ${quota}`,
-        ]
-          .filter(Boolean)
-          .join(" — ");
-
-        return { ok: true, message: resultMessage };
-      }
-
-      // Fallback: try /send with countOnly=1 (dry-run, zero cost, validates token)
-      const dryRunResponse = await requestExternal(
-        "https://api.fonnte.com/send",
-        {
-          method: "POST",
-          headers: {
-            Authorization: apiKey,
-            "Content-Type": "application/json",
-          },
-          data: {
-            target: "628000000000",
-            message: "test",
-            countOnly: "1",
-          },
-        },
-      );
-
-      if (dryRunResponse.status === 401 || dryRunResponse.status === 403) {
-        return {
-          ok: false,
-          message:
-            "API key tidak valid — salin ulang token dari dashboard.fonnte.com → Device → Token",
-        };
-      }
-
-      if (!dryRunResponse.ok) {
-        return {
-          ok: false,
-          message: `Fonnte tidak merespons dengan benar (status ${dryRunResponse.status}). Pastikan device sudah Connected di Fonnte.`,
-        };
-      }
-
-      const fallbackBody = dryRunResponse.body as {
-        status?: boolean;
-        message?: string;
-        quota?: Record<string, { quota?: number; remaining?: number }>;
-      };
-
-      if (fallbackBody.status === false) {
-        return {
-          ok: false,
-          message: fallbackBody.message ?? "API key tidak valid",
-        };
-      }
-
-      // Extract quota info from response for a friendlier message
-      const quotaEntries = Object.values(fallbackBody.quota ?? {});
-      const remaining = quotaEntries[0]?.remaining;
-
-      const resultMessage = [
-        "Koneksi Fonnte berhasil",
-        remaining !== undefined && `sisa kuota: ${remaining}`,
-      ]
-        .filter(Boolean)
-        .join(" — ");
-
-      return { ok: true, message: resultMessage };
-    },
-  },
-
-  whatsapp_whapi: {
-    type: "whatsapp_whapi",
-    test: async (credential) => {
-      if (!credential.apiToken) {
-        return { ok: false, message: "apiToken Whapi wajib diisi" };
-      }
-
-      const apiToken = credential.apiToken.trim();
-
-      const healthResponse = await requestExternal(
-        "https://gate.whapi.cloud/health",
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${apiToken}`,
-            "Content-Type": "application/json",
-          },
-        },
-      );
-
-      if (healthResponse.status === 401 || healthResponse.status === 403) {
-        return {
-          ok: false,
-          message:
-            "API token tidak valid — salin ulang token dari panel.whapi.cloud → Channel → Token",
-        };
-      }
-
-      if (!healthResponse.ok) {
-        return {
-          ok: false,
-          message: `Whapi tidak merespons dengan benar (status ${healthResponse.status}). Pastikan channel sudah aktif.`,
-        };
-      }
-
-      const body = healthResponse.body as {
-        status?: { text?: string } | string;
-      };
-
-      const channelStatus =
-        typeof body.status === "string" ? body.status : body.status?.text;
-
-      const resultMessage = [
-        "Koneksi Whapi berhasil",
-        channelStatus && `status channel: ${channelStatus}`,
-      ]
-        .filter(Boolean)
-        .join(" — ");
-
-      return { ok: true, message: resultMessage };
-    },
-  },
-
   telegram: {
     type: "telegram",
     test: async (credential) => {
@@ -263,6 +85,62 @@ export const CONNECTORS: Record<string, Connector> = {
         ?.result?.username;
 
       return { ok: true, message: `Bot terhubung: @${botUsername ?? "bot"}` };
+    },
+  },
+
+  telegram_personal: {
+    type: "telegram_personal",
+    test: async (credential) => {
+      if (!credential.apiId || !credential.apiHash || !credential.phoneNumber) {
+        return {
+          ok: false,
+          message: "apiId, apiHash & phoneNumber wajib diisi",
+        };
+      }
+
+      if (!/^\d+$/.test(credential.apiId.trim())) {
+        return { ok: false, message: "apiId harus berupa angka" };
+      }
+
+      if (!/^\+?\d{8,15}$/.test(credential.phoneNumber.trim())) {
+        return {
+          ok: false,
+          message: "Format nomor Telegram tidak valid (mis. +628123456789)",
+        };
+      }
+
+      return {
+        ok: true,
+        message:
+          "Format kredensial valid — login sesi dilakukan saat workflow pertama berjalan",
+      };
+    },
+  },
+
+  gemini: {
+    type: "gemini",
+    test: async (credential) => {
+      if (!credential.apiKey) {
+        return { ok: false, message: "apiKey Gemini wajib diisi" };
+      }
+
+      const response = await requestExternal(
+        `https://generativelanguage.googleapis.com/v1beta/models?key=${credential.apiKey.trim()}`,
+        { method: "GET" },
+      );
+
+      if (response.status === 400 || response.status === 403) {
+        return { ok: false, message: "API key Gemini tidak valid" };
+      }
+
+      if (!response.ok) {
+        return {
+          ok: false,
+          message: `Gemini tidak merespons dengan benar (status ${response.status})`,
+        };
+      }
+
+      return { ok: true, message: "Koneksi Gemini berhasil" };
     },
   },
 

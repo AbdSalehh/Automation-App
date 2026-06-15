@@ -226,90 +226,6 @@ function isSamePhoneKey(
   );
 }
 
-async function sendFonnte(
-  credential: Record<string, string>,
-  target: string,
-  message: string,
-  countryCode: string,
-): Promise<Record<string, unknown>> {
-  const response = await requestExternal("https://api.fonnte.com/send", {
-    method: "POST",
-    headers: {
-      Authorization: credential.apiKey,
-      "Content-Type": "application/json",
-    },
-    data: { target, message, countryCode },
-  });
-
-  if (!response.ok) {
-    throw new Error(
-      `WhatsApp Fonnte: gagal mengirim ke ${target} (status ${response.status})`,
-    );
-  }
-
-  const body = response.body as {
-    status?: boolean;
-    reason?: string;
-    id?: unknown;
-  };
-
-  if (body.status === false) {
-    throw new Error(
-      `WhatsApp Fonnte: ${body.reason ?? "gagal mengirim pesan"}`,
-    );
-  }
-
-  // Fonnte returns a message id array; expose it for downstream tracking.
-  const messageId = Array.isArray(body.id) ? body.id[0] : (body.id ?? null);
-
-  return { provider: "fonnte", messageId, raw: body };
-}
-
-async function sendWhapi(
-  credential: Record<string, string>,
-  target: string,
-  message: string,
-): Promise<Record<string, unknown>> {
-  // Whapi expects the recipient in international format without symbols, or a
-  // full chat id (e.g. 628xxx@s.whatsapp.net). Strip non-digits unless a chat
-  // id was already provided.
-  const to = target.includes("@") ? target : target.replace(/\D/g, "");
-
-  const response = await requestExternal(
-    "https://gate.whapi.cloud/messages/text",
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${credential.apiToken}`,
-        "Content-Type": "application/json",
-      },
-      data: { to, body: message },
-    },
-  );
-
-  if (!response.ok) {
-    throw new Error(
-      `WhatsApp Whapi: gagal mengirim ke ${target} (status ${response.status})`,
-    );
-  }
-
-  const body = response.body as {
-    sent?: boolean;
-    message?: { id?: string };
-    error?: { message?: string };
-  };
-
-  if (body.error) {
-    throw new Error(
-      `WhatsApp Whapi: ${body.error.message ?? "gagal mengirim pesan"}`,
-    );
-  }
-
-  const messageId = body.message?.id ?? null;
-
-  return { provider: "whapi", messageId, raw: body };
-}
-
 /**
  * Sends a WhatsApp message via the Meta WhatsApp Business Cloud API.
  */
@@ -380,9 +296,9 @@ async function sendBaileys(
 }
 
 /**
- * Provider dispatcher used by the unified `whatsapp_send` node. Routes the send
- * to Whapi, Fonnte, Meta, or the self-hosted Baileys service based on the
- * selected provider.
+ * Provider dispatcher used by the unified `whatsapp_send` node. Routes the
+ * send to Meta or the self-hosted Baileys service based on the selected
+ * provider.
  */
 async function sendWhatsApp(
   provider: WhatsAppProvider,
@@ -392,19 +308,11 @@ async function sendWhatsApp(
   countryCode: string,
   sessionId: string,
 ): Promise<Record<string, unknown>> {
-  if (provider === "fonnte") {
-    return sendFonnte(credential, target, message, countryCode);
-  }
-
   if (provider === "meta") {
     return sendMeta(credential, target, message);
   }
 
-  if (provider === "baileys") {
-    return sendBaileys(sessionId, target, message);
-  }
-
-  return sendWhapi(credential, target, message);
+  return sendBaileys(sessionId, target, message);
 }
 
 /**
@@ -420,14 +328,6 @@ function assertWhatsAppCredential(
    */
   if (provider === "baileys") {
     return;
-  }
-
-  if (provider === "fonnte" && !credential?.apiKey) {
-    throw new Error("WhatsApp Fonnte: API key tidak ada");
-  }
-
-  if (provider === "whapi" && !credential?.apiToken) {
-    throw new Error("WhatsApp Whapi: API token tidak ada");
   }
 
   if (
@@ -529,6 +429,12 @@ async function runNode(
       );
 
       if (!credential?.botToken) {
+        if (credential?.apiId) {
+          throw new Error(
+            "Telegram nomor pribadi belum didukung di node ini — gunakan kredensial Telegram Bot (BotFather).",
+          );
+        }
+
         throw new Error("Telegram: kredensial tidak ada");
       }
 
@@ -560,8 +466,273 @@ async function runNode(
       return { sent: results.length, results };
     }
 
+    case "telegram_trigger": {
+      /**
+       * Pesan/balasan Telegram masuk. Webhook men-seed triggerPayload dengan
+       * { sender, message, ... }. Ekspos sebagai satu item collection agar node
+       * berikutnya bisa memakai {{sender}}, {{message}}.
+       */
+      const payload = (context.triggerPayload ?? {}) as Record<string, unknown>;
+
+      const enrichedRow = {
+        ...payload,
+        reply: payload.message,
+      };
+
+      return { rows: [enrichedRow], ...enrichedRow };
+    }
+
+    case "ai_gemini": {
+      const credential = await loadCredential(
+        node.data.credentialId,
+        context.ownerId,
+      );
+
+      if (!credential?.apiKey) {
+        throw new Error("Gemini: API key tidak ada");
+      }
+
+      const model = String(config.model ?? "gemini-1.5-flash");
+
+      const items = toItems(input);
+      const itemsToProcess = items.length > 0 ? items : [{}];
+      const results: unknown[] = [];
+
+      for (const item of itemsToProcess) {
+        const prompt = resolveTemplate(
+          String(config.prompt ?? config.text ?? ""),
+          item,
+        );
+
+        if (!prompt) {
+          throw new Error("Gemini: prompt kosong");
+        }
+
+        const response = await requestExternal(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${credential.apiKey.trim()}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            data: { contents: [{ parts: [{ text: prompt }] }] },
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            `Gemini: gagal menghasilkan teks (status ${response.status})`,
+          );
+        }
+
+        const body = response.body as {
+          candidates?: Array<{
+            content?: { parts?: Array<{ text?: string }> };
+          }>;
+        };
+
+        const text = body.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+
+        results.push({ text, raw: body });
+      }
+
+      const first = results[0] as { text?: string; raw?: unknown } | undefined;
+
+      return { text: first?.text ?? "", raw: first?.raw, results };
+    }
+
+    case "gmail_send": {
+      const credential = await loadCredential(
+        node.data.credentialId,
+        context.ownerId,
+      );
+
+      if (!credential) {
+        throw new Error("Gmail: kredensial Google tidak ada");
+      }
+
+      const accessToken = await getGoogleAccessToken(credential);
+
+      const items = toItems(input);
+      const itemsToSend = items.length > 0 ? items : [{}];
+      const results: unknown[] = [];
+
+      for (const item of itemsToSend) {
+        const to = resolveTemplate(String(config.to ?? ""), item);
+        const subject = resolveTemplate(String(config.subject ?? ""), item);
+        const messageBody = resolveTemplate(
+          String(config.body ?? config.text ?? ""),
+          item,
+        );
+
+        if (!to) {
+          throw new Error("Gmail: penerima (to) kosong");
+        }
+
+        const mimeMessage = [
+          `To: ${to}`,
+          `Subject: ${subject}`,
+          "Content-Type: text/plain; charset=UTF-8",
+          "",
+          messageBody,
+        ].join("\n");
+
+        const encodedMessage = Buffer.from(mimeMessage)
+          .toString("base64")
+          .replace(/\+/g, "-")
+          .replace(/\//g, "_")
+          .replace(/=+$/, "");
+
+        const response = await requestExternal(
+          "https://gmail.googleapis.com/gmail/v1/users/me/messages/send",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+            data: { raw: encodedMessage },
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            `Gmail: gagal mengirim ke ${to} (status ${response.status})`,
+          );
+        }
+
+        results.push(response.body);
+      }
+
+      const first = results[0] as
+        | { id?: string; threadId?: string }
+        | undefined;
+
+      return {
+        messageId: first?.id ?? null,
+        threadId: first?.threadId ?? null,
+        sent: results.length,
+        results,
+      };
+    }
+
+    case "google_drive_upload": {
+      const credential = await loadCredential(
+        node.data.credentialId,
+        context.ownerId,
+      );
+
+      if (!credential) {
+        throw new Error("Google Drive: kredensial Google tidak ada");
+      }
+
+      const accessToken = await getGoogleAccessToken(credential);
+
+      const item = (toItems(input)[0] ?? {}) as Item;
+
+      const fileName = resolveTemplate(
+        String(config.filename ?? config.fileName ?? "untitled.txt"),
+        item,
+      );
+      const fileContent = resolveTemplate(
+        String(config.content ?? config.text ?? ""),
+        item,
+      );
+      const folderId = String(config.folderId ?? "").trim();
+
+      const boundary = `automation_${crypto.randomUUID()}`;
+
+      const metadata = {
+        name: fileName,
+        ...(folderId ? { parents: [folderId] } : {}),
+      };
+
+      const multipartBody =
+        `--${boundary}\r\n` +
+        `Content-Type: application/json; charset=UTF-8\r\n\r\n` +
+        `${JSON.stringify(metadata)}\r\n` +
+        `--${boundary}\r\n` +
+        `Content-Type: text/plain; charset=UTF-8\r\n\r\n` +
+        `${fileContent}\r\n` +
+        `--${boundary}--`;
+
+      const response = await requestExternal(
+        "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": `multipart/related; boundary=${boundary}`,
+          },
+          data: multipartBody,
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          `Google Drive: gagal mengunggah file (status ${response.status})`,
+        );
+      }
+
+      const body = response.body as {
+        id?: string;
+        webViewLink?: string;
+      };
+
+      return {
+        fileId: body.id ?? null,
+        webViewLink: body.webViewLink ?? null,
+        raw: body,
+      };
+    }
+
+    case "google_drive_list": {
+      const credential = await loadCredential(
+        node.data.credentialId,
+        context.ownerId,
+      );
+
+      if (!credential) {
+        throw new Error("Google Drive: kredensial Google tidak ada");
+      }
+
+      const accessToken = await getGoogleAccessToken(credential);
+
+      const folderId = String(config.folderId ?? "").trim();
+      const pageSize = Number(config.pageSize ?? 20);
+
+      const query = folderId
+        ? `'${folderId}' in parents and trashed=false`
+        : "trashed=false";
+
+      const listUrl = new URL("https://www.googleapis.com/drive/v3/files");
+      listUrl.searchParams.set("q", query);
+      listUrl.searchParams.set("pageSize", String(pageSize));
+      listUrl.searchParams.set(
+        "fields",
+        "files(id,name,mimeType,webViewLink,modifiedTime)",
+      );
+
+      const response = await requestExternal(listUrl.toString(), {
+        method: "GET",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Google Drive: gagal memuat daftar file (status ${response.status})`,
+        );
+      }
+
+      const body = response.body as {
+        files?: Array<Record<string, unknown>>;
+      };
+
+      const files = body.files ?? [];
+
+      return { files, rows: files, count: files.length };
+    }
+
     case "whatsapp_send": {
-      const provider = String(config.provider ?? "whapi") as WhatsAppProvider;
+      const provider = String(config.provider ?? "baileys") as WhatsAppProvider;
 
       const credential = await loadCredential(
         node.data.credentialId,

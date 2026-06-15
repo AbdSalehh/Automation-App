@@ -27,10 +27,10 @@ export const API_ROUTES = {
 /** Connector types supported by the platform. Mirrors docs/n8n.md. */
 export const CREDENTIAL_TYPES = [
   "whatsapp",
-  "whatsapp_fonnte",
-  "whatsapp_whapi",
   "whatsapp_oauth",
   "telegram",
+  "telegram_personal",
+  "gemini",
   "google_oauth",
   "google_service_account",
   "google_calendar",
@@ -41,11 +41,11 @@ export type CredentialType = (typeof CREDENTIAL_TYPES)[number];
 
 export const CREDENTIAL_TYPE_LABELS: Record<CredentialType, string> = {
   whatsapp: "WhatsApp Business API (Meta)",
-  whatsapp_fonnte: "WhatsApp via Fonnte (Mudah)",
-  whatsapp_whapi: "WhatsApp via Whapi",
   whatsapp_oauth: "WhatsApp OAuth",
-  telegram: "Telegram Bot",
-  google_oauth: "Google OAuth2",
+  telegram: "Telegram Bot (BotFather)",
+  telegram_personal: "Telegram Nomor Pribadi",
+  gemini: "Google Gemini AI",
+  google_oauth: "Google Workspace (OAuth2)",
   google_service_account: "Google Service Account",
   google_calendar: "Google Calendar",
   http: "Generic HTTP",

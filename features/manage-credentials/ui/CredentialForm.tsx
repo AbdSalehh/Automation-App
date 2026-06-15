@@ -35,6 +35,13 @@ export function CredentialForm({ onCreated }: CredentialFormProps) {
 
   const credentialFields = CREDENTIAL_FIELDS[credentialType];
 
+  /**
+   * Google OAuth memakai alur connect-button: user mengisi Client ID & Secret
+   * miliknya, lalu diarahkan ke layar izin Google untuk mendapatkan refresh
+   * token secara otomatis (tanpa Playground).
+   */
+  const isGoogleOAuth = credentialType === "google_oauth";
+
   const updateFieldValue = (fieldKey: string, fieldValue: string) =>
     setFieldValues((currentValues) => ({
       ...currentValues,
@@ -76,6 +83,25 @@ export function CredentialForm({ onCreated }: CredentialFormProps) {
     }
   };
 
+  /**
+   * Mengarahkan browser ke endpoint authorize. Server akan menyimpan Client ID
+   * & Secret sementara di Redis lalu meredirect ke layar izin Google.
+   */
+  const handleConnectGoogle = () => {
+    const params = new URLSearchParams({
+      clientId: fieldValues.clientId ?? "",
+      clientSecret: fieldValues.clientSecret ?? "",
+      name: credentialName,
+    });
+
+    window.location.href = `/api/connectors/google/authorize?${params.toString()}`;
+  };
+
+  const isGoogleConnectDisabled =
+    !credentialName.trim() ||
+    !fieldValues.clientId?.trim() ||
+    !fieldValues.clientSecret?.trim();
+
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div>
@@ -88,6 +114,8 @@ export function CredentialForm({ onCreated }: CredentialFormProps) {
           onValueChange={(selectedType) => {
             setCredentialType(selectedType as CredentialType);
             setFieldValues({});
+            setTestMessage(null);
+            setTestError(null);
           }}
         >
           <SelectTrigger className="w-full">
@@ -114,7 +142,7 @@ export function CredentialForm({ onCreated }: CredentialFormProps) {
           onChange={(changeEvent) =>
             setCredentialName(changeEvent.target.value)
           }
-          placeholder="mis. WA Produksi"
+          placeholder="mis. Google Workspace Saya"
           required
         />
       </div>
@@ -136,25 +164,43 @@ export function CredentialForm({ onCreated }: CredentialFormProps) {
         </div>
       ))}
 
+      {isGoogleOAuth && (
+        <p className="text-xs text-muted-foreground">
+          Setelah mengisi Client ID & Client Secret, klik tombol di bawah untuk
+          login Google dan memberi izin. Refresh token akan disimpan otomatis,
+          tanpa perlu OAuth Playground.
+        </p>
+      )}
+
       {testMessage && <p className="text-sm text-emerald-600">{testMessage}</p>}
       {testError && <p className="text-sm text-destructive">{testError}</p>}
 
-      <div className="flex gap-2">
+      {isGoogleOAuth ? (
         <Button
           type="button"
-          variant="secondary"
-          disabled={isTesting}
-          onClick={handleTestConnection}
+          disabled={isGoogleConnectDisabled}
+          onClick={handleConnectGoogle}
         >
-          {isTesting && <Spinner />}
-          Uji Koneksi
+          Hubungkan dengan Google
         </Button>
+      ) : (
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={isTesting}
+            onClick={handleTestConnection}
+          >
+            {isTesting && <Spinner />}
+            Uji Koneksi
+          </Button>
 
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting && <Spinner />}
-          Simpan
-        </Button>
-      </div>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting && <Spinner />}
+            Simpan
+          </Button>
+        </div>
+      )}
     </form>
   );
 }

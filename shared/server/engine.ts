@@ -17,6 +17,7 @@ import {
   clearReminder,
   listReminderKeys,
 } from "@/shared/server/reminders";
+import { publishExecutionUpdate } from "@/shared/server/ablyPublisher";
 import type {
   FlowNode,
   FlowEdge,
@@ -1904,6 +1905,16 @@ export async function runWorkflow(
     );
   }
 
+  /**
+   * Beri tahu klien (editor) bahwa eksekusi ini berjalan agar animasi run node
+   * dapat diputar realtime, termasuk untuk run dari webhook & schedule.
+   */
+  await publishExecutionUpdate(workflow.ownerId, {
+    executionId: execution.id,
+    workflowId,
+    status: outcome.status,
+  });
+
   return execution.id;
 }
 
@@ -2067,6 +2078,12 @@ export async function resumeWorkflow(
         `Balasan dicatat. Menunggu ${remainingWaits} target lain membalas`,
       );
 
+      await publishExecutionUpdate(workflow.ownerId, {
+        executionId: waiting.executionId,
+        workflowId: waiting.workflowId,
+        status: "running",
+      });
+
       return;
     }
 
@@ -2085,6 +2102,16 @@ export async function resumeWorkflow(
       `Eksekusi selesai dengan status ${outcome.status}`,
     );
   }
+
+  /**
+   * Beri tahu klien (editor) bahwa lanjutan eksekusi ini berjalan agar animasi
+   * run node dapat diputar realtime (mis. setelah balasan WhatsApp masuk).
+   */
+  await publishExecutionUpdate(workflow.ownerId, {
+    executionId: waiting.executionId,
+    workflowId: waiting.workflowId,
+    status: outcome.status,
+  });
 }
 
 /**

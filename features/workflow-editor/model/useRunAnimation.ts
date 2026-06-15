@@ -33,7 +33,7 @@ export function useRunAnimation(
   nodes: FlowNode[],
   edges: FlowEdge[],
   isExecuting: boolean,
-  lastExecutionId: string | null,
+  animateExecutionId: string | null,
 ): RunAnimationState {
   const { loadNodeLogs } = useExecutionStore();
 
@@ -81,20 +81,20 @@ export function useRunAnimation(
 
   /** Saat run selesai, putar cascade berdasarkan urutan nodeLogs. */
   useEffect(() => {
-    if (!lastExecutionId || isExecuting) {
+    if (!animateExecutionId || isExecuting) {
       return;
     }
 
-    if (playedExecutionIdRef.current === lastExecutionId) {
+    if (playedExecutionIdRef.current === animateExecutionId) {
       return;
     }
 
-    playedExecutionIdRef.current = lastExecutionId;
+    playedExecutionIdRef.current = animateExecutionId;
 
     let isCancelled = false;
 
     const playCascade = async () => {
-      const nodeLogs = await loadNodeLogs(lastExecutionId);
+      const nodeLogs = await loadNodeLogs(animateExecutionId);
 
       if (isCancelled || nodeLogs.length === 0) {
         return;
@@ -180,7 +180,7 @@ export function useRunAnimation(
       isCancelled = true;
       clearTimers();
     };
-  }, [lastExecutionId, isExecuting, edges, loadNodeLogs]);
+  }, [animateExecutionId, isExecuting, edges, loadNodeLogs]);
 
   /** Bersihkan semua timer saat unmount. */
   useEffect(() => clearTimers, []);

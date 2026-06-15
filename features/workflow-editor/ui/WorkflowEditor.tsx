@@ -36,7 +36,12 @@ export function WorkflowEditor() {
   const { nodes, edges, setNodes, setEdges, workflowId, isExecuting } =
     useWorkflowStore();
 
-  const { latestStatus, pollLatestStatus } = useExecutionStore();
+  const {
+    realtimeExecutionId,
+    pollLatestStatus,
+    subscribeExecutions,
+    unsubscribeExecutions,
+  } = useExecutionStore();
 
   const { replies, subscribeReplies, unsubscribeReplies } =
     useWhatsappReplyStore();
@@ -59,23 +64,23 @@ export function WorkflowEditor() {
 
   const { lastExecutionId } = useWorkflowStore();
 
-  /** True while the most recent run (manual or scheduled) is in progress. */
-  const isRunning = isExecuting || latestStatus === "running";
-
   /**
-   * State animasi run berurutan: node yang sedang berjalan (spinner), edge yang
-   * sedang dilewati, dan status akhir tiap node (done/failed).
+   * Pemicu animasi cascade: run manual memakai `lastExecutionId`, sedangkan
+   * run dari webhook/schedule memakai `realtimeExecutionId` dari event Ably.
    */
+  const animateExecutionId = realtimeExecutionId ?? lastExecutionId;
+
   const { activeEdgeId, nodeStateById } = useRunAnimation(
     nodes,
     edges,
     isExecuting,
-    lastExecutionId,
+    animateExecutionId,
   );
 
   /**
-   * Poll the latest execution status while a run is active so edges keep
-   * animating until the workflow finishes. Stops once status leaves "running".
+   * Ambil status eksekusi terbaru sekali saat workflow dibuka untuk state awal.
+   * Update berikutnya datang realtime lewat event `execution-update` (Ably),
+   * jadi tidak ada lagi polling berkala.
    */
   useEffect(() => {
     if (!workflowId) {
@@ -83,17 +88,24 @@ export function WorkflowEditor() {
     }
 
     pollLatestStatus(workflowId);
+  }, [workflowId, pollLatestStatus]);
 
-    if (!isRunning) {
+  /**
+   * Berlangganan event `execution-update` selama editor terbuka agar eksekusi
+   * yang dipicu webhook (balasan WhatsApp) maupun schedule ikut memutar animasi
+   * run node, lalu berhenti berlangganan saat editor dilepas.
+   */
+  useEffect(() => {
+    if (!sessionId) {
       return;
     }
 
-    const intervalId = setInterval(() => {
-      pollLatestStatus(workflowId);
-    }, 2000);
+    subscribeExecutions(sessionId);
 
-    return () => clearInterval(intervalId);
-  }, [workflowId, isRunning, pollLatestStatus]);
+    return () => {
+      unsubscribeExecutions();
+    };
+  }, [sessionId, subscribeExecutions, unsubscribeExecutions]);
 
   /**
    * Berlangganan balasan WhatsApp realtime via Ably selama editor terbuka,

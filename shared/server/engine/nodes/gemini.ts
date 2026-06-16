@@ -1,3 +1,4 @@
+import { GEMINI_MODEL } from "@/shared/config/constants";
 import { requestExternal } from "@/shared/server/httpClient";
 import { resolveTemplate } from "@/shared/server/templating";
 import type { NodeHandler } from "../types";
@@ -24,7 +25,7 @@ export const aiGeminiHandler: NodeHandler = async ({
     throw new Error("Gemini: API key tidak ada");
   }
 
-  const model = String(config.model ?? "gemini-1.5-flash");
+  const model = String(config.model ?? GEMINI_MODEL);
   const systemInstruction = String(config.systemInstruction ?? "").trim();
 
   const items = toItems(input);

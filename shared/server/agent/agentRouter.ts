@@ -60,6 +60,27 @@ async function replyViaAgent(
   }
 }
 
+/**
+ * Mengirim indikator presence (mis. "composing" = sedang mengetik) ke pengirim
+ * lewat akun agen. Indikator akan hilang sendiri saat balasan terkirim.
+ */
+async function sendAgentTyping(
+  ownerId: string,
+  sender: string,
+  presence: "composing" | "paused",
+): Promise<void> {
+  const cleanTarget = sender.includes("@") ? sender : sender.replace(/\D/g, "");
+
+  try {
+    await baileysClient.post(`/sessions/${agentSessionId(ownerId)}/presence`, {
+      target: cleanTarget,
+      presence,
+    });
+  } catch {
+    /** Indikator mengetik opsional; kegagalan tidak boleh menghentikan alur. */
+  }
+}
+
 /** Mengumpulkan ringkasan workflow milik pemilik untuk konteks classifier. */
 async function loadWorkflowContext(
   ownerId: string,
@@ -163,6 +184,12 @@ export async function handleAgentMessage(
   args: AgentRouterArgs,
 ): Promise<{ action: string }> {
   const { ownerId, sender, message } = args;
+
+  /**
+   * Tampilkan indikator "sedang mengetik" secepatnya agar pengguna tahu pesan
+   * sedang diproses. Indikator hilang otomatis ketika balasan dikirim.
+   */
+  await sendAgentTyping(ownerId, sender, "composing");
 
   const geminiApiKey = await loadOwnerGeminiKey(ownerId);
 

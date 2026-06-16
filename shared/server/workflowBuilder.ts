@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import { prisma } from "@/shared/lib/prisma";
+import { GEMINI_MODEL } from "@/shared/config/constants";
 import { requestExternal } from "@/shared/server/httpClient";
 import {
   NODE_TYPES,
@@ -232,7 +233,7 @@ export async function buildWorkflowFromPrompt(
   geminiApiKey: string,
   ownerId: string,
 ): Promise<BuiltWorkflow> {
-  const model = "gemini-1.5-flash";
+  const model = GEMINI_MODEL;
 
   const response = await requestExternal(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey.trim()}`,

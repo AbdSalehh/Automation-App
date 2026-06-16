@@ -1,4 +1,5 @@
 import { prisma } from "@/shared/lib/prisma";
+import { GEMINI_MODEL } from "@/shared/config/constants";
 import { decryptJson } from "@/shared/lib/crypto";
 import { requestExternal } from "@/shared/server/httpClient";
 
@@ -115,7 +116,7 @@ export async function classifyIntent(
   workflows: WorkflowContext[],
   geminiApiKey: string,
 ): Promise<IntentResult> {
-  const model = "gemini-2.5-flash";
+  const model = GEMINI_MODEL;
 
   const response = await requestExternal(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey.trim()}`,

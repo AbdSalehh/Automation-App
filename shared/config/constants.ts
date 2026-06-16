@@ -1,5 +1,12 @@
 export const APP_NAME = "AutoFlow";
 
+/**
+ * Model Gemini default untuk seluruh fitur AI (classifier, builder, node).
+ * Pusatkan di sini agar tidak ada versi yang tertinggal/usang (mis. 1.5 yang
+ * sudah dipensiunkan dan membalas 404).
+ */
+export const GEMINI_MODEL = "gemini-2.5-flash";
+
 export const ROUTES = {
   home: "/",
   workflows: "/workflows",

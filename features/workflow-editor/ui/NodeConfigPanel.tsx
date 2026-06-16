@@ -97,7 +97,7 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
     {
       key: "model",
       label: "Model (opsional)",
-      placeholder: "gemini-1.5-flash",
+      placeholder: "gemini-2.5-flash",
     },
   ],
   supabase_insert: [

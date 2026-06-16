@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { href: ROUTES.workflows, label: "Workflows" },
   { href: ROUTES.credentials, label: "Credentials" },
   { href: ROUTES.executions, label: "Executions" },
+  { href: ROUTES.settings, label: "Settings" },
 ];
 
 export async function AppHeader() {

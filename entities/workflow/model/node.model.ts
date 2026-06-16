@@ -233,19 +233,17 @@ export const NODE_TYPES: NodeTypeDef[] = [
   {
     kind: "supabase_insert",
     category: "action",
-    label: "Database Insert (Supabase)",
-    description: "Simpan satu/banyak baris ke tabel Supabase.",
+    label: "Database Insert",
+    description: "Simpan satu/banyak baris ke database proyek.",
     icon: "DatabaseZap",
-    credentialType: "supabase",
     outputs: ["inserted", "rows"],
   },
   {
     kind: "supabase_query",
     category: "action",
-    label: "Database Query (Supabase)",
-    description: "Baca baris dari tabel Supabase dengan filter opsional.",
+    label: "Database Query",
+    description: "Baca baris dari database proyek dengan filter opsional.",
     icon: "Database",
-    credentialType: "supabase",
     outputs: ["rows", "count"],
   },
   {

@@ -10,6 +10,7 @@ import type { WhatsAppProvider } from "@/entities/workflow/model/node.model";
 import type { Item, NodeHandler } from "../types";
 import { loadCredential } from "../credentials";
 import { resolveActionItems, sleep } from "../utils";
+import { workflowSessionId } from "@/shared/server/whatsapp/sessions";
 
 /**
  * Sends a WhatsApp message via the Meta WhatsApp Business Cloud API.
@@ -167,6 +168,12 @@ export const whatsappSendHandler: NodeHandler = async ({
 
   assertWhatsAppCredential(provider, credential);
 
+  /**
+   * Node workflow mengirim lewat akun WhatsApp kedua (channel workflow),
+   * terpisah dari akun agen yang dipakai router chat-action.
+   */
+  const workflowSession = workflowSessionId(context.ownerId);
+
   const { items, isCollection } = resolveActionItems(input);
   const countryCode = String(config.countryCode ?? "62");
   const targetField = String(config.targetField ?? "").trim();
@@ -244,7 +251,7 @@ export const whatsappSendHandler: NodeHandler = async ({
           target,
           message,
           countryCode,
-          context.ownerId,
+          workflowSession,
         );
 
         results.push({
@@ -270,7 +277,7 @@ export const whatsappSendHandler: NodeHandler = async ({
           target,
           reminder.message,
           countryCode,
-          context.ownerId,
+          workflowSession,
         );
 
         await clearReminder(reminderScope, rowKey);
@@ -369,7 +376,7 @@ export const whatsappSendHandler: NodeHandler = async ({
       target,
       message,
       countryCode,
-      context.ownerId,
+      workflowSession,
     );
 
     results.push({

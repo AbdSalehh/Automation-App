@@ -2,7 +2,6 @@ import { prisma } from "@/shared/lib/prisma";
 import { decryptJson } from "@/shared/lib/crypto";
 import { handleRoute, ok, badRequest } from "@/shared/api/http";
 import { runWorkflow, resumeWaitingReplies } from "@/shared/server/engine";
-import { handleBuilderIntent } from "@/shared/server/builderIntent";
 import type { FlowNode } from "@/entities/workflow/model/workflow.model";
 
 /**
@@ -94,22 +93,6 @@ export async function POST(
       receivedAt: new Date().toISOString(),
       provider: "telegram",
     };
-
-    /**
-     * Intent builder: bila pesan adalah perintah membuat otomasi, bangun
-     * workflow lalu balas via Telegram — tidak meneruskan ke alur biasa.
-     */
-    const builderHandled = await handleBuilderIntent({
-      ownerId: owner.ownerId,
-      sender: payload.sender,
-      message: text,
-      provider: "telegram",
-      botToken: token,
-    });
-
-    if (builderHandled) {
-      return ok({ builder: true }, "Permintaan pembuatan otomasi diproses");
-    }
 
     /** Lanjutkan eksekusi wait_reply yang menunggu balasan pengirim ini. */
     const resumedCount = await resumeWaitingReplies(payload.sender, payload);

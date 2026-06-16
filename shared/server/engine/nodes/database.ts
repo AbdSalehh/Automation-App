@@ -1,17 +1,29 @@
 import { requestExternal } from "@/shared/server/httpClient";
 import { resolveTemplate } from "@/shared/server/templating";
 import type { Item, NodeHandler } from "../types";
-import { loadCredential } from "../credentials";
 import { toItems } from "../utils";
 
 /**
- * Membentuk base URL REST (PostgREST) Supabase dari projectUrl kredensial.
- * Contoh: https://abc.supabase.co -> https://abc.supabase.co/rest/v1
+ * Konfigurasi Supabase tingkat-proyek dari environment. Seluruh pengguna
+ * menulis ke satu database proyek yang sama; pemisahan data antar pengguna
+ * dilakukan lewat kolom (mis. ownerId), bukan kredensial per-user.
  */
-function buildRestBaseUrl(projectUrl: string): string {
+function resolveSupabaseConfig(): {
+  restBaseUrl: string;
+  serviceRoleKey: string;
+} {
+  const projectUrl = process.env.SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!projectUrl || !serviceRoleKey) {
+    throw new Error(
+      "Supabase: SUPABASE_URL dan SUPABASE_SERVICE_ROLE_KEY belum diset di environment",
+    );
+  }
+
   const trimmed = projectUrl.trim().replace(/\/+$/, "");
 
-  return `${trimmed}/rest/v1`;
+  return { restBaseUrl: `${trimmed}/rest/v1`, serviceRoleKey };
 }
 
 /**
@@ -99,20 +111,8 @@ function parseFilters(raw: unknown): QueryFilter[] {
 }
 
 /** Supabase Insert — menambah baris ke sebuah tabel via PostgREST. */
-export const supabaseInsertHandler: NodeHandler = async ({
-  node,
-  input,
-  context,
-  config,
-}) => {
-  const credential = await loadCredential(
-    node.data.credentialId,
-    context.ownerId,
-  );
-
-  if (!credential?.projectUrl || !credential?.serviceRoleKey) {
-    throw new Error("Supabase: kredensial tidak lengkap");
-  }
+export const supabaseInsertHandler: NodeHandler = async ({ input, config }) => {
+  const { restBaseUrl, serviceRoleKey } = resolveSupabaseConfig();
 
   const table = String(config.table ?? "").trim();
 
@@ -148,11 +148,11 @@ export const supabaseInsertHandler: NodeHandler = async ({
   });
 
   const response = await requestExternal(
-    `${buildRestBaseUrl(credential.projectUrl)}/${encodeURIComponent(table)}`,
+    `${restBaseUrl}/${encodeURIComponent(table)}`,
     {
       method: "POST",
       headers: {
-        ...buildHeaders(credential.serviceRoleKey),
+        ...buildHeaders(serviceRoleKey),
         Prefer: "return=representation",
       },
       data: rowsToInsert,
@@ -171,20 +171,8 @@ export const supabaseInsertHandler: NodeHandler = async ({
 };
 
 /** Supabase Query — membaca baris dari sebuah tabel via PostgREST. */
-export const supabaseQueryHandler: NodeHandler = async ({
-  node,
-  input,
-  context,
-  config,
-}) => {
-  const credential = await loadCredential(
-    node.data.credentialId,
-    context.ownerId,
-  );
-
-  if (!credential?.projectUrl || !credential?.serviceRoleKey) {
-    throw new Error("Supabase: kredensial tidak lengkap");
-  }
+export const supabaseQueryHandler: NodeHandler = async ({ input, config }) => {
+  const { restBaseUrl, serviceRoleKey } = resolveSupabaseConfig();
 
   const table = String(config.table ?? "").trim();
 
@@ -194,9 +182,7 @@ export const supabaseQueryHandler: NodeHandler = async ({
 
   const firstItem = (toItems(input)[0] ?? {}) as Item;
 
-  const queryUrl = new URL(
-    `${buildRestBaseUrl(credential.projectUrl)}/${encodeURIComponent(table)}`,
-  );
+  const queryUrl = new URL(`${restBaseUrl}/${encodeURIComponent(table)}`);
 
   /** Kolom yang dipilih (default semua). */
   const selectColumns = String(config.select ?? "*").trim() || "*";
@@ -235,7 +221,7 @@ export const supabaseQueryHandler: NodeHandler = async ({
 
   const response = await requestExternal(queryUrl.toString(), {
     method: "GET",
-    headers: buildHeaders(credential.serviceRoleKey),
+    headers: buildHeaders(serviceRoleKey),
   });
 
   if (!response.ok) {

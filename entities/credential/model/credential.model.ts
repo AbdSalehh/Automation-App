@@ -55,19 +55,6 @@ export const CREDENTIAL_FIELDS: Record<CredentialType, CredentialFieldDef[]> = {
       placeholder: "Dari aistudio.google.com → Get API key",
     },
   ],
-  supabase: [
-    {
-      key: "projectUrl",
-      label: "Project URL",
-      placeholder: "https://xxxxxxxx.supabase.co",
-    },
-    {
-      key: "serviceRoleKey",
-      label: "Service Role Key",
-      secret: true,
-      placeholder: "Dari Project Settings → API → service_role",
-    },
-  ],
   google_oauth: [
     { key: "clientId", label: "Client ID" },
     { key: "clientSecret", label: "Client Secret", secret: true },

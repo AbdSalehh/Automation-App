@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
+import { prisma } from "@/shared/lib/prisma";
 import { requestExternal } from "@/shared/server/httpClient";
 import {
   NODE_TYPES,
@@ -20,11 +21,26 @@ import type {
  * Server-only module.
  */
 
+/** Node yang tidak menemukan kredensial cocok dan perlu diisi pengguna. */
+export interface MissingCredential {
+  nodeLabel: string;
+  credentialType: string;
+}
+
 export interface BuiltWorkflow {
   name: string;
   nodes: FlowNode[];
   edges: FlowEdge[];
+  missingCredentials: MissingCredential[];
 }
+
+/** Peta kind node ke tipe kredensial yang dibutuhkannya. */
+const KIND_TO_CREDENTIAL_TYPE = new Map<string, string>(
+  NODE_TYPES.filter((nodeType) => nodeType.credentialType).map((nodeType) => [
+    nodeType.kind,
+    nodeType.credentialType as string,
+  ]),
+);
 
 /** Bentuk mentah node yang diminta dihasilkan Gemini. */
 interface RawBuilderNode {
@@ -74,7 +90,7 @@ function buildSystemPrompt(): string {
     '2. Struktur: { "name": string, "nodes": [{ "ref": string, "kind": string, "label": string, "config": object }], "edges": [{ "from": ref, "to": ref }] }.',
     '3. `ref` adalah id sementara unik antar node (mis. "n1", "n2") untuk merujuk di edges.',
     "4. Mulai dengan satu node trigger (kind diakhiri _trigger). Untuk otomasi via chat, gunakan whatsapp_trigger atau telegram_trigger.",
-    "5. Untuk menyimpan data pakai supabase_insert/supabase_query. Untuk memproses teks dengan AI pakai ai_gemini.",
+    "5. Untuk menyimpan data (mis. catatan keuangan, log), UTAMAKAN Google Sheets (google_sheets_append/read/update). Pakai supabase_insert/supabase_query hanya bila pengguna meminta database. Untuk memproses teks dengan AI pakai ai_gemini.",
     "6. Untuk membalas pesan pakai whatsapp_send atau telegram_send.",
     "7. Isi config secukupnya dan gunakan template {{message}}, {{sender}}, {{name}}, {{text}} bila relevan.",
     "8. credentialId dikosongkan ('') karena dipilih pengguna nanti.",
@@ -161,7 +177,48 @@ function normalizeBuilderResult(
     name: raw.name?.trim() || fallbackName,
     nodes,
     edges,
+    missingCredentials: [],
   };
+}
+
+/**
+ * Mengisi `credentialId` tiap node dengan kredensial milik pemilik yang tipenya
+ * cocok (ambil terbaru). Node yang tidak menemukan kredensial dikumpulkan agar
+ * pengguna bisa diberi tahu apa yang masih perlu diisi.
+ */
+async function assignCredentials(
+  nodes: FlowNode[],
+  ownerId: string,
+): Promise<MissingCredential[]> {
+  const credentialIdByType = new Map<string, string | null>();
+  const missing: MissingCredential[] = [];
+
+  for (const node of nodes) {
+    const credentialType = KIND_TO_CREDENTIAL_TYPE.get(node.data.kind);
+
+    if (!credentialType) {
+      continue;
+    }
+
+    if (!credentialIdByType.has(credentialType)) {
+      const credentialRecord = await prisma.credential.findFirst({
+        where: { userId: ownerId, type: credentialType },
+        orderBy: { createdAt: "desc" },
+      });
+
+      credentialIdByType.set(credentialType, credentialRecord?.id ?? null);
+    }
+
+    const credentialId = credentialIdByType.get(credentialType) ?? null;
+
+    if (credentialId) {
+      node.data.credentialId = credentialId;
+    } else {
+      missing.push({ nodeLabel: node.data.label, credentialType });
+    }
+  }
+
+  return missing;
 }
 
 /**
@@ -173,6 +230,7 @@ function normalizeBuilderResult(
 export async function buildWorkflowFromPrompt(
   prompt: string,
   geminiApiKey: string,
+  ownerId: string,
 ): Promise<BuiltWorkflow> {
   const model = "gemini-1.5-flash";
 
@@ -218,6 +276,8 @@ export async function buildWorkflowFromPrompt(
   if (built.nodes.length === 0) {
     throw new Error("Builder: tidak ada node valid yang dihasilkan");
   }
+
+  built.missingCredentials = await assignCredentials(built.nodes, ownerId);
 
   return built;
 }

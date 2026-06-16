@@ -1,7 +1,8 @@
 import { prisma } from "@/shared/lib/prisma";
 import { handleRoute, ok, badRequest } from "@/shared/api/http";
 import { runWorkflow, resumeWaitingReplies } from "@/shared/server/engine";
-import { handleBuilderIntent } from "@/shared/server/builderIntent";
+import { handleAgentMessage } from "@/shared/server/agent/agentRouter";
+import { parseSessionId } from "@/shared/server/whatsapp/sessions";
 import { decryptWebhookJson } from "@/shared/lib/webhookCrypto";
 import type { FlowNode } from "@/entities/workflow/model/workflow.model";
 
@@ -69,30 +70,30 @@ export async function POST(request: Request) {
       receivedAt: source.receivedAt ?? new Date().toISOString(),
     };
 
-    /**
-     * Intent builder: bila pesan adalah perintah membuat otomasi, bangun
-     * workflow lalu balas via WhatsApp — tidak diteruskan ke alur biasa.
-     */
-    const builderHandled = await handleBuilderIntent({
-      ownerId: payload.sessionId,
-      sender: payload.sender,
-      message: payload.message,
-      provider: "whatsapp",
-    });
+    const { ownerId, channel } = parseSessionId(payload.sessionId);
 
-    if (builderHandled) {
-      return ok({ builder: true }, "Permintaan pembuatan otomasi diproses");
+    /**
+     * Akun agen: seluruh pesan masuk diproses router Gemini (tanya/buat/
+     * jalankan/di luar konteks). Tidak memicu workflow secara langsung.
+     */
+    if (channel === "agent") {
+      const result = await handleAgentMessage({
+        ownerId,
+        sender: payload.sender,
+        message: payload.message,
+      });
+
+      return ok(result, "Pesan agen diproses");
     }
 
-    /** Lanjutkan eksekusi wait_reply yang menunggu balasan dari pengirim ini. */
+    /**
+     * Akun workflow: jalur klasik. Lanjutkan wait_reply yang menunggu balasan
+     * pengirim ini, lalu picu workflow milik pemilik yang punya whatsapp_trigger.
+     */
     const resumedCount = await resumeWaitingReplies(payload.sender, payload);
 
-    /**
-     * Hanya workflow milik pemilik sesi (ownerId === sessionId) yang boleh
-     * dipicu oleh balasan ini.
-     */
     const publishedWorkflows = await prisma.workflow.findMany({
-      where: { isPublished: true, ownerId: payload.sessionId },
+      where: { isPublished: true, ownerId },
     });
 
     const triggered: string[] = [];

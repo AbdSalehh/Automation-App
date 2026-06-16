@@ -6,6 +6,7 @@ export const ROUTES = {
   workflow: (id: string) => `/workflows/${id}`,
   credentials: "/credentials",
   executions: "/executions",
+  settings: "/settings",
   login: "/login",
   onboarding: "/onboarding",
 } as const;
@@ -31,7 +32,6 @@ export const CREDENTIAL_TYPES = [
   "telegram",
   "telegram_personal",
   "gemini",
-  "supabase",
   "google_oauth",
   "google_service_account",
   "google_calendar",
@@ -46,7 +46,6 @@ export const CREDENTIAL_TYPE_LABELS: Record<CredentialType, string> = {
   telegram: "Telegram Bot (BotFather)",
   telegram_personal: "Telegram Nomor Pribadi",
   gemini: "Google Gemini AI",
-  supabase: "Supabase Database",
   google_oauth: "Google Workspace (OAuth2)",
   google_service_account: "Google Service Account",
   google_calendar: "Google Calendar",

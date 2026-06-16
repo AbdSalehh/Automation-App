@@ -225,7 +225,9 @@ export async function handleAgentMessage(
 
   try {
     intentResult = await classifyIntent(message, workflows, geminiApiKey);
-  } catch {
+  } catch (error) {
+    console.error("[agent] classifyIntent gagal:", error);
+
     await replyViaAgent(
       ownerId,
       sender,

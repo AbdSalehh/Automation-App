@@ -115,7 +115,7 @@ export async function classifyIntent(
   workflows: WorkflowContext[],
   geminiApiKey: string,
 ): Promise<IntentResult> {
-  const model = "gemini-1.5-flash";
+  const model = "gemini-2.5-flash";
 
   const response = await requestExternal(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey.trim()}`,
@@ -127,14 +127,19 @@ export async function classifyIntent(
           parts: [{ text: buildClassifierPrompt(workflows) }],
         },
         contents: [{ parts: [{ text: message }] }],
-        generationConfig: { temperature: 0.2 },
+        generationConfig: {
+          temperature: 0.2,
+          responseMimeType: "application/json",
+        },
       },
     },
   );
 
   if (!response.ok) {
     throw new Error(
-      `Classifier: Gemini gagal merespons (status ${response.status})`,
+      `Classifier: Gemini gagal merespons (status ${response.status}): ${JSON.stringify(
+        response.body,
+      )}`,
     );
   }
 

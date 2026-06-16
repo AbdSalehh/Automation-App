@@ -1,18 +1,27 @@
 import { prisma } from "@/shared/lib/prisma";
 import { decryptJson } from "@/shared/lib/crypto";
+import { GEMINI_MODEL } from "@/shared/config/constants";
 import { handleRoute, ok, badRequest } from "@/shared/api/http";
 import { runWorkflow, resumeWaitingReplies } from "@/shared/server/engine";
+import { requestExternal } from "@/shared/server/httpClient";
+import {
+  handleAgentMessage,
+  type AgentTransport,
+} from "@/shared/server/agent/agentRouter";
 import type { FlowNode } from "@/entities/workflow/model/workflow.model";
 
 /**
  * Webhook pesan masuk Telegram (per-bot).
  *
- * Telegram melakukan POST ke URL ini setiap ada update. Token bot diambil dari
- * segmen path `[token]` sehingga endpoint bisa mengidentifikasi kredensial &
- * pemilik (owner) yang tepat tanpa header auth (Telegram tidak mengirim auth).
+ * Telegram melakukan POST ke URL ini setiap ada update (realtime, lewat
+ * setWebhook). Token bot diambil dari segmen path `[token]` sehingga endpoint
+ * bisa mengidentifikasi kredensial & pemilik (owner) yang tepat tanpa header
+ * auth (Telegram tidak mengirim auth).
  *
- * Hanya workflow milik pemilik bot yang memuat node `telegram_trigger` yang
- * dipicu, sehingga pesan satu user tidak salah memicu workflow user lain.
+ * Dua jalur:
+ * 1. Bot terdaftar sebagai Agen Chat-Action (`agent_chat`) → pesan diproses
+ *    router Gemini (tanya/buat/jalankan).
+ * 2. Bot biasa → memicu workflow milik pemilik yang memuat `telegram_trigger`.
  */
 interface TelegramUpdate {
   message?: {
@@ -20,6 +29,41 @@ interface TelegramUpdate {
     chat?: { id?: number | string };
     from?: { first_name?: string; username?: string };
   };
+}
+
+interface AgentChatConfig {
+  ownerId: string;
+  geminiApiKey: string;
+  geminiModel: string;
+}
+
+/** Mencari kredensial agen chat-action yang botToken-nya cocok. */
+async function findAgentChatConfig(
+  botToken: string,
+): Promise<AgentChatConfig | null> {
+  const agentCredentials = await prisma.credential.findMany({
+    where: { type: "agent_chat" },
+  });
+
+  for (const credentialRecord of agentCredentials) {
+    try {
+      const decrypted = decryptJson<Record<string, string>>(
+        credentialRecord.data,
+      );
+
+      if (decrypted.botToken === botToken) {
+        return {
+          ownerId: credentialRecord.userId,
+          geminiApiKey: decrypted.geminiApiKey ?? "",
+          geminiModel: decrypted.geminiModel || GEMINI_MODEL,
+        };
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  return null;
 }
 
 /** Mencari kredensial Telegram (beserta owner) yang botToken-nya cocok. */
@@ -45,6 +89,43 @@ async function findTelegramOwner(
   }
 
   return null;
+}
+
+/**
+ * Transport Telegram untuk router agen: mengirim balasan via `sendMessage` dan
+ * indikator "sedang mengetik" via `sendChatAction` (realtime di aplikasi chat).
+ */
+function createTelegramTransport(
+  botToken: string,
+  chatId: string,
+): AgentTransport {
+  return {
+    reply: async (text) => {
+      await requestExternal(
+        `https://api.telegram.org/bot${botToken}/sendMessage`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          data: { chat_id: chatId, text },
+        },
+      );
+    },
+
+    sendTyping: async () => {
+      try {
+        await requestExternal(
+          `https://api.telegram.org/bot${botToken}/sendChatAction`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            data: { chat_id: chatId, action: "typing" },
+          },
+        );
+      } catch {
+        /** Indikator mengetik opsional; kegagalan tidak menghentikan alur. */
+      }
+    },
+  };
 }
 
 export async function POST(
@@ -75,6 +156,32 @@ export async function POST(
       return ok({ ignored: true }, "Update tanpa pesan teks diabaikan");
     }
 
+    /**
+     * Jalur 1 — Agen Chat-Action. Jika token cocok dengan kredensial
+     * `agent_chat`, seluruh pesan diproses router Gemini.
+     */
+    const agentConfig = await findAgentChatConfig(token);
+
+    if (agentConfig) {
+      if (!agentConfig.geminiApiKey) {
+        return badRequest("Agen chat-action belum memiliki Gemini API key");
+      }
+
+      const transport = createTelegramTransport(token, String(chatId));
+
+      const result = await handleAgentMessage({
+        ownerId: agentConfig.ownerId,
+        sender: String(chatId),
+        message: text,
+        geminiApiKey: agentConfig.geminiApiKey,
+        geminiModel: agentConfig.geminiModel,
+        transport,
+      });
+
+      return ok(result, "Pesan agen diproses");
+    }
+
+    /** Jalur 2 — Bot biasa: picu workflow telegram_trigger milik pemilik. */
     const owner = await findTelegramOwner(token);
 
     if (!owner) {

@@ -115,9 +115,8 @@ export async function classifyIntent(
   message: string,
   workflows: WorkflowContext[],
   geminiApiKey: string,
+  model: string = GEMINI_MODEL,
 ): Promise<IntentResult> {
-  const model = GEMINI_MODEL;
-
   const response = await requestExternal(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey.trim()}`,
     {

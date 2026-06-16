@@ -232,9 +232,8 @@ export async function buildWorkflowFromPrompt(
   prompt: string,
   geminiApiKey: string,
   ownerId: string,
+  model: string = GEMINI_MODEL,
 ): Promise<BuiltWorkflow> {
-  const model = GEMINI_MODEL;
-
   const response = await requestExternal(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey.trim()}`,
     {

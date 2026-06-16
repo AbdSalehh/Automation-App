@@ -10,7 +10,6 @@ import type { WhatsAppProvider } from "@/entities/workflow/model/node.model";
 import type { Item, NodeHandler } from "../types";
 import { loadCredential } from "../credentials";
 import { resolveActionItems, sleep } from "../utils";
-import { workflowSessionId } from "@/shared/server/whatsapp/sessions";
 
 /**
  * Sends a WhatsApp message via the Meta WhatsApp Business Cloud API.
@@ -169,10 +168,10 @@ export const whatsappSendHandler: NodeHandler = async ({
   assertWhatsAppCredential(provider, credential);
 
   /**
-   * Node workflow mengirim lewat akun WhatsApp kedua (channel workflow),
-   * terpisah dari akun agen yang dipakai router chat-action.
+   * Node workflow mengirim lewat sesi WhatsApp pengguna (satu akun per
+   * pengguna). Kunci sesi sama dengan id pemilik workflow.
    */
-  const workflowSession = workflowSessionId(context.ownerId);
+  const workflowSession = context.ownerId;
 
   const { items, isCollection } = resolveActionItems(input);
   const countryCode = String(config.countryCode ?? "62");

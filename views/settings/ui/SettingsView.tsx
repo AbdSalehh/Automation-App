@@ -1,9 +1,11 @@
 import { AgentPipelineCanvas } from "@/features/agent-pipeline";
+import { AgentSettingsPanel } from "@/features/agent-settings";
 import { WhatsappQrLogin } from "@/features/whatsapp-qr-login";
 
 /**
- * Halaman setelan pengguna. Menampilkan kanvas read-only alur agen chat-action
- * sebagai pemicu sistem, beserta kartu koneksi akun WhatsApp agen.
+ * Halaman setelan pengguna. Menampilkan panel aktivasi agen chat-action
+ * (Telegram + Gemini), kanvas read-only alur agen sebagai pemicu sistem, serta
+ * koneksi akun WhatsApp yang khusus dipakai node WhatsApp di workflow.
  */
 export function SettingsView() {
   return (
@@ -11,10 +13,14 @@ export function SettingsView() {
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold text-foreground">Setelan Agen</h1>
         <p className="text-sm text-muted-foreground">
-          Alur agen chat-action di bawah ini adalah pemicu sistem dan tidak
-          dapat diedit. Hubungkan akun WhatsApp agen untuk mulai menerima pesan.
+          Aktifkan agen chat-action lewat Telegram, lalu kirim pesan ke bot Anda
+          untuk membuat & menjalankan otomasi.
         </p>
       </header>
+
+      <section className="max-w-2xl">
+        <AgentSettingsPanel />
+      </section>
 
       <section className="flex flex-col gap-3">
         <h2 className="text-sm font-semibold text-foreground">
@@ -25,8 +31,12 @@ export function SettingsView() {
 
       <section className="flex flex-col gap-3">
         <h2 className="text-sm font-semibold text-foreground">
-          Akun WhatsApp Agen
+          Akun WhatsApp (untuk node WhatsApp)
         </h2>
+        <p className="text-xs text-muted-foreground">
+          Scan QR ini hanya jika Anda memakai node WhatsApp di dalam workflow.
+          Tidak wajib untuk agen chat-action.
+        </p>
         <div className="max-w-md">
           <WhatsappQrLogin />
         </div>

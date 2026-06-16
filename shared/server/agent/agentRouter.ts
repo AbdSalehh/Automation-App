@@ -1,31 +1,41 @@
 import { prisma } from "@/shared/lib/prisma";
 import { getRedisClient } from "@/shared/lib/redis";
-import { baileysClient } from "@/shared/api/baileysClient";
+import { GEMINI_MODEL } from "@/shared/config/constants";
 import { runWorkflow } from "@/shared/server/engine";
 import { buildWorkflowFromPrompt } from "@/shared/server/workflowBuilder";
-import { agentSessionId } from "@/shared/server/whatsapp/sessions";
 import type { FlowNode } from "@/entities/workflow/model/workflow.model";
-import {
-  classifyIntent,
-  loadOwnerGeminiKey,
-  type WorkflowContext,
-} from "./intentClassifier";
+import { classifyIntent, type WorkflowContext } from "./intentClassifier";
 
 /**
- * Router agen WhatsApp (chat-action).
+ * Router agen chat-action (transport-agnostik).
  *
- * Memproses pesan masuk ke akun agen: mendeteksi konfirmasi pembuatan yang
- * tertunda, lalu mengklasifikasi maksud lewat Gemini dan menjalankan tindakan
- * (jawab pertanyaan / buat workflow / jalankan workflow / tolak di luar konteks).
+ * Memproses pesan masuk dari channel chat (mis. Telegram): mendeteksi konfirmasi
+ * pembuatan yang tertunda, lalu mengklasifikasi maksud lewat Gemini dan
+ * menjalankan tindakan (jawab pertanyaan / buat workflow / jalankan workflow /
+ * tolak di luar konteks).
+ *
+ * Pengiriman balasan & indikator mengetik dilakukan lewat `transport` sehingga
+ * router tidak terikat ke satu penyedia (Telegram/WhatsApp/dll.).
  *
  * Server-only module.
  */
 
+/** Adaptor pengiriman pesan untuk channel chat tertentu. */
+export interface AgentTransport {
+  /** Mengirim balasan teks ke pengirim. */
+  reply: (text: string) => Promise<void>;
+  /** Menampilkan indikator "sedang mengetik" (opsional, boleh no-op). */
+  sendTyping: () => Promise<void>;
+}
+
 export interface AgentRouterArgs {
   ownerId: string;
-  /** Nomor pengirim, dipakai untuk membalas via akun agen. */
+  /** Identitas pengirim pada channel (mis. chatId Telegram). */
   sender: string;
   message: string;
+  geminiApiKey: string;
+  geminiModel: string;
+  transport: AgentTransport;
 }
 
 /** TTL state konfirmasi pembuatan (10 menit). */
@@ -37,48 +47,6 @@ const CANCEL_WORDS = ["batal", "tidak", "ga", "gak", "no", "cancel"];
 
 function pendingKey(ownerId: string, sender: string): string {
   return `agent-pending:${ownerId}:${sender}`;
-}
-
-/** Mengirim balasan teks ke pengirim melalui akun agen (channel agent). */
-async function replyViaAgent(
-  ownerId: string,
-  sender: string,
-  text: string,
-): Promise<void> {
-  const cleanTarget = sender.includes("@") ? sender : sender.replace(/\D/g, "");
-
-  try {
-    await baileysClient.post(
-      `/sessions/${agentSessionId(ownerId)}/send-message`,
-      {
-        target: cleanTarget,
-        message: text,
-      },
-    );
-  } catch {
-    /** Kegagalan balasan tidak boleh menggagalkan pemrosesan pesan. */
-  }
-}
-
-/**
- * Mengirim indikator presence (mis. "composing" = sedang mengetik) ke pengirim
- * lewat akun agen. Indikator akan hilang sendiri saat balasan terkirim.
- */
-async function sendAgentTyping(
-  ownerId: string,
-  sender: string,
-  presence: "composing" | "paused",
-): Promise<void> {
-  const cleanTarget = sender.includes("@") ? sender : sender.replace(/\D/g, "");
-
-  try {
-    await baileysClient.post(`/sessions/${agentSessionId(ownerId)}/presence`, {
-      target: cleanTarget,
-      presence,
-    });
-  } catch {
-    /** Indikator mengetik opsional; kegagalan tidak boleh menghentikan alur. */
-  }
 }
 
 /** Mengumpulkan ringkasan workflow milik pemilik untuk konteks classifier. */
@@ -108,11 +76,17 @@ async function loadWorkflowContext(
  */
 async function buildAndReply(
   ownerId: string,
-  sender: string,
   prompt: string,
   geminiApiKey: string,
+  geminiModel: string,
+  reply: AgentTransport["reply"],
 ): Promise<void> {
-  const built = await buildWorkflowFromPrompt(prompt, geminiApiKey, ownerId);
+  const built = await buildWorkflowFromPrompt(
+    prompt,
+    geminiApiKey,
+    ownerId,
+    geminiModel,
+  );
 
   const created = await prisma.workflow.create({
     data: {
@@ -128,7 +102,7 @@ async function buildAndReply(
     .map((node) => `• ${node.data.label}`)
     .join("\n");
 
-  let reply = `Otomasi "${built.name}" sudah dibuat dengan ${built.nodes.length} langkah:\n${nodeSummary}`;
+  let message = `Otomasi "${built.name}" sudah dibuat dengan ${built.nodes.length} langkah:\n${nodeSummary}`;
 
   if (built.missingCredentials.length > 0) {
     const missingSummary = built.missingCredentials
@@ -138,12 +112,12 @@ async function buildAndReply(
       )
       .join("\n");
 
-    reply += `\n\nBeberapa node masih perlu kredensial sebelum bisa dijalankan:\n${missingSummary}\n\nLengkapi di aplikasi (menu Credentials), lalu publikasikan workflow.`;
+    message += `\n\nBeberapa node masih perlu kredensial sebelum bisa dijalankan:\n${missingSummary}\n\nLengkapi di aplikasi (menu Credentials), lalu publikasikan workflow.`;
   } else {
-    reply += `\n\nSemua kredensial sudah terpasang otomatis. Buka aplikasi untuk meninjau & mempublikasikan (ID: ${created.id}).`;
+    message += `\n\nSemua kredensial sudah terpasang otomatis. Buka aplikasi untuk meninjau & mempublikasikan (ID: ${created.id}).`;
   }
 
-  await replyViaAgent(ownerId, sender, reply);
+  await reply(message);
 }
 
 /** Mencari workflow milik pemilik berdasarkan nama (cocok persis lalu sebagian). */
@@ -183,25 +157,14 @@ async function findWorkflowByName(
 export async function handleAgentMessage(
   args: AgentRouterArgs,
 ): Promise<{ action: string }> {
-  const { ownerId, sender, message } = args;
+  const { ownerId, sender, message, geminiApiKey, transport } = args;
+  const geminiModel = args.geminiModel || GEMINI_MODEL;
 
   /**
    * Tampilkan indikator "sedang mengetik" secepatnya agar pengguna tahu pesan
-   * sedang diproses. Indikator hilang otomatis ketika balasan dikirim.
+   * sedang diproses.
    */
-  await sendAgentTyping(ownerId, sender, "composing");
-
-  const geminiApiKey = await loadOwnerGeminiKey(ownerId);
-
-  if (!geminiApiKey) {
-    await replyViaAgent(
-      ownerId,
-      sender,
-      "Agen AI belum aktif. Tambahkan kredensial Google Gemini di aplikasi (menu Credentials) terlebih dahulu.",
-    );
-
-    return { action: "no_gemini" };
-  }
+  await transport.sendTyping();
 
   const redis = await getRedisClient();
   const key = pendingKey(ownerId, sender);
@@ -215,14 +178,18 @@ export async function handleAgentMessage(
       await redis.del(key);
 
       try {
-        await buildAndReply(ownerId, sender, pendingPrompt, geminiApiKey);
+        await buildAndReply(
+          ownerId,
+          pendingPrompt,
+          geminiApiKey,
+          geminiModel,
+          transport.reply,
+        );
       } catch (error) {
         const reason =
           error instanceof Error ? error.message : "kesalahan tak dikenal";
 
-        await replyViaAgent(
-          ownerId,
-          sender,
+        await transport.reply(
           `Maaf, otomasi gagal dibuat: ${reason}. Coba jelaskan ulang dengan lebih spesifik.`,
         );
       }
@@ -233,11 +200,7 @@ export async function handleAgentMessage(
     if (CANCEL_WORDS.includes(normalized)) {
       await redis.del(key);
 
-      await replyViaAgent(
-        ownerId,
-        sender,
-        "Baik, pembuatan otomasi dibatalkan.",
-      );
+      await transport.reply("Baik, pembuatan otomasi dibatalkan.");
 
       return { action: "create_cancelled" };
     }
@@ -251,13 +214,16 @@ export async function handleAgentMessage(
   let intentResult;
 
   try {
-    intentResult = await classifyIntent(message, workflows, geminiApiKey);
+    intentResult = await classifyIntent(
+      message,
+      workflows,
+      geminiApiKey,
+      geminiModel,
+    );
   } catch (error) {
     console.error("[agent] classifyIntent gagal:", error);
 
-    await replyViaAgent(
-      ownerId,
-      sender,
+    await transport.reply(
       "Maaf, saya sedang kesulitan memproses pesan itu. Coba ulangi sebentar lagi.",
     );
 
@@ -268,9 +234,7 @@ export async function handleAgentMessage(
     intentResult.intent === "question" ||
     intentResult.intent === "out_of_scope"
   ) {
-    await replyViaAgent(
-      ownerId,
-      sender,
+    await transport.reply(
       intentResult.answer ??
         "Saya hanya bisa membantu seputar otomasi dan workflow di aplikasi ini.",
     );
@@ -285,9 +249,7 @@ export async function handleAgentMessage(
       intentResult.planSummary ??
       "Saya akan membuat workflow sesuai permintaan Anda.";
 
-    await replyViaAgent(
-      ownerId,
-      sender,
+    await transport.reply(
       `Rencana otomasi:\n${plan}\n\nBalas "ya" untuk membuat, atau "batal" untuk membatalkan.`,
     );
 
@@ -301,9 +263,7 @@ export async function handleAgentMessage(
     );
 
     if (!workflow) {
-      await replyViaAgent(
-        ownerId,
-        sender,
+      await transport.reply(
         `Workflow "${intentResult.workflowName ?? ""}" tidak ditemukan. Sebutkan nama yang sesuai dengan daftar workflow Anda.`,
       );
 
@@ -313,20 +273,12 @@ export async function handleAgentMessage(
     try {
       await runWorkflow(workflow.id, { sender, message }, "main");
 
-      await replyViaAgent(
-        ownerId,
-        sender,
-        `Workflow "${workflow.name}" sedang dijalankan.`,
-      );
+      await transport.reply(`Workflow "${workflow.name}" sedang dijalankan.`);
     } catch (error) {
       const reason =
         error instanceof Error ? error.message : "kesalahan tak dikenal";
 
-      await replyViaAgent(
-        ownerId,
-        sender,
-        `Gagal menjalankan "${workflow.name}": ${reason}.`,
-      );
+      await transport.reply(`Gagal menjalankan "${workflow.name}": ${reason}.`);
     }
 
     return { action: "run_triggered" };

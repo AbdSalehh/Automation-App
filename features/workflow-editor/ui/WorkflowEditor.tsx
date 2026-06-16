@@ -135,11 +135,23 @@ export function WorkflowEditor() {
 
     const newReplies = replies.slice(toastedReplyCountRef.current);
 
+    const MEDIA_LABELS: Record<string, string> = {
+      image: "🖼️ Gambar",
+      video: "🎬 Video",
+      audio: "🎙️ Pesan suara",
+      document: "📄 Dokumen",
+      sticker: "🌟 Stiker",
+    };
+
     for (const reply of newReplies) {
       const senderLabel = reply.name || reply.sender || "WhatsApp";
 
+      const mediaLabel = reply.media ? MEDIA_LABELS[reply.messageType] : null;
+
+      const description = reply.message || mediaLabel || "(tanpa teks)";
+
       toast.info(`📩 Balasan dari ${senderLabel}`, {
-        description: reply.message,
+        description,
       });
     }
 

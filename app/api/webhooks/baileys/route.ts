@@ -1,8 +1,6 @@
 import { prisma } from "@/shared/lib/prisma";
 import { handleRoute, ok, badRequest } from "@/shared/api/http";
 import { runWorkflow, resumeWaitingReplies } from "@/shared/server/engine";
-import { handleAgentMessage } from "@/shared/server/agent/agentRouter";
-import { parseSessionId } from "@/shared/server/whatsapp/sessions";
 import { decryptWebhookJson } from "@/shared/lib/webhookCrypto";
 import type { FlowNode } from "@/entities/workflow/model/workflow.model";
 
@@ -20,11 +18,28 @@ import type { FlowNode } from "@/entities/workflow/model/workflow.model";
  * salah memicu workflow user lain. Payload diperlakukan sebagai data tak
  * tepercaya (tanpa auth header).
  */
+interface InboundMedia {
+  mimetype: string;
+  fileName: string;
+  fileLength: number;
+  url: string;
+}
+
+type InboundMessageType =
+  | "text"
+  | "image"
+  | "video"
+  | "audio"
+  | "document"
+  | "sticker";
+
 interface BaileysWebhookPayload {
   sessionId?: string;
   sender?: string;
   message?: string;
   name?: string;
+  messageType?: InboundMessageType;
+  media?: InboundMedia | null;
   sentAt?: string;
   receivedAt?: string;
   /** Token terenkripsi berisi field di atas (format baru). */
@@ -55,40 +70,34 @@ export async function POST(request: Request) {
       }
     }
 
-    if (!source.sessionId || !source.sender || !source.message) {
+    const hasMedia = Boolean(source.media?.url);
+
+    /**
+     * Pesan media tanpa caption tetap valid: cukup ada `media` walau `message`
+     * kosong. Untuk pesan teks, `message` wajib ada.
+     */
+    if (!source.sessionId || !source.sender || (!source.message && !hasMedia)) {
       return badRequest(
-        "Payload tidak lengkap: sessionId, sender, dan message wajib diisi",
+        "Payload tidak lengkap: sessionId, sender, dan message/media wajib diisi",
       );
     }
 
     const payload = {
       sessionId: String(source.sessionId),
       sender: String(source.sender),
-      message: String(source.message),
+      message: String(source.message ?? ""),
       name: String(source.name ?? ""),
+      messageType: source.messageType ?? "text",
+      media: source.media ?? null,
       sentAt: source.sentAt ?? "",
       receivedAt: source.receivedAt ?? new Date().toISOString(),
     };
 
-    const { ownerId, channel } = parseSessionId(payload.sessionId);
+    const ownerId = payload.sessionId;
 
     /**
-     * Akun agen: seluruh pesan masuk diproses router Gemini (tanya/buat/
-     * jalankan/di luar konteks). Tidak memicu workflow secara langsung.
-     */
-    if (channel === "agent") {
-      const result = await handleAgentMessage({
-        ownerId,
-        sender: payload.sender,
-        message: payload.message,
-      });
-
-      return ok(result, "Pesan agen diproses");
-    }
-
-    /**
-     * Akun workflow: jalur klasik. Lanjutkan wait_reply yang menunggu balasan
-     * pengirim ini, lalu picu workflow milik pemilik yang punya whatsapp_trigger.
+     * Lanjutkan wait_reply yang menunggu balasan pengirim ini, lalu picu
+     * workflow milik pemilik yang memuat node whatsapp_trigger.
      */
     const resumedCount = await resumeWaitingReplies(payload.sender, payload);
 

@@ -22,8 +22,8 @@ export const AGENT_PIPELINE_NODES: Node<PipelineNodeData>[] = [
     position: { x: 0, y: 160 },
     data: {
       kind: "trigger",
-      title: "Balasan WhatsApp",
-      subtitle: "Pesan masuk dari akun agen",
+      title: "Pesan Telegram",
+      subtitle: "Pesan masuk dari bot agen",
     },
   },
   {
@@ -62,7 +62,7 @@ export const AGENT_PIPELINE_NODES: Node<PipelineNodeData>[] = [
     position: { x: 980, y: 280 },
     data: {
       kind: "reply",
-      title: "Konfirmasi WhatsApp",
+      title: "Konfirmasi Telegram",
       subtitle: "Kirim hasil aksi ke pengguna",
     },
   },

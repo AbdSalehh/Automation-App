@@ -7,6 +7,21 @@ export const APP_NAME = "AutoFlow";
  */
 export const GEMINI_MODEL = "gemini-2.5-flash";
 
+/**
+ * Pilihan model Gemini gratis (keluarga Flash/Flash-Lite). Model Pro tidak
+ * disertakan karena berbayar. Flash-Lite berguna saat Flash sedang high-traffic
+ * karena kuota & bebannya terpisah.
+ */
+export const GEMINI_MODELS: { value: string; label: string }[] = [
+  { value: "gemini-2.5-flash", label: "Gemini 2.5 Flash (default)" },
+  {
+    value: "gemini-2.5-flash-lite",
+    label: "Gemini 2.5 Flash-Lite (ringan, jarang sibuk)",
+  },
+  { value: "gemini-flash-latest", label: "Gemini Flash (terbaru)" },
+  { value: "gemini-flash-lite-latest", label: "Gemini Flash-Lite (terbaru)" },
+];
+
 export const ROUTES = {
   home: "/",
   workflows: "/workflows",
@@ -39,6 +54,7 @@ export const CREDENTIAL_TYPES = [
   "telegram",
   "telegram_personal",
   "gemini",
+  "agent_chat",
   "google_oauth",
   "google_service_account",
   "google_calendar",
@@ -53,6 +69,7 @@ export const CREDENTIAL_TYPE_LABELS: Record<CredentialType, string> = {
   telegram: "Telegram Bot (BotFather)",
   telegram_personal: "Telegram Nomor Pribadi",
   gemini: "Google Gemini AI",
+  agent_chat: "Agen Chat-Action (Telegram + Gemini)",
   google_oauth: "Google Workspace (OAuth2)",
   google_service_account: "Google Service Account",
   google_calendar: "Google Calendar",

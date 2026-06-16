@@ -55,6 +55,25 @@ export const CREDENTIAL_FIELDS: Record<CredentialType, CredentialFieldDef[]> = {
       placeholder: "Dari aistudio.google.com → Get API key",
     },
   ],
+  agent_chat: [
+    {
+      key: "botToken",
+      label: "Bot Token Telegram",
+      secret: true,
+      placeholder: "Dari @BotFather → /newbot",
+    },
+    {
+      key: "geminiApiKey",
+      label: "API Key Gemini",
+      secret: true,
+      placeholder: "Dari aistudio.google.com → Get API key",
+    },
+    {
+      key: "geminiModel",
+      label: "Model Gemini",
+      placeholder: "gemini-2.5-flash",
+    },
+  ],
   google_oauth: [
     { key: "clientId", label: "Client ID" },
     { key: "clientSecret", label: "Client Secret", secret: true },

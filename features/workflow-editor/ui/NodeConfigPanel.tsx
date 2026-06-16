@@ -41,6 +41,7 @@ import { ScheduleTriggerConfig } from "./ScheduleTriggerConfig";
 import { TransformConfig, type TransformMapping } from "./TransformConfig";
 import { ExpressionInput } from "./ExpressionInput";
 import type { VariableGroup } from "./VariablePicker";
+import { GEMINI_MODELS } from "@/shared/config/constants";
 import { cn } from "@/shared/lib/utils";
 
 interface NodeConfigPanelProps {
@@ -97,7 +98,8 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
     {
       key: "model",
       label: "Model (opsional)",
-      placeholder: "gemini-2.5-flash",
+      selectOptions: GEMINI_MODELS,
+      hint: "Flash-Lite cocok saat Flash sedang sibuk (high-traffic).",
     },
   ],
   supabase_insert: [

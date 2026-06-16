@@ -78,6 +78,68 @@ const COUNTRY_CODE_OPTIONS = [
 ];
 
 const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
+  ai_gemini: [
+    {
+      key: "systemInstruction",
+      label: "Peran AI (System Instruction)",
+      multiline: true,
+      placeholder:
+        "Kamu adalah asisten yang mencatat pengeluaran. Ekstrak nama item dan harga dari pesan.",
+      hint: "Mendefinisikan persona/peran AI dan format balasan yang diharapkan.",
+    },
+    {
+      key: "prompt",
+      label: "Prompt / Pesan",
+      multiline: true,
+      placeholder: "{{message}}",
+      hint: "Pesan yang diproses AI. Gunakan {{message}} untuk isi pesan masuk.",
+    },
+    {
+      key: "model",
+      label: "Model (opsional)",
+      placeholder: "gemini-1.5-flash",
+    },
+  ],
+  supabase_insert: [
+    { key: "table", label: "Nama Tabel", placeholder: "expenses" },
+    {
+      key: "columns",
+      label: "Kolom (satu per baris: kolom=nilai)",
+      multiline: true,
+      placeholder: "item={{text}}\namount={{amount}}\nsender={{sender}}",
+      hint: "Kosongkan untuk menyimpan seluruh field data masuk apa adanya. Nilai mendukung {{template}}.",
+    },
+  ],
+  supabase_query: [
+    { key: "table", label: "Nama Tabel", placeholder: "expenses" },
+    {
+      key: "select",
+      label: "Kolom Dipilih",
+      placeholder: "*",
+      hint: "Daftar kolom dipisah koma, atau * untuk semua.",
+    },
+    {
+      key: "filters",
+      label: "Filter (satu per baris: kolom operator nilai)",
+      multiline: true,
+      placeholder: "sender eq {{sender}}\namount gte 1000",
+      hint: "Operator PostgREST: eq, gte, lte, like, dst.",
+    },
+    {
+      key: "orderBy",
+      label: "Urutkan (opsional)",
+      placeholder: "created_at.desc",
+    },
+    { key: "limit", label: "Batas Baris (opsional)", placeholder: "50" },
+  ],
+  telegram_trigger: [
+    {
+      key: "info",
+      label: "Info",
+      placeholder: "",
+      hint: "Saat ada pesan Telegram masuk, data tersedia sebagai {{sender}}, {{message}}, {{name}}. Daftarkan webhook bot di halaman kredensial Telegram.",
+    },
+  ],
   http_request: [
     { key: "url", label: "URL", placeholder: "https://api.example.com/data" },
     { key: "method", label: "Method", placeholder: "GET / POST / PUT" },

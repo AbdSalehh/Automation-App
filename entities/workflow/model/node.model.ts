@@ -22,6 +22,8 @@ export type NodeKind =
   | "google_calendar_trigger"
   | "google_calendar_create_event"
   | "google_calendar_list_events"
+  | "supabase_insert"
+  | "supabase_query"
   | "date_calculator"
   | "schedule"
   | "wait_reply"
@@ -227,6 +229,24 @@ export const NODE_TYPES: NodeTypeDef[] = [
     icon: "Sparkles",
     credentialType: "gemini",
     outputs: ["text", "raw"],
+  },
+  {
+    kind: "supabase_insert",
+    category: "action",
+    label: "Database Insert (Supabase)",
+    description: "Simpan satu/banyak baris ke tabel Supabase.",
+    icon: "DatabaseZap",
+    credentialType: "supabase",
+    outputs: ["inserted", "rows"],
+  },
+  {
+    kind: "supabase_query",
+    category: "action",
+    label: "Database Query (Supabase)",
+    description: "Baca baris dari tabel Supabase dengan filter opsional.",
+    icon: "Database",
+    credentialType: "supabase",
+    outputs: ["rows", "count"],
   },
   {
     kind: "date_calculator",

@@ -155,6 +155,41 @@ export const CONNECTORS: Record<string, Connector> = {
     },
   },
 
+  supabase: {
+    type: "supabase",
+    test: async (credential) => {
+      if (!credential.projectUrl || !credential.serviceRoleKey) {
+        return {
+          ok: false,
+          message: "projectUrl & serviceRoleKey wajib diisi",
+        };
+      }
+
+      const baseUrl = credential.projectUrl.trim().replace(/\/+$/, "");
+
+      const response = await requestExternal(`${baseUrl}/rest/v1/`, {
+        method: "GET",
+        headers: {
+          apikey: credential.serviceRoleKey,
+          Authorization: `Bearer ${credential.serviceRoleKey}`,
+        },
+      });
+
+      if (response.status === 401 || response.status === 403) {
+        return { ok: false, message: "Service role key tidak valid" };
+      }
+
+      if (!response.ok) {
+        return {
+          ok: false,
+          message: `Supabase tidak merespons dengan benar (status ${response.status})`,
+        };
+      }
+
+      return { ok: true, message: "Koneksi Supabase berhasil" };
+    },
+  },
+
   google_service_account: {
     type: "google_service_account",
     test: async (credential) => {

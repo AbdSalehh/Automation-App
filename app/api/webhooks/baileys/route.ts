@@ -1,6 +1,7 @@
 import { prisma } from "@/shared/lib/prisma";
 import { handleRoute, ok, badRequest } from "@/shared/api/http";
 import { runWorkflow, resumeWaitingReplies } from "@/shared/server/engine";
+import { handleBuilderIntent } from "@/shared/server/builderIntent";
 import { decryptWebhookJson } from "@/shared/lib/webhookCrypto";
 import type { FlowNode } from "@/entities/workflow/model/workflow.model";
 
@@ -67,6 +68,21 @@ export async function POST(request: Request) {
       sentAt: source.sentAt ?? "",
       receivedAt: source.receivedAt ?? new Date().toISOString(),
     };
+
+    /**
+     * Intent builder: bila pesan adalah perintah membuat otomasi, bangun
+     * workflow lalu balas via WhatsApp — tidak diteruskan ke alur biasa.
+     */
+    const builderHandled = await handleBuilderIntent({
+      ownerId: payload.sessionId,
+      sender: payload.sender,
+      message: payload.message,
+      provider: "whatsapp",
+    });
+
+    if (builderHandled) {
+      return ok({ builder: true }, "Permintaan pembuatan otomasi diproses");
+    }
 
     /** Lanjutkan eksekusi wait_reply yang menunggu balasan dari pengirim ini. */
     const resumedCount = await resumeWaitingReplies(payload.sender, payload);

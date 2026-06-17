@@ -26,13 +26,27 @@ import { classifyIntent, type WorkflowContext } from "./intentClassifier";
  * Server-only module.
  */
 
+/** Tombol inline yang bisa dikirim bersama balasan (mis. konfirmasi Ya/Batal). */
+export interface AgentReplyButton {
+  /** Teks yang tampil di tombol. */
+  label: string;
+  /** Data callback yang dikirim balik saat tombol ditekan. */
+  value: string;
+}
+
 /** Adaptor pengiriman pesan untuk channel chat tertentu. */
 export interface AgentTransport {
-  /** Mengirim balasan teks ke pengirim. */
-  reply: (text: string) => Promise<void>;
+  /** Mengirim balasan teks ke pengirim, opsional dengan tombol inline. */
+  reply: (text: string, buttons?: AgentReplyButton[]) => Promise<void>;
   /** Menampilkan indikator "sedang mengetik" (opsional, boleh no-op). */
   sendTyping: () => Promise<void>;
 }
+
+/** Tombol konfirmasi standar Ya / Batal untuk aksi yang menunggu persetujuan. */
+const CONFIRM_BUTTONS: AgentReplyButton[] = [
+  { label: "✅ Ya", value: "ya" },
+  { label: "❌ Batal", value: "batal" },
+];
 
 export interface AgentRouterArgs {
   ownerId: string;
@@ -310,6 +324,75 @@ function describeNode(node: FlowNode): string {
 }
 
 /**
+ * Mengubah status publikasi workflow LANGSUNG di database tanpa memanggil
+ * Gemini. Dipakai untuk intent `publish` agar cepat dan tidak terdampak
+ * high-traffic (penyebab error 503 saat sebelumnya lewat builder).
+ */
+async function setWorkflowPublished(
+  ownerId: string,
+  workflowId: string,
+  workflowName: string,
+  publishState: boolean,
+  reply: AgentTransport["reply"],
+): Promise<{ action: string }> {
+  try {
+    await prisma.workflow.update({
+      where: { id: workflowId },
+      data: { isPublished: publishState },
+    });
+
+    await invalidateKeys(
+      cacheKeys.workflowDetail(workflowId),
+      cacheKeys.workflowList(ownerId),
+    );
+
+    await publishWorkflowUpdate(ownerId, {
+      action: "updated",
+      workflowId,
+    });
+
+    if (publishState) {
+      await reply(
+        [
+          `🟢 Siap! Workflow <b>${escapeHtml(workflowName)}</b> sekarang berstatus <b>AKTIF</b>. 🎉`,
+          "",
+          "Mulai sekarang otomasi ini akan berjalan otomatis setiap pemicunya terpenuhi:",
+          "• Pemicu terjadwal akan jalan sesuai waktunya.",
+          "• Pemicu pesan/Webhook akan merespons begitu ada data masuk.",
+          "",
+          `💡 Ingin menonaktifkan sementara? Cukup kirim <i>"jadikan draft ${escapeHtml(
+            workflowName,
+          )}"</i>. Ada lagi yang bisa saya bantu?`,
+        ].join("\n"),
+      );
+    } else {
+      await reply(
+        [
+          `⚪ Oke, workflow <b>${escapeHtml(workflowName)}</b> sudah kembali ke status <b>DRAFT</b>.`,
+          "",
+          "Saat berstatus draft, otomasi <b>tidak</b> akan berjalan otomatis, jadi aman untuk Anda sunting dulu.",
+          "",
+          `💡 Kalau sudah siap mengaktifkannya lagi, kirim <i>"publikasikan ${escapeHtml(
+            workflowName,
+          )}"</i>. Mau saya bantu yang lain?`,
+        ].join("\n"),
+      );
+    }
+  } catch (error) {
+    const reason =
+      error instanceof Error ? error.message : "kesalahan tak dikenal";
+
+    await reply(
+      `Maaf, gagal mengubah status workflow <b>${escapeHtml(
+        workflowName,
+      )}</b>: ${escapeHtml(reason)}.`,
+    );
+  }
+
+  return { action: "publish_done" };
+}
+
+/**
  * Menjalankan aksi yang sudah dikonfirmasi pengguna ("ya"): membuat, mengubah,
  * atau menghapus workflow. Semua kegagalan dibalas dengan pesan ramah.
  */
@@ -561,7 +644,8 @@ export async function handleAgentMessage(
       "Saya akan membuat workflow sesuai permintaan Anda.";
 
     await transport.reply(
-      `🛠️ <b>Rencana otomasi:</b>\n${plan}\n\nBalas <b>"ya"</b> untuk membuat, atau <b>"batal"</b> untuk membatalkan.`,
+      `🛠️ <b>Rencana otomasi:</b>\n${plan}\n\nApakah Anda ingin saya membuatnya sekarang? Tekan tombol di bawah ini.`,
+      CONFIRM_BUTTONS,
     );
 
     return { action: "create_proposed" };
@@ -597,7 +681,8 @@ export async function handleAgentMessage(
         workflow.name,
       )}</b>:\n${escapeHtml(
         intentResult.editInstruction ?? message,
-      )}\n\nBalas <b>"ya"</b> untuk menerapkan, atau <b>"batal"</b> untuk membatalkan.`,
+      )}\n\nLanjutkan perubahan ini? Tekan tombol di bawah ini.`,
+      CONFIRM_BUTTONS,
     );
 
     return { action: "edit_proposed" };
@@ -630,10 +715,38 @@ export async function handleAgentMessage(
     await transport.reply(
       `⚠️ Yakin ingin <b>menghapus</b> workflow <b>${escapeHtml(
         workflow.name,
-      )}</b>? Tindakan ini tidak bisa dibatalkan.\n\nBalas <b>"ya"</b> untuk menghapus, atau <b>"batal"</b> untuk membatalkan.`,
+      )}</b>? Tindakan ini tidak bisa dibatalkan.\n\nTekan tombol di bawah ini untuk memastikan.`,
+      CONFIRM_BUTTONS,
     );
 
     return { action: "delete_proposed" };
+  }
+
+  if (intentResult.intent === "publish") {
+    const workflow = await findWorkflowByName(
+      ownerId,
+      intentResult.workflowName ?? "",
+    );
+
+    if (!workflow) {
+      await transport.reply(
+        `🔍 Workflow <b>${escapeHtml(
+          intentResult.workflowName ?? "",
+        )}</b> tidak ditemukan. Coba sebutkan nama yang sesuai dengan daftar workflow Anda.`,
+      );
+
+      return { action: "publish_not_found" };
+    }
+
+    const publishState = intentResult.publishState !== false;
+
+    return setWorkflowPublished(
+      ownerId,
+      workflow.id,
+      workflow.name,
+      publishState,
+      transport.reply,
+    );
   }
 
   if (intentResult.intent === "run") {

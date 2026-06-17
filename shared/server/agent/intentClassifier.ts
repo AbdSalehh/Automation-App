@@ -21,6 +21,7 @@ export type AgentIntent =
   | "explain"
   | "edit"
   | "delete"
+  | "publish"
   | "out_of_scope";
 
 export interface IntentResult {
@@ -33,6 +34,8 @@ export interface IntentResult {
   nodeName?: string;
   /** Instruksi perubahan untuk intent `edit` (mis. "tambah node Gmail"). */
   editInstruction?: string;
+  /** Status target untuk intent `publish` (true = aktifkan, false = jadikan draft). */
+  publishState?: boolean;
   /** Ringkasan rencana untuk intent `create` (ditampilkan sebelum konfirmasi). */
   planSummary?: string;
 }
@@ -92,19 +95,22 @@ function buildClassifierPrompt(workflows: WorkflowContext[]): string {
     "3. `run` — pengguna ingin MENJALANKAN workflow yang ada. Isi `workflowName` dengan nama terdekat dari daftar.",
     "4. `list` — pengguna minta DAFTAR workflow miliknya (kata kunci: daftar, list, apa saja workflow saya). Tidak perlu field lain.",
     "5. `explain` — pengguna minta PENJELASAN isi workflow atau node tertentu (kata kunci: sebutkan node, jelaskan, node apa saja). Isi `workflowName`. Bila merujuk satu node tertentu, isi juga `nodeName`.",
-    "6. `edit` — pengguna ingin MENGUBAH workflow yang ada (kata kunci: ubah, edit, tambah node, ganti, hapus node). Isi `workflowName` dan `editInstruction` (instruksi perubahan ringkas).",
+    "6. `edit` — pengguna ingin MENGUBAH STRUKTUR workflow (kata kunci: ubah, edit, tambah node, ganti node, hapus node). Isi `workflowName` dan `editInstruction`. JANGAN gunakan `edit` untuk sekadar publikasi/aktivasi.",
     "7. `delete` — pengguna ingin MENGHAPUS workflow (kata kunci: hapus, delete). Isi `workflowName`.",
-    "8. `out_of_scope` — di luar topik aplikasi. Isi `answer` dengan penolakan sopan dan arahkan kembali ke fungsi aplikasi.",
+    "8. `publish` — pengguna ingin MENGUBAH STATUS aktif/draft tanpa mengubah node (kata kunci: publish, publikasikan, aktifkan, jadikan aktif, jalankan otomatis, nonaktifkan, jadikan draft, matikan). Isi `workflowName` dan `publishState` (true untuk aktifkan/publish, false untuk draft/nonaktif).",
+    "9. `out_of_scope` — di luar topik aplikasi. Isi `answer` dengan penolakan sopan dan arahkan kembali ke fungsi aplikasi.",
     "",
     "GAYA BAHASA untuk `answer`/`planSummary` (akan dikirim ke Telegram):",
     "- Gunakan HTML Telegram bila perlu penekanan: <b>tebal</b>, <i>miring</i>, <u>garis bawah</u>. JANGAN pakai markdown (** atau __).",
     "- Gunakan daftar berpoin dengan karakter • di awal baris bila menyebut beberapa hal.",
-    "- Sisipkan 1-2 emoji yang relevan agar ramah, jangan berlebihan.",
-    "- Tulis ringkas namun informatif; pisahkan paragraf dengan baris kosong.",
+    "- Sisipkan 2-3 emoji yang relevan agar ramah, jangan berlebihan.",
+    "- Tulis JAWABAN YANG PANJANG, LENGKAP, dan INFORMATIF (minimal 4-6 kalimat). Jangan menjawab terlalu singkat.",
+    "- Struktur ideal: (1) kalimat pembuka yang menyapa & merangkum, (2) bagian isi berpoin yang menjelaskan detail/langkah, (3) kalimat penutup berisi saran langkah berikutnya atau ajakan bertanya lebih lanjut.",
+    "- Pisahkan setiap paragraf/bagian dengan baris kosong agar mudah dibaca.",
     "",
     "ATURAN OUTPUT:",
     "Balas HANYA JSON murni tanpa markdown fence, format:",
-    '{ "intent": "...", "answer": "...", "workflowName": "...", "nodeName": "...", "editInstruction": "...", "planSummary": "..." }',
+    '{ "intent": "...", "answer": "...", "workflowName": "...", "nodeName": "...", "editInstruction": "...", "publishState": true, "planSummary": "..." }',
     "Sertakan hanya field yang relevan dengan intent terpilih.",
   ].join("\n");
 }

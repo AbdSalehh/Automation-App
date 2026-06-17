@@ -47,6 +47,8 @@ export const API_ROUTES = {
   generateCase: "/generate-case",
   users: "/users",
   user: (id: string) => `/users/${id}`,
+  accountProfile: "/account/profile",
+  accountPassword: "/account/password",
 } as const;
 
 /** Connector types supported by the platform. Mirrors docs/n8n.md. */

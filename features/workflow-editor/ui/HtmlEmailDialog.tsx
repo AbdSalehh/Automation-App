@@ -11,6 +11,7 @@ import {
   AlertDialogTrigger,
 } from "@/shared/ui/alert-dialog";
 import { Button, Textarea } from "@/shared/ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { cn } from "@/shared/lib/utils";
 
 interface HtmlEmailDialogProps {
@@ -57,47 +58,48 @@ export function HtmlEmailDialog({ value, onChange }: HtmlEmailDialogProps) {
         </Button>
       </AlertDialogTrigger>
 
-      <AlertDialogContent className="sm:max-w-3xl">
+      <AlertDialogContent className="sm:max-w-3xl!">
         <AlertDialogHeader>
           <AlertDialogTitle>Template HTML Email</AlertDialogTitle>
         </AlertDialogHeader>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div className="flex flex-col gap-1.5">
-            <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+        <Tabs defaultValue="code" className="w-full">
+          <TabsList className="w-full">
+            <TabsTrigger value="code" className="gap-1.5">
               <CodeIcon className="size-3.5" />
-              Sumber HTML
-            </span>
+              Kode
+            </TabsTrigger>
+            <TabsTrigger value="preview" className="gap-1.5">
+              <EyeIcon className="size-3.5" />
+              Preview
+            </TabsTrigger>
+          </TabsList>
 
+          <TabsContent value="code" className="flex flex-col gap-1.5">
             <Textarea
               value={draftHtml}
               onChange={(changeEvent) => setDraftHtml(changeEvent.target.value)}
               placeholder={PLACEHOLDER_HTML}
-              className="h-72 resize-none font-mono text-xs"
+              className="h-80 resize-none font-mono text-xs"
             />
 
             <p className="text-xs text-muted-foreground">
               Mendukung {"{{template}}"} untuk data dinamis seperti {"{{nama}}"}
               .
             </p>
-          </div>
+          </TabsContent>
 
-          <div className="flex flex-col gap-1.5">
-            <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-              <EyeIcon className="size-3.5" />
-              Preview
-            </span>
-
+          <TabsContent value="preview">
             <iframe
               title="Preview HTML email"
               sandbox=""
               srcDoc={draftHtml}
               className={cn(
-                "h-72 w-full rounded-md border border-border bg-white",
+                "h-80 w-full rounded-md border border-border bg-white",
               )}
             />
-          </div>
-        </div>
+          </TabsContent>
+        </Tabs>
 
         <AlertDialogFooter>
           <Button

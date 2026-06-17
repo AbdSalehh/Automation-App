@@ -1,22 +1,43 @@
 import { AgentPipelineCanvas } from "@/features/agent-pipeline";
 import { AgentSettingsPanel } from "@/features/agent-settings";
 import { WhatsappQrLogin } from "@/features/whatsapp-qr-login";
+import { ProfileForm, PasswordForm } from "@/features/account-settings";
+import { requireUser } from "@/shared/auth";
+import { prisma } from "@/shared/lib/prisma";
 
 /**
- * Halaman setelan pengguna. Menampilkan panel aktivasi agen chat-action
- * (Telegram + Gemini), kanvas read-only alur agen sebagai pemicu sistem, serta
- * koneksi akun WhatsApp yang khusus dipakai node WhatsApp di workflow.
+ * Halaman setelan pengguna. Menampilkan profil akun (nama, foto, password),
+ * panel aktivasi agen chat-action (Telegram + Gemini), kanvas read-only alur
+ * agen, serta koneksi akun WhatsApp untuk node WhatsApp di workflow.
  */
-export function SettingsView() {
+export async function SettingsView() {
+  const sessionUser = await requireUser();
+
+  const account = await prisma.user.findUnique({
+    where: { id: sessionUser.id },
+    select: { name: true, image: true, passwordHash: true },
+  });
+
+  const hasPassword = Boolean(account?.passwordHash);
+
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8">
       <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold text-foreground">Setelan Agen</h1>
+        <h1 className="text-2xl font-bold text-foreground">Setelan</h1>
         <p className="text-sm text-muted-foreground">
-          Aktifkan agen chat-action lewat Telegram, lalu kirim pesan ke bot Anda
+          Kelola profil akun Anda, lalu aktifkan agen chat-action lewat Telegram
           untuk membuat & menjalankan otomasi.
         </p>
       </header>
+
+      <section className="grid max-w-4xl grid-cols-1 gap-4 md:grid-cols-2">
+        <ProfileForm
+          initialName={account?.name ?? ""}
+          initialImage={account?.image ?? null}
+        />
+
+        {hasPassword && <PasswordForm />}
+      </section>
 
       <section className="max-w-2xl">
         <AgentSettingsPanel />

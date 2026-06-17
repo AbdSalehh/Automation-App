@@ -74,6 +74,31 @@ function formatConfigKey(key: string): string {
   return key.replace(/([A-Z])/g, " $1").trim();
 }
 
+/**
+ * Mengubah nilai config menjadi teks yang aman ditampilkan. Objek/array
+ * di-stringify ringkas sebagai JSON agar tidak muncul "[object Object]", dan
+ * nilai panjang dipangkas supaya kartu node tetap rapi.
+ */
+function formatConfigValue(value: unknown): string {
+  if (value === null || value === undefined) {
+    return "—";
+  }
+
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+}
+
 /** Human-readable summary of a single structured condition rule. */
 function describeRule(rule: {
   field?: string;
@@ -234,8 +259,8 @@ function NodeBody({ nodeData }: { nodeData: WorkflowNodeData }) {
               <span className="shrink-0 text-[11px] capitalize text-muted-foreground">
                 {formatConfigKey(key)}
               </span>
-              <span className="truncate text-right text-[11px] font-medium text-foreground">
-                {String(value)}
+              <span className="line-clamp-2 text-right text-[11px] font-medium wrap-break-word text-foreground">
+                {formatConfigValue(value)}
               </span>
             </div>
           ))}

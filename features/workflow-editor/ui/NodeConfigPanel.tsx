@@ -192,7 +192,7 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
       key: "senderField",
       label: "Info",
       placeholder: "",
-      hint: "Saat ada balasan WA, data tersedia sebagai {{sender}}, {{message}}, {{name}}. Pasang URL webhook /api/webhooks/whapi (Whapi) atau /api/webhooks/whatsapp (Fonnte) di dashboard provider.",
+      hint: "Saat ada balasan WA, data tersedia sebagai {{sender}}, {{message}}, {{name}}. Hubungkan akun WhatsApp (Baileys) lewat scan QR di Setelan, atau pakai WhatsApp Cloud API (Meta).",
     },
   ],
   schedule: [
@@ -340,14 +340,10 @@ const CONDITION_NODE_KINDS = new Set(["condition", "filter"]);
  * ditampilkan untuk provider tersebut.
  */
 const PROVIDER_TO_CREDENTIAL_TYPE = {
-  whapi: "whatsapp_whapi",
-  fonnte: "whatsapp_fonnte",
   meta: "whatsapp",
 } as const;
 
 const WHATSAPP_PROVIDER_OPTIONS = [
-  { value: "whapi", label: "Whapi" },
-  { value: "fonnte", label: "Fonnte" },
   { value: "meta", label: "WhatsApp Cloud API (Meta)" },
   { value: "baileys", label: "Self-host (Baileys)" },
 ];

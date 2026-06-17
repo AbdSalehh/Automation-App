@@ -29,6 +29,14 @@ interface TelegramUpdate {
     chat?: { id?: number | string };
     from?: { first_name?: string; username?: string };
   };
+  callback_query?: {
+    id: string;
+    data?: string;
+    message?: {
+      chat?: { id?: number | string };
+    };
+    from?: { first_name?: string; username?: string };
+  };
 }
 
 interface AgentChatConfig {
@@ -100,13 +108,33 @@ function createTelegramTransport(
   chatId: string,
 ): AgentTransport {
   return {
-    reply: async (text) => {
+    reply: async (text, buttons) => {
       const sendMessageUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+
+      /**
+       * Bila ada tombol, susun sebagai inline_keyboard (satu baris) memakai
+       * callback_data agar router bisa memproses pilihan saat ditekan.
+       */
+      const replyMarkup = buttons?.length
+        ? {
+            inline_keyboard: [
+              buttons.map((button) => ({
+                text: button.label,
+                callback_data: button.value,
+              })),
+            ],
+          }
+        : undefined;
 
       const htmlResponse = await requestExternal(sendMessageUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        data: { chat_id: chatId, text, parse_mode: "HTML" },
+        data: {
+          chat_id: chatId,
+          text,
+          parse_mode: "HTML",
+          reply_markup: replyMarkup,
+        },
       });
 
       /**
@@ -117,7 +145,7 @@ function createTelegramTransport(
         await requestExternal(sendMessageUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          data: { chat_id: chatId, text },
+          data: { chat_id: chatId, text, reply_markup: replyMarkup },
         });
       }
     },
@@ -156,6 +184,59 @@ export async function POST(
       update = (await request.json()) as TelegramUpdate;
     } catch {
       return badRequest("Body bukan JSON yang valid");
+    }
+
+    const callbackQuery = update.callback_query;
+
+    /**
+     * Tombol inline (callback_query) diperlakukan seperti pesan teks biasa:
+     * `data` tombol ("ya"/"batal") menjadi teks, dan chat diambil dari pesan
+     * tempat tombol berada. Telegram juga di-acknowledge agar spinner tombol
+     * hilang.
+     */
+    if (callbackQuery) {
+      const callbackChatId = callbackQuery.message?.chat?.id;
+      const callbackText = callbackQuery.data ?? "";
+
+      await requestExternal(
+        `https://api.telegram.org/bot${token}/answerCallbackQuery`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          data: { callback_query_id: callbackQuery.id },
+        },
+      ).catch(() => undefined);
+
+      if (
+        !callbackText ||
+        callbackChatId === undefined ||
+        callbackChatId === null
+      ) {
+        return ok({ ignored: true }, "Callback tanpa data diabaikan");
+      }
+
+      const agentConfig = await findAgentChatConfig(token);
+
+      if (!agentConfig) {
+        return ok({ ignored: true }, "Callback bukan untuk agen chat-action");
+      }
+
+      if (!agentConfig.geminiApiKey) {
+        return badRequest("Agen chat-action belum memiliki Gemini API key");
+      }
+
+      const transport = createTelegramTransport(token, String(callbackChatId));
+
+      const result = await handleAgentMessage({
+        ownerId: agentConfig.ownerId,
+        sender: String(callbackChatId),
+        message: callbackText,
+        geminiApiKey: agentConfig.geminiApiKey,
+        geminiModel: agentConfig.geminiModel,
+        transport,
+      });
+
+      return ok(result, "Callback tombol diproses");
     }
 
     const message = update.message;

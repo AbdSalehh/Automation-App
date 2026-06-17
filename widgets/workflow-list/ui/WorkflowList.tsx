@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { Trash2Icon } from "lucide-react";
 import { Badge, Button, Card } from "@/shared/ui";
 import { ROUTES } from "@/shared/config/constants";
@@ -10,12 +11,39 @@ import { useWorkflowListStore } from "@/entities/workflow";
 import { CreateWorkflowButton } from "@/features/manage-workflows";
 
 export function WorkflowList() {
-  const { workflows, fetchWorkflows, isLoading, errorMessage, removeWorkflow } =
-    useWorkflowListStore();
+  const {
+    workflows,
+    fetchWorkflows,
+    isLoading,
+    errorMessage,
+    removeWorkflow,
+    subscribeRealtime,
+    unsubscribeRealtime,
+  } = useWorkflowListStore();
+
+  const { data: session } = useSession();
+
+  const sessionId = session?.user?.id ?? "";
 
   useEffect(() => {
     fetchWorkflows();
   }, [fetchWorkflows]);
+
+  /**
+   * Berlangganan event `workflow-update` selama halaman terbuka agar perubahan
+   * dari agen Telegram maupun tab lain langsung tersinkron tanpa refresh.
+   */
+  useEffect(() => {
+    if (!sessionId) {
+      return;
+    }
+
+    subscribeRealtime(sessionId);
+
+    return () => {
+      unsubscribeRealtime();
+    };
+  }, [sessionId, subscribeRealtime, unsubscribeRealtime]);
 
   return (
     <div className="flex flex-col gap-6">

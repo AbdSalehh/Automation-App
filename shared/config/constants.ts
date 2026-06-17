@@ -31,6 +31,8 @@ export const ROUTES = {
   settings: "/settings",
   login: "/login",
   onboarding: "/onboarding",
+  terms: "/terms",
+  privacy: "/privacy",
 } as const;
 
 export const API_ROUTES = {

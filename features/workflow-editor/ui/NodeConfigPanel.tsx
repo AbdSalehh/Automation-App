@@ -28,9 +28,11 @@ import {
   useSheetPreviewStore,
   useNodeTestStore,
   getNodeTypeDef,
+  getSiblingOperations,
   validateNodeData,
   type FlowNode,
   type ConditionGroup,
+  type NodeKind,
 } from "@/entities/workflow";
 import { useCredentialStore } from "@/entities/credential";
 import { ConditionBuilder } from "./ConditionBuilder";
@@ -40,6 +42,8 @@ import { DateCalculatorConfig } from "./DateCalculatorConfig";
 import { ScheduleTriggerConfig } from "./ScheduleTriggerConfig";
 import { TransformConfig, type TransformMapping } from "./TransformConfig";
 import { ExpressionInput } from "./ExpressionInput";
+import { DateTimePicker } from "./DateTimePicker";
+import { HtmlEmailDialog } from "./HtmlEmailDialog";
 import type { VariableGroup } from "./VariablePicker";
 import { GEMINI_MODELS } from "@/shared/config/constants";
 import { cn } from "@/shared/lib/utils";
@@ -58,6 +62,10 @@ interface ConfigFieldDef {
   columnSelect?: boolean;
   /** Render as a dropdown with a fixed set of options. */
   selectOptions?: { value: string; label: string }[];
+  /** Render as a Calendar + time picker writing a local ISO string. */
+  dateTime?: boolean;
+  /** Render the HTML email dialog when the node's bodyType is "html". */
+  htmlEmail?: boolean;
   hint?: string;
 }
 
@@ -278,23 +286,35 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
       placeholder: "Konfirmasi pesanan {{nama}}",
     },
     {
+      key: "bodyType",
+      label: "Tipe Isi",
+      selectOptions: [
+        { value: "text", label: "Teks Biasa" },
+        { value: "html", label: "HTML Email" },
+      ],
+      hint: "Pilih HTML Email untuk template berformat dengan preview.",
+    },
+    {
       key: "body",
       label: "Isi Email",
       multiline: true,
       placeholder: "Halo {{nama}}, terima kasih sudah memesan.",
+      htmlEmail: true,
     },
   ],
   google_calendar_create_event: [
     { key: "summary", label: "Judul Event", placeholder: "Rapat {{Nama}}" },
     {
       key: "startDateTime",
-      label: "Mulai (ISO)",
-      placeholder: "2026-06-10T09:00:00",
+      label: "Mulai",
+      placeholder: "Pilih tanggal & jam mulai",
+      dateTime: true,
     },
     {
       key: "endDateTime",
-      label: "Selesai (ISO)",
-      placeholder: "2026-06-10T10:00:00",
+      label: "Selesai",
+      placeholder: "Pilih tanggal & jam selesai",
+      dateTime: true,
     },
     { key: "timeZone", label: "Time Zone", placeholder: "Asia/Jakarta" },
     { key: "description", label: "Deskripsi", multiline: true },
@@ -365,6 +385,27 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
 
   const nodeTypeDefinition = getNodeTypeDef(node.data.kind);
   const configFields = CONFIG_FIELDS[node.data.kind] ?? [];
+
+  /**
+   * Operasi sejenis (family + kategori sama). Bila lebih dari satu, panel
+   * menampilkan dropdown Operation untuk berpindah operasi tanpa menambah node.
+   */
+  const siblingOperations = getSiblingOperations(node.data.kind);
+
+  const handleOperationChange = (nextKind: string) => {
+    const currentDefinition = getNodeTypeDef(node.data.kind);
+    const nextDefinition = getNodeTypeDef(nextKind as NodeKind);
+
+    const shouldSyncLabel =
+      !node.data.label || node.data.label === currentDefinition?.label;
+
+    updateNodeData(node.id, {
+      kind: nextKind as NodeKind,
+      ...(shouldSyncLabel && nextDefinition
+        ? { label: nextDefinition.label }
+        : {}),
+    });
+  };
 
   const isWhatsAppSend = node.data.kind === "whatsapp_send";
   const selectedProvider = String(node.data.config.provider ?? "whapi");
@@ -514,7 +555,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
 
   return (
     <>
-      <aside className="flex w-80 shrink-0 flex-col border-l border-border bg-card">
+      <aside className="flex w-80 shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm">
         <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
           <h2 className="text-sm font-semibold text-foreground">
             Node Properties
@@ -547,6 +588,36 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                 {nodeTypeDefinition?.description}
               </p>
             </div>
+
+            {siblingOperations.length > 1 && (
+              <div>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                  Operation
+                </label>
+
+                <Select
+                  value={node.data.kind}
+                  onValueChange={handleOperationChange}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="\u2014 pilih operasi \u2014" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    {siblingOperations.map((operation) => (
+                      <SelectItem key={operation.kind} value={operation.kind}>
+                        {operation.operationLabel ?? operation.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  Pilih operasi untuk node ini. Konfigurasi di bawah
+                  menyesuaikan pilihan.
+                </p>
+              </div>
+            )}
 
             {isWhatsAppSend && (
               <div>
@@ -896,7 +967,23 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                   {configField.label}
                 </label>
 
-                {configField.selectOptions ? (
+                {configField.htmlEmail &&
+                String(node.data.config.bodyType ?? "text") === "html" ? (
+                  <HtmlEmailDialog
+                    value={String(node.data.config[configField.key] ?? "")}
+                    onChange={(html) =>
+                      updateConfigValue(configField.key, html)
+                    }
+                  />
+                ) : configField.dateTime ? (
+                  <DateTimePicker
+                    value={String(node.data.config[configField.key] ?? "")}
+                    placeholder={configField.placeholder}
+                    onChange={(isoValue) =>
+                      updateConfigValue(configField.key, isoValue)
+                    }
+                  />
+                ) : configField.selectOptions ? (
                   <Select
                     value={String(
                       node.data.config[configField.key] ??

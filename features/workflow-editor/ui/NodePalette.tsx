@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { PlusIcon, SearchIcon } from "lucide-react";
 import { Button, Input, Icon, ScrollArea } from "@/shared/ui";
 import { cn } from "@/shared/lib/utils";
 import {
   NODE_TYPES,
+  NODE_FAMILIES,
   useWorkflowStore,
   type NodeCategory,
+  type NodeKind,
+  type NodeFamily,
 } from "@/entities/workflow";
 
 const CATEGORY_ORDER: NodeCategory[] = ["trigger", "action", "logic"];
@@ -24,6 +27,62 @@ const CATEGORY_ICON_STYLES: Record<NodeCategory, string> = {
   logic: "bg-amber-100 text-amber-600",
 };
 
+/**
+ * Satu kartu di palette. Node dengan family yang sama pada satu kategori
+ * digabung jadi satu entri; klik menambahkan operasi default (kind pertama),
+ * lalu operasi spesifik dipilih lewat dropdown di panel konfigurasi.
+ */
+interface PaletteEntry {
+  id: string;
+  label: string;
+  description: string;
+  icon: string;
+  defaultKind: NodeKind;
+}
+
+/**
+ * Membangun daftar kartu untuk satu kategori: family digabung menjadi satu
+ * kartu, node tanpa family tampil apa adanya. Urutan kemunculan dipertahankan.
+ */
+function buildPaletteEntries(category: NodeCategory): PaletteEntry[] {
+  const entries: PaletteEntry[] = [];
+  const seenFamilies = new Set<NodeFamily>();
+
+  NODE_TYPES.filter((nodeType) => nodeType.category === category).forEach(
+    (nodeType) => {
+      if (!nodeType.family) {
+        entries.push({
+          id: nodeType.kind,
+          label: nodeType.label,
+          description: nodeType.description,
+          icon: nodeType.icon,
+          defaultKind: nodeType.kind,
+        });
+
+        return;
+      }
+
+      if (seenFamilies.has(nodeType.family)) {
+        return;
+      }
+
+      seenFamilies.add(nodeType.family);
+
+      const family = NODE_FAMILIES[nodeType.family];
+
+      entries.push({
+        id: `${category}:${nodeType.family}`,
+        label: family.label,
+        description: `${family.label} — pilih operasinya setelah ditambahkan.`,
+        icon: family.icon,
+        defaultKind: nodeType.kind,
+      });
+    },
+  );
+
+  return entries;
+}
+
 export function NodePalette() {
   const { addNodeByKind } = useWorkflowStore();
   const [searchTerm, setSearchTerm] = useState("");
@@ -34,8 +93,17 @@ export function NodePalette() {
     normalizedSearch.length === 0 ||
     label.toLowerCase().includes(normalizedSearch);
 
+  const entriesByCategory = useMemo(
+    () =>
+      CATEGORY_ORDER.map((category) => ({
+        category,
+        entries: buildPaletteEntries(category),
+      })),
+    [],
+  );
+
   return (
-    <aside className="flex w-64 shrink-0 flex-col border-r border-border bg-card">
+    <aside className="flex w-64 shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm">
       <div className="flex flex-col gap-3 border-b border-border p-3">
         <h2 className="text-sm font-semibold text-foreground">Node Library</h2>
 
@@ -57,13 +125,12 @@ export function NodePalette() {
 
       <ScrollArea className="flex-1">
         <div className="p-3">
-          {CATEGORY_ORDER.map((category) => {
-            const nodesInCategory = NODE_TYPES.filter(
-              (nodeType) =>
-                nodeType.category === category && matchesSearch(nodeType.label),
+          {entriesByCategory.map(({ category, entries }) => {
+            const visibleEntries = entries.filter((entry) =>
+              matchesSearch(entry.label),
             );
 
-            if (nodesInCategory.length === 0) {
+            if (visibleEntries.length === 0) {
               return null;
             }
 
@@ -74,12 +141,12 @@ export function NodePalette() {
                 </p>
 
                 <div className="grid grid-cols-2 gap-2">
-                  {nodesInCategory.map((nodeType) => (
+                  {visibleEntries.map((entry) => (
                     <button
-                      key={nodeType.kind}
+                      key={entry.id}
                       type="button"
-                      title={nodeType.description}
-                      onClick={() => addNodeByKind(nodeType.kind)}
+                      title={entry.description}
+                      onClick={() => addNodeByKind(entry.defaultKind)}
                       className="flex items-center gap-2 rounded-lg border border-border bg-background px-2.5 py-2 text-left transition-colors hover:border-primary/40 hover:bg-accent"
                     >
                       <span
@@ -88,10 +155,10 @@ export function NodePalette() {
                           CATEGORY_ICON_STYLES[category],
                         )}
                       >
-                        <Icon name={nodeType.icon} className="size-3.5" />
+                        <Icon name={entry.icon} className="size-3.5" />
                       </span>
                       <span className="truncate text-xs font-medium text-foreground">
-                        {nodeType.label}
+                        {entry.label}
                       </span>
                     </button>
                   ))}

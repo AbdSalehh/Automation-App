@@ -34,7 +34,7 @@ export function WorkflowCanvas({ workflowId }: WorkflowCanvasProps) {
   return (
     <ReactFlowProvider>
       <div className="flex h-full flex-1 flex-col">
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-1 gap-3 overflow-hidden bg-muted/30 p-3">
           <NodePalette />
           <WorkflowEditor />
         </div>

@@ -3,7 +3,7 @@ import { requestExternal } from "@/shared/server/httpClient";
 import { resolveTemplate } from "@/shared/server/templating";
 import type { NodeHandler } from "../types";
 import { loadCredential } from "../credentials";
-import { toItems } from "../utils";
+import { toItems, stripCodeFence } from "../utils";
 
 /**
  * Node AI Gemini. Mendukung `systemInstruction` (peran/persona AI) dan `prompt`
@@ -74,7 +74,8 @@ export const aiGeminiHandler: NodeHandler = async ({
       }>;
     };
 
-    const text = body.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+    const rawText = body.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+    const text = stripCodeFence(rawText);
 
     results.push({ ...item, text, raw: body });
   }

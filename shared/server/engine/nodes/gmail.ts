@@ -39,10 +39,21 @@ export const gmailSendHandler: NodeHandler = async ({
       throw new Error("Gmail: penerima (to) kosong");
     }
 
+    /**
+     * Tipe isi email. "html" mengirim sebagai text/html agar template berformat
+     * tampil rapi di klien email; selain itu tetap text/plain.
+     */
+    const isHtml = String(config.bodyType ?? "text") === "html";
+
+    const contentType = isHtml
+      ? "text/html; charset=UTF-8"
+      : "text/plain; charset=UTF-8";
+
     const mimeMessage = [
       `To: ${to}`,
       `Subject: ${subject}`,
-      "Content-Type: text/plain; charset=UTF-8",
+      "MIME-Version: 1.0",
+      `Content-Type: ${contentType}`,
       "",
       messageBody,
     ].join("\n");

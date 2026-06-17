@@ -9,6 +9,7 @@ import {
   type NodeKind,
 } from "@/entities/workflow/model/node.model";
 import { invalidateKeys, cacheKeys } from "@/shared/lib/cache";
+import { publishWorkflowUpdate } from "@/shared/server/ablyPublisher";
 import { classifyIntent, type WorkflowContext } from "./intentClassifier";
 
 /**
@@ -191,6 +192,11 @@ async function buildAndReply(
     cacheKeys.workflowList(ownerId),
   );
 
+  await publishWorkflowUpdate(ownerId, {
+    action: existingWorkflowId ? "updated" : "created",
+    workflowId: savedId,
+  });
+
   const verb = existingWorkflowId ? "diperbarui" : "dibuat";
 
   let message = `✅ Otomasi <b>${escapeHtml(built.name)}</b> berhasil ${verb} dengan <b>${built.nodes.length} langkah</b>:\n${nodeSummary}`;
@@ -328,6 +334,11 @@ async function runPendingAction(
         cacheKeys.workflowDetail(pending.workflowId),
         cacheKeys.workflowList(ownerId),
       );
+
+      await publishWorkflowUpdate(ownerId, {
+        action: "deleted",
+        workflowId: pending.workflowId,
+      });
 
       await reply(
         `🗑️ Workflow <b>${escapeHtml(

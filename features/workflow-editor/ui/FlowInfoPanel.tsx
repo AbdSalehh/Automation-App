@@ -53,7 +53,7 @@ export function FlowInfoPanel() {
       : "";
 
   return (
-    <aside className="flex w-80 shrink-0 flex-col border-l border-border bg-card">
+    <aside className="flex w-80 shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm">
       <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
         <h2 className="text-sm font-semibold text-foreground">Flow</h2>
         <Badge variant={isPublished ? "success" : "neutral"}>

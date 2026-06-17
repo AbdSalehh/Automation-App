@@ -1,6 +1,17 @@
 import { create } from "zustand";
+import type * as Ably from "ably";
+import { acquireAblyClient, releaseAblyClient } from "@/shared/lib/ablyClient";
 import { workflowService } from "../service/workflow.service";
 import type { WorkflowSummary } from "../model/workflow.model";
+
+/**
+ * Payload event `workflow-update` yang dipublish server saat workflow
+ * dibuat/diubah/dihapus (termasuk lewat agen chat Telegram).
+ */
+interface WorkflowUpdateEvent {
+  action: "created" | "updated" | "deleted";
+  workflowId: string;
+}
 
 /**
  * Store for the workflow list page. Per coding rule #6, fetching and loading
@@ -12,16 +23,22 @@ interface WorkflowListState {
   isCreating: boolean;
   errorMessage: string | null;
 
+  /** Channel langganan `workflow-update` lewat koneksi Ably bersama. */
+  channel: Ably.RealtimeChannel | null;
+
   fetchWorkflows: () => Promise<void>;
   createWorkflow: (name: string) => Promise<string | null>;
   removeWorkflow: (workflowId: string) => Promise<void>;
+  subscribeRealtime: (sessionId: string) => void;
+  unsubscribeRealtime: () => void;
 }
 
-export const useWorkflowListStore = create<WorkflowListState>((set) => ({
+export const useWorkflowListStore = create<WorkflowListState>((set, get) => ({
   workflows: [],
   isLoading: false,
   isCreating: false,
   errorMessage: null,
+  channel: null,
 
   fetchWorkflows: async () => {
     set({ isLoading: true, errorMessage: null });
@@ -72,5 +89,44 @@ export const useWorkflowListStore = create<WorkflowListState>((set) => ({
         (workflow) => workflow.id !== workflowId,
       ),
     }));
+  },
+
+  /**
+   * Berlangganan event `workflow-update` lewat koneksi Ably bersama. Saat ada
+   * perubahan workflow (termasuk dari agen Telegram), daftar di-fetch ulang
+   * sehingga halaman tetap sinkron tanpa refresh manual.
+   */
+  subscribeRealtime: (sessionId) => {
+    if (get().channel) {
+      return;
+    }
+
+    const ablyClient = acquireAblyClient();
+
+    const channel = ablyClient.channels.get(`session:${sessionId}`);
+
+    channel.subscribe("workflow-update", (ablyMessage) => {
+      const update = ablyMessage.data as WorkflowUpdateEvent;
+
+      if (!update?.workflowId) {
+        return;
+      }
+
+      get().fetchWorkflows();
+    });
+
+    set({ channel });
+  },
+
+  /** Berhenti berlangganan dan melepas satu referensi koneksi bersama. */
+  unsubscribeRealtime: () => {
+    const { channel } = get();
+
+    if (channel) {
+      channel.unsubscribe();
+      releaseAblyClient();
+    }
+
+    set({ channel: null });
   },
 }));

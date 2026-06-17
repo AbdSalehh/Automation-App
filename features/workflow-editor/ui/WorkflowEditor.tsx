@@ -258,8 +258,8 @@ export function WorkflowEditor() {
     nodes?.find((node) => node.id === selectedNodeId) ?? null;
 
   return (
-    <div className="flex h-full flex-1">
-      <div className="relative flex-1 bg-muted/30">
+    <div className="flex h-full flex-1 gap-3">
+      <div className="relative flex-1 overflow-hidden rounded-xl border border-border bg-muted/30 shadow-sm">
         <ReactFlow
           nodes={displayNodes}
           edges={displayEdges}

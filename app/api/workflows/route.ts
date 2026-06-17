@@ -9,6 +9,7 @@ import {
   parsePagination,
 } from "@/shared/api/http";
 import { cacheQuery, cacheKeys, invalidateKeys } from "@/shared/lib/cache";
+import { publishWorkflowUpdate } from "@/shared/server/ablyPublisher";
 
 // GET /api/workflows — list current user's workflows (summaries, cached).
 export async function GET(request: Request) {
@@ -64,6 +65,11 @@ export async function POST(request: Request) {
     });
 
     await invalidateKeys(cacheKeys.workflowList(user.id));
+
+    await publishWorkflowUpdate(user.id, {
+      action: "created",
+      workflowId: workflow.id,
+    });
 
     return created(
       {

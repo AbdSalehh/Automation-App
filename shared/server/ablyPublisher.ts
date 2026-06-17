@@ -40,3 +40,37 @@ export async function publishExecutionUpdate(
     /** Abaikan — animasi realtime bersifat best-effort. */
   }
 }
+
+export type WorkflowUpdateAction = "created" | "updated" | "deleted";
+
+interface WorkflowUpdatePayload {
+  action: WorkflowUpdateAction;
+  workflowId: string;
+}
+
+/**
+ * Mem-publish event `workflow-update` ke channel pemilik agar halaman daftar
+ * workflow ikut menyegarkan datanya tanpa perlu refresh manual — termasuk saat
+ * perubahan dipicu agen chat (Telegram botfather). Kegagalan ditelan agar tidak
+ * mengganggu alur utama.
+ */
+export async function publishWorkflowUpdate(
+  ownerId: string,
+  payload: WorkflowUpdatePayload,
+): Promise<void> {
+  const apiKey = process.env.ABLY_API_KEY;
+
+  if (!apiKey || !ownerId) {
+    return;
+  }
+
+  try {
+    const ablyRest = new Ably.Rest({ key: apiKey });
+
+    const channel = ablyRest.channels.get(`session:${ownerId}`);
+
+    await channel.publish("workflow-update", payload);
+  } catch {
+    /** Abaikan — sinkronisasi realtime bersifat best-effort. */
+  }
+}

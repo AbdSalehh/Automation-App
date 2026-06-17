@@ -11,8 +11,15 @@ export type {
   NodeKind,
   NodeTypeDef,
   WorkflowNodeData,
+  NodeFamily,
 } from "./model/node.model";
-export { NODE_TYPES, getNodeTypeDef } from "./model/node.model";
+export {
+  NODE_TYPES,
+  NODE_FAMILIES,
+  getNodeTypeDef,
+  getFamilyOperations,
+  getSiblingOperations,
+} from "./model/node.model";
 export type {
   ConditionOperator,
   ConditionRule,

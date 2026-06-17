@@ -22,6 +22,48 @@ export function indexToColumnLetter(index: number): string {
 }
 
 /**
+ * Membersihkan pembungkus markdown code-fence (mis. ```json ... ``` atau
+ * ``` ... ```) yang sering ditambahkan model AI, lalu mengembalikan isi mentah
+ * yang sudah dipangkas spasinya.
+ */
+export function stripCodeFence(value: string): string {
+  const trimmed = value.trim();
+
+  const fenceMatch = trimmed.match(/^```[a-zA-Z0-9]*\n?([\s\S]*?)\n?```$/);
+
+  if (fenceMatch) {
+    return fenceMatch[1].trim();
+  }
+
+  return trimmed;
+}
+
+/**
+ * Mengubah nilai sel apa pun menjadi string yang rapi untuk ditulis ke
+ * spreadsheet. Objek/array diserialisasi sebagai JSON (bukan "[object Object]"),
+ * teks dibersihkan dari code-fence, dan null/undefined menjadi string kosong.
+ */
+export function stringifyCell(value: unknown): string {
+  if (value === null || value === undefined) {
+    return "";
+  }
+
+  if (typeof value === "string") {
+    return stripCodeFence(value);
+  }
+
+  if (typeof value === "object") {
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
+  }
+
+  return String(value);
+}
+
+/**
  * Coerces an arbitrary node output into an array of items so downstream nodes
  * can iterate uniformly. Recognises common shapes: `{ rows: [...] }`,
  * `{ items: [...] }`, a raw array, or a single object.

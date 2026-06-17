@@ -36,6 +36,32 @@ export type NodeKind =
 /** WhatsApp delivery provider, chosen per-node via the provider dropdown. */
 export type WhatsAppProvider = "meta" | "baileys";
 
+/**
+ * Family connector. Beberapa node sejenis (mis. semua operasi Google Sheets)
+ * dikelompokkan jadi satu kartu di palette, lalu dipilih operasinya lewat
+ * dropdown. Node tanpa family tampil sebagai kartu tunggal.
+ */
+export type NodeFamily =
+  | "whatsapp"
+  | "telegram"
+  | "google_sheets"
+  | "google_calendar"
+  | "google_drive"
+  | "database";
+
+/** Tampilan kartu palette untuk tiap family (label + ikon perwakilan). */
+export const NODE_FAMILIES: Record<
+  NodeFamily,
+  { label: string; icon: string }
+> = {
+  whatsapp: { label: "WhatsApp", icon: "MessageCircle" },
+  telegram: { label: "Telegram", icon: "Send" },
+  google_sheets: { label: "Google Sheets", icon: "Sheet" },
+  google_calendar: { label: "Google Calendar", icon: "CalendarClock" },
+  google_drive: { label: "Google Drive", icon: "FolderOpen" },
+  database: { label: "Database", icon: "Database" },
+};
+
 export interface NodeTypeDef {
   kind: NodeKind;
   category: NodeCategory;
@@ -47,6 +73,10 @@ export interface NodeTypeDef {
   credentialType?: string;
   /** Named output keys this node produces (shown in the Output section of the node card). */
   outputs?: string[];
+  /** Family pengelompokan di palette (opsional). */
+  family?: NodeFamily;
+  /** Label operasi yang tampil di dropdown Operation. */
+  operationLabel?: string;
 }
 
 /** Data carried on each React Flow node (stored in Workflow.nodes JSON). */
@@ -93,6 +123,8 @@ export const NODE_TYPES: NodeTypeDef[] = [
       "Trigger when a new row is added or a row is updated in Google Sheets.",
     icon: "TableProperties",
     credentialType: "google_oauth",
+    family: "google_sheets",
+    operationLabel: "Trigger Baris",
     outputs: ["triggered", "at"],
   },
   {
@@ -111,6 +143,8 @@ export const NODE_TYPES: NodeTypeDef[] = [
     description:
       "Kirim pesan WhatsApp via Baileys (self-hosted) atau Meta Business API.",
     icon: "MessageCircle",
+    family: "whatsapp",
+    operationLabel: "Kirim Pesan",
     outputs: ["sent", "pending", "rows"],
   },
   {
@@ -119,6 +153,8 @@ export const NODE_TYPES: NodeTypeDef[] = [
     label: "WhatsApp Reply",
     description: "Trigger saat ada balasan WhatsApp masuk (via Baileys).",
     icon: "MessageSquareReply",
+    family: "whatsapp",
+    operationLabel: "Balasan Masuk",
     outputs: ["sender", "message", "name"],
   },
   {
@@ -128,6 +164,8 @@ export const NODE_TYPES: NodeTypeDef[] = [
     description: "Kirim pesan via Telegram Bot atau nomor pribadi.",
     icon: "Send",
     credentialType: "telegram",
+    family: "telegram",
+    operationLabel: "Kirim Pesan",
     outputs: ["sent", "results"],
   },
   {
@@ -137,6 +175,8 @@ export const NODE_TYPES: NodeTypeDef[] = [
     description: "Trigger saat ada pesan/balasan Telegram masuk.",
     icon: "MessageSquareReply",
     credentialType: "telegram",
+    family: "telegram",
+    operationLabel: "Pesan Masuk",
     outputs: ["sender", "message", "name"],
   },
   {
@@ -147,6 +187,8 @@ export const NODE_TYPES: NodeTypeDef[] = [
       "Buat spreadsheet baru (dapat spreadsheetId) atau tambah sheet baru di spreadsheet yang ada.",
     icon: "SheetIcon",
     credentialType: "google_oauth",
+    family: "google_sheets",
+    operationLabel: "Buat Spreadsheet/Sheet",
     outputs: ["spreadsheetId", "spreadsheetUrl", "sheetName"],
   },
   {
@@ -156,6 +198,8 @@ export const NODE_TYPES: NodeTypeDef[] = [
     description: "Append a row to Google Sheets.",
     icon: "Sheet",
     credentialType: "google_oauth",
+    family: "google_sheets",
+    operationLabel: "Tambah Baris",
     outputs: ["appended", "rows"],
   },
   {
@@ -165,6 +209,8 @@ export const NODE_TYPES: NodeTypeDef[] = [
     description: "Read rows from a Google Sheets spreadsheet.",
     icon: "TableProperties",
     credentialType: "google_oauth",
+    family: "google_sheets",
+    operationLabel: "Baca Baris",
     outputs: ["rows", "headers", "totalRows"],
   },
   {
@@ -175,6 +221,8 @@ export const NODE_TYPES: NodeTypeDef[] = [
       "Update a cell/column on matching rows — e.g. mark reminder as sent.",
     icon: "SheetIcon",
     credentialType: "google_oauth",
+    family: "google_sheets",
+    operationLabel: "Update Baris",
     outputs: ["updated", "rows"],
   },
   {
@@ -185,6 +233,8 @@ export const NODE_TYPES: NodeTypeDef[] = [
       "Triggers when a calendar event is created, updated, or deleted.",
     icon: "CalendarClock",
     credentialType: "google_oauth",
+    family: "google_calendar",
+    operationLabel: "Trigger Event",
     outputs: ["event", "at"],
   },
   {
@@ -194,6 +244,8 @@ export const NODE_TYPES: NodeTypeDef[] = [
     description: "Create a new event in Google Calendar.",
     icon: "CalendarPlus",
     credentialType: "google_oauth",
+    family: "google_calendar",
+    operationLabel: "Buat Event",
     outputs: ["eventId", "htmlLink"],
   },
   {
@@ -203,6 +255,8 @@ export const NODE_TYPES: NodeTypeDef[] = [
     description: "Fetch a list of upcoming events from Google Calendar.",
     icon: "CalendarDays",
     credentialType: "google_oauth",
+    family: "google_calendar",
+    operationLabel: "List Event",
     outputs: ["events", "count"],
   },
   {
@@ -221,6 +275,8 @@ export const NODE_TYPES: NodeTypeDef[] = [
     description: "Unggah file teks ke Google Drive.",
     icon: "Upload",
     credentialType: "google_oauth",
+    family: "google_drive",
+    operationLabel: "Upload File",
     outputs: ["fileId", "webViewLink"],
   },
   {
@@ -230,6 +286,8 @@ export const NODE_TYPES: NodeTypeDef[] = [
     description: "Daftar file di Google Drive (opsional dalam satu folder).",
     icon: "FolderOpen",
     credentialType: "google_oauth",
+    family: "google_drive",
+    operationLabel: "List File",
     outputs: ["files", "count"],
   },
   {
@@ -247,6 +305,8 @@ export const NODE_TYPES: NodeTypeDef[] = [
     label: "Database Insert",
     description: "Simpan satu/banyak baris ke database proyek.",
     icon: "DatabaseZap",
+    family: "database",
+    operationLabel: "Insert Baris",
     outputs: ["inserted", "rows"],
   },
   {
@@ -255,6 +315,8 @@ export const NODE_TYPES: NodeTypeDef[] = [
     label: "Database Query",
     description: "Baca baris dari database proyek dengan filter opsional.",
     icon: "Database",
+    family: "database",
+    operationLabel: "Query Baris",
     outputs: ["rows", "count"],
   },
   {
@@ -322,4 +384,31 @@ export const NODE_TYPES: NodeTypeDef[] = [
 
 export function getNodeTypeDef(nodeKind: NodeKind): NodeTypeDef | undefined {
   return NODE_TYPES.find((nodeType) => nodeType.kind === nodeKind);
+}
+
+/**
+ * Mengembalikan semua operasi (kind) milik satu family pada kategori tertentu.
+ * Dipakai dropdown Operation untuk berpindah antar operasi sejenis.
+ */
+export function getFamilyOperations(
+  family: NodeFamily,
+  category: NodeCategory,
+): NodeTypeDef[] {
+  return NODE_TYPES.filter(
+    (nodeType) => nodeType.family === family && nodeType.category === category,
+  );
+}
+
+/**
+ * Mengembalikan operasi sejenis (family + kategori sama) untuk sebuah kind,
+ * agar panel konfigurasi bisa menampilkan dropdown pemilih operasi.
+ */
+export function getSiblingOperations(nodeKind: NodeKind): NodeTypeDef[] {
+  const definition = getNodeTypeDef(nodeKind);
+
+  if (!definition?.family) {
+    return [];
+  }
+
+  return getFamilyOperations(definition.family, definition.category);
 }

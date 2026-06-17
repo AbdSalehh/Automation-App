@@ -3,7 +3,7 @@ import { resolveTemplate } from "@/shared/server/templating";
 import { getGoogleAccessToken } from "@/shared/server/google";
 import type { Item, NodeHandler } from "../types";
 import { loadCredential } from "../credentials";
-import { toItems, indexToColumnLetter } from "../utils";
+import { toItems, indexToColumnLetter, stringifyCell } from "../utils";
 
 /**
  * Google Sheets Create — membuat spreadsheet baru atau menambah sheet (tab)
@@ -159,13 +159,13 @@ export const googleSheetsAppendHandler: NodeHandler = async ({
     columnOrder.length > 0
       ? columnOrder.map((column) => {
           if (column.includes("{{")) {
-            return resolveTemplate(column, item);
+            return stringifyCell(resolveTemplate(column, item));
           }
 
-          return String(item[column] ?? "");
+          return stringifyCell(item[column]);
         })
       : Object.values(item).map((cell) =>
-          resolveTemplate(String(cell ?? ""), item),
+          stringifyCell(resolveTemplate(String(cell ?? ""), item)),
         ),
   );
 

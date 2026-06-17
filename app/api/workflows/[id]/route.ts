@@ -2,6 +2,7 @@ import { prisma } from "@/shared/lib/prisma";
 import { requireUser } from "@/shared/auth";
 import { handleRoute, ok, noContent, notFound } from "@/shared/api/http";
 import { cacheQuery, cacheKeys, invalidateKeys } from "@/shared/lib/cache";
+import { publishWorkflowUpdate } from "@/shared/server/ablyPublisher";
 import type {
   FlowNode,
   FlowEdge,
@@ -113,7 +114,15 @@ export async function PUT(request: Request, { params }: RouteParams) {
       cacheKeys.workflowList(user.id),
     );
 
-    return ok(serializeWorkflow(updatedWorkflow), "Workflow berhasil diperbarui");
+    await publishWorkflowUpdate(user.id, {
+      action: "updated",
+      workflowId: id,
+    });
+
+    return ok(
+      serializeWorkflow(updatedWorkflow),
+      "Workflow berhasil diperbarui",
+    );
   });
 }
 
@@ -135,6 +144,11 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
       cacheKeys.workflowDetail(id),
       cacheKeys.workflowList(user.id),
     );
+
+    await publishWorkflowUpdate(user.id, {
+      action: "deleted",
+      workflowId: id,
+    });
 
     return noContent();
   });

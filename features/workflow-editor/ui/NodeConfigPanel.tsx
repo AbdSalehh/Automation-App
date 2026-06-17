@@ -227,6 +227,34 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
     },
     { key: "text", label: "Pesan", multiline: true },
   ],
+  google_sheets_create: [
+    {
+      key: "mode",
+      label: "Mode",
+      selectOptions: [
+        { value: "new_spreadsheet", label: "Buat spreadsheet baru" },
+        { value: "new_sheet", label: "Tambah sheet di spreadsheet yang ada" },
+      ],
+      hint: "Buat spreadsheet baru (dapat ID otomatis) atau tambah tab pada spreadsheet yang sudah ada.",
+    },
+    {
+      key: "title",
+      label: "Judul Spreadsheet (mode baru)",
+      placeholder: "Catatan Keuangan {{name}}",
+      hint: "Dipakai saat mode 'Buat spreadsheet baru'. Mendukung {{template}}.",
+    },
+    {
+      key: "spreadsheetId",
+      label: "Spreadsheet ID (mode tambah sheet)",
+      placeholder: "1AbC...xyz",
+      hint: "Dipakai saat mode 'Tambah sheet di spreadsheet yang ada'.",
+    },
+    {
+      key: "sheetName",
+      label: "Nama Sheet/Tab",
+      placeholder: "Sheet1",
+    },
+  ],
   google_sheets_append: [
     { key: "spreadsheetId", label: "Spreadsheet ID" },
     { key: "sheetName", label: "Nama Sheet", placeholder: "Balasan" },
@@ -235,6 +263,25 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
       label: "Kolom (pisahkan koma)",
       placeholder: "sender,message,receivedAt",
       hint: "Nama field dari data masuk (mis. sender, message, name dari WA trigger). Baris baru ditulis mulai kolom A sesuai urutan ini.",
+    },
+  ],
+  gmail_send: [
+    {
+      key: "to",
+      label: "Penerima (to)",
+      placeholder: "tujuan@email.com atau {{email}}",
+      hint: "Wajib diisi. Mendukung {{template}} dari data masuk, mis. {{email}}.",
+    },
+    {
+      key: "subject",
+      label: "Subjek",
+      placeholder: "Konfirmasi pesanan {{nama}}",
+    },
+    {
+      key: "body",
+      label: "Isi Email",
+      multiline: true,
+      placeholder: "Halo {{nama}}, terima kasih sudah memesan.",
     },
   ],
   google_calendar_create_event: [

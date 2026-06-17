@@ -12,6 +12,7 @@ import {
   googleDriveListHandler,
 } from "./nodes/google-drive";
 import {
+  googleSheetsCreateHandler,
   googleSheetsAppendHandler,
   googleSheetsReadHandler,
   googleSheetsUpdateHandler,
@@ -57,6 +58,7 @@ const NODE_HANDLERS: Partial<Record<NodeKind, NodeHandler>> = {
   google_drive_upload: googleDriveUploadHandler,
   google_drive_list: googleDriveListHandler,
 
+  google_sheets_create: googleSheetsCreateHandler,
   google_sheets_append: googleSheetsAppendHandler,
   google_sheets_read: googleSheetsReadHandler,
   google_sheets_update: googleSheetsUpdateHandler,

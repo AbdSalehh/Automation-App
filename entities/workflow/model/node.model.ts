@@ -16,6 +16,7 @@ export type NodeKind =
   | "google_drive_upload"
   | "google_drive_list"
   | "ai_gemini"
+  | "google_sheets_create"
   | "google_sheets_append"
   | "google_sheets_read"
   | "google_sheets_update"
@@ -137,6 +138,16 @@ export const NODE_TYPES: NodeTypeDef[] = [
     icon: "MessageSquareReply",
     credentialType: "telegram",
     outputs: ["sender", "message", "name"],
+  },
+  {
+    kind: "google_sheets_create",
+    category: "action",
+    label: "Google Sheets Create",
+    description:
+      "Buat spreadsheet baru (dapat spreadsheetId) atau tambah sheet baru di spreadsheet yang ada.",
+    icon: "SheetIcon",
+    credentialType: "google_oauth",
+    outputs: ["spreadsheetId", "spreadsheetUrl", "sheetName"],
   },
   {
     kind: "google_sheets_append",

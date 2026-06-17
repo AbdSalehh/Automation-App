@@ -13,20 +13,33 @@ import { requestExternal } from "@/shared/server/httpClient";
  * Server-only module.
  */
 
-export type AgentIntent = "question" | "create" | "run" | "out_of_scope";
+export type AgentIntent =
+  | "question"
+  | "create"
+  | "run"
+  | "list"
+  | "explain"
+  | "edit"
+  | "delete"
+  | "out_of_scope";
 
 export interface IntentResult {
   intent: AgentIntent;
   /** Jawaban langsung untuk intent `question`/`out_of_scope`. */
   answer?: string;
-  /** Nama workflow yang dirujuk untuk intent `run`. */
+  /** Nama workflow yang dirujuk untuk intent `run`/`explain`/`edit`/`delete`. */
   workflowName?: string;
+  /** Nama/label node tertentu yang ingin dijelaskan (intent `explain`). */
+  nodeName?: string;
+  /** Instruksi perubahan untuk intent `edit` (mis. "tambah node Gmail"). */
+  editInstruction?: string;
   /** Ringkasan rencana untuk intent `create` (ditampilkan sebelum konfirmasi). */
   planSummary?: string;
 }
 
 /** Ringkasan singkat workflow milik pemilik untuk konteks tanya-jawab. */
 export interface WorkflowContext {
+  id: string;
   name: string;
   isPublished: boolean;
   nodeCount: number;
@@ -64,7 +77,7 @@ function buildClassifierPrompt(workflows: WorkflowContext[]): string {
       : "(belum ada workflow)";
 
   return [
-    "Kamu adalah asisten untuk aplikasi OTOMASI WORKFLOW berbasis WhatsApp.",
+    "Kamu adalah asisten untuk aplikasi OTOMASI WORKFLOW dengan antarmuka chat Telegram.",
     "Tugasmu mengklasifikasi pesan pengguna menjadi salah satu intent dan membalas dalam Bahasa Indonesia.",
     "",
     "BATASAN PENTING: Hanya layani topik seputar aplikasi ini — workflow, otomasi, node, kredensial, dan cara penggunaannya.",
@@ -74,14 +87,24 @@ function buildClassifierPrompt(workflows: WorkflowContext[]): string {
     workflowList,
     "",
     "INTENT yang tersedia:",
-    "1. `question` — pengguna bertanya tentang aplikasi/workflow miliknya. Isi `answer` dengan jawaban berdasarkan daftar workflow di atas.",
-    "2. `create` — pengguna ingin MEMBUAT otomasi baru (kata kunci: buat, buatkan, bikin). Isi `planSummary` dengan ringkasan rencana langkah-langkah workflow yang akan dibuat (bahasa awam, 2-4 langkah).",
-    "3. `run` — pengguna ingin MENJALANKAN workflow yang sudah ada. Isi `workflowName` dengan nama workflow terdekat dari daftar.",
-    "4. `out_of_scope` — di luar topik aplikasi. Isi `answer` dengan penolakan sopan dan arahkan kembali ke fungsi aplikasi.",
+    "1. `question` — pengguna bertanya umum tentang aplikasi/workflow miliknya. Isi `answer`.",
+    "2. `create` — pengguna ingin MEMBUAT otomasi baru (kata kunci: buat, buatkan, bikin). Isi `planSummary` dengan ringkasan rencana langkah-langkah (bahasa awam, 2-4 langkah).",
+    "3. `run` — pengguna ingin MENJALANKAN workflow yang ada. Isi `workflowName` dengan nama terdekat dari daftar.",
+    "4. `list` — pengguna minta DAFTAR workflow miliknya (kata kunci: daftar, list, apa saja workflow saya). Tidak perlu field lain.",
+    "5. `explain` — pengguna minta PENJELASAN isi workflow atau node tertentu (kata kunci: sebutkan node, jelaskan, node apa saja). Isi `workflowName`. Bila merujuk satu node tertentu, isi juga `nodeName`.",
+    "6. `edit` — pengguna ingin MENGUBAH workflow yang ada (kata kunci: ubah, edit, tambah node, ganti, hapus node). Isi `workflowName` dan `editInstruction` (instruksi perubahan ringkas).",
+    "7. `delete` — pengguna ingin MENGHAPUS workflow (kata kunci: hapus, delete). Isi `workflowName`.",
+    "8. `out_of_scope` — di luar topik aplikasi. Isi `answer` dengan penolakan sopan dan arahkan kembali ke fungsi aplikasi.",
+    "",
+    "GAYA BAHASA untuk `answer`/`planSummary` (akan dikirim ke Telegram):",
+    "- Gunakan HTML Telegram bila perlu penekanan: <b>tebal</b>, <i>miring</i>, <u>garis bawah</u>. JANGAN pakai markdown (** atau __).",
+    "- Gunakan daftar berpoin dengan karakter • di awal baris bila menyebut beberapa hal.",
+    "- Sisipkan 1-2 emoji yang relevan agar ramah, jangan berlebihan.",
+    "- Tulis ringkas namun informatif; pisahkan paragraf dengan baris kosong.",
     "",
     "ATURAN OUTPUT:",
     "Balas HANYA JSON murni tanpa markdown fence, format:",
-    '{ "intent": "...", "answer": "...", "workflowName": "...", "planSummary": "..." }',
+    '{ "intent": "...", "answer": "...", "workflowName": "...", "nodeName": "...", "editInstruction": "...", "planSummary": "..." }',
     "Sertakan hanya field yang relevan dengan intent terpilih.",
   ].join("\n");
 }

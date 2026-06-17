@@ -5,6 +5,116 @@ import type { Item, NodeHandler } from "../types";
 import { loadCredential } from "../credentials";
 import { toItems, indexToColumnLetter } from "../utils";
 
+/**
+ * Google Sheets Create — membuat spreadsheet baru atau menambah sheet (tab)
+ * baru pada spreadsheet yang sudah ada.
+ *
+ * Mode (config.mode):
+ *   - "new_spreadsheet" (default): buat spreadsheet baru, kembalikan
+ *     spreadsheetId + URL agar node berikutnya bisa langsung memakainya.
+ *   - "new_sheet": tambah tab baru ke spreadsheetId yang diberikan.
+ */
+export const googleSheetsCreateHandler: NodeHandler = async ({
+  node,
+  input,
+  context,
+  config,
+}) => {
+  const credential = await loadCredential(
+    node.data.credentialId,
+    context.ownerId,
+  );
+
+  if (!credential) {
+    throw new Error("Google Sheets: kredensial tidak ada");
+  }
+
+  const accessToken = await getGoogleAccessToken(credential);
+
+  const items = toItems(input);
+  const firstItem = items[0] ?? {};
+
+  const mode = String(config.mode ?? "new_spreadsheet");
+
+  const sheetName =
+    resolveTemplate(String(config.sheetName ?? ""), firstItem).trim() ||
+    "Sheet1";
+
+  if (mode === "new_sheet") {
+    const spreadsheetId = String(config.spreadsheetId ?? "").trim();
+
+    if (!spreadsheetId) {
+      throw new Error(
+        "Google Sheets: spreadsheetId wajib diisi untuk mode new_sheet",
+      );
+    }
+
+    const response = await requestExternal(
+      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        data: {
+          requests: [{ addSheet: { properties: { title: sheetName } } }],
+        },
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error("Google Sheets: gagal menambah sheet baru");
+    }
+
+    return {
+      spreadsheetId,
+      spreadsheetUrl: `https://docs.google.com/spreadsheets/d/${spreadsheetId}`,
+      sheetName,
+    };
+  }
+
+  const title =
+    resolveTemplate(String(config.title ?? ""), firstItem).trim() ||
+    "Spreadsheet Baru";
+
+  const response = await requestExternal(
+    "https://sheets.googleapis.com/v4/spreadsheets",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      data: {
+        properties: { title },
+        sheets: [{ properties: { title: sheetName } }],
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error("Google Sheets: gagal membuat spreadsheet baru");
+  }
+
+  const body = response.body as {
+    spreadsheetId?: string;
+    spreadsheetUrl?: string;
+  };
+
+  if (!body.spreadsheetId) {
+    throw new Error("Google Sheets: spreadsheetId tidak diterima dari API");
+  }
+
+  return {
+    spreadsheetId: body.spreadsheetId,
+    spreadsheetUrl:
+      body.spreadsheetUrl ??
+      `https://docs.google.com/spreadsheets/d/${body.spreadsheetId}`,
+    sheetName,
+  };
+};
+
 /** Google Sheets Append — menambah baris ke spreadsheet. */
 export const googleSheetsAppendHandler: NodeHandler = async ({
   node,

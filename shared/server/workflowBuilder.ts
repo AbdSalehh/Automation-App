@@ -145,7 +145,7 @@ function normalizeBuilderResult(
     nodes.push({
       id: nodeId,
       type: "workflowNode",
-      position: { x: 80 + layoutIndex * 280, y: 200 },
+      position: { x: 80 + layoutIndex * 360, y: 200 },
       data: {
         kind: rawNode.kind as NodeKind,
         label: rawNode.label ?? rawNode.kind,
@@ -233,7 +233,16 @@ export async function buildWorkflowFromPrompt(
   geminiApiKey: string,
   ownerId: string,
   model: string = GEMINI_MODEL,
+  existingContext?: string,
 ): Promise<BuiltWorkflow> {
+  /**
+   * Untuk mode edit: konteks workflow lama disisipkan agar Gemini
+   * mempertahankan node yang tidak diubah dan hanya menyesuaikan yang diminta.
+   */
+  const userPrompt = existingContext
+    ? `${existingContext}\n\nPermintaan perubahan: ${prompt}`
+    : prompt;
+
   const response = await requestExternal(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey.trim()}`,
     {
@@ -241,7 +250,7 @@ export async function buildWorkflowFromPrompt(
       headers: { "Content-Type": "application/json" },
       data: {
         system_instruction: { parts: [{ text: buildSystemPrompt() }] },
-        contents: [{ parts: [{ text: prompt }] }],
+        contents: [{ parts: [{ text: userPrompt }] }],
         generationConfig: { temperature: 0.2 },
       },
     },

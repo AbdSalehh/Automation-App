@@ -3,7 +3,7 @@
 import {
   BaseEdge,
   EdgeLabelRenderer,
-  getSmoothStepPath,
+  getBezierPath,
   type EdgeProps,
 } from "@xyflow/react";
 import { cn } from "@/shared/lib/utils";
@@ -28,7 +28,7 @@ export function LabeledEdge({
   markerEnd,
   data,
 }: EdgeProps) {
-  const [edgePath, labelX, labelY] = getSmoothStepPath({
+  const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
     sourcePosition,

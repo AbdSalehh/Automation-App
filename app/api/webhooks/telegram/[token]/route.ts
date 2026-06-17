@@ -101,14 +101,25 @@ function createTelegramTransport(
 ): AgentTransport {
   return {
     reply: async (text) => {
-      await requestExternal(
-        `https://api.telegram.org/bot${botToken}/sendMessage`,
-        {
+      const sendMessageUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+
+      const htmlResponse = await requestExternal(sendMessageUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        data: { chat_id: chatId, text, parse_mode: "HTML" },
+      });
+
+      /**
+       * Bila Telegram menolak HTML (mis. tag tidak valid), kirim ulang sebagai
+       * teks biasa agar pesan tetap sampai ke pengguna.
+       */
+      if (!htmlResponse.ok) {
+        await requestExternal(sendMessageUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           data: { chat_id: chatId, text },
-        },
-      );
+        });
+      }
     },
 
     sendTyping: async () => {

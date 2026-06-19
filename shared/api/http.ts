@@ -61,7 +61,11 @@ export function parsePagination(
   const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1);
   const limit = Math.min(
     100,
-    Math.max(1, parseInt(searchParams.get("limit") ?? String(defaults.limit ?? 10), 10) || 10),
+    Math.max(
+      1,
+      parseInt(searchParams.get("limit") ?? String(defaults.limit ?? 10), 10) ||
+        10,
+    ),
   );
 
   return { page, limit };
@@ -154,9 +158,7 @@ export function noContent(): NextResponse {
 /**
  * 400 Bad Request.
  */
-export function badRequest(
-  message: string,
-): NextResponse<ApiResponse<null>> {
+export function badRequest(message: string): NextResponse<ApiResponse<null>> {
   return NextResponse.json(
     { success: false, statusCode: 400, message, data: null },
     { status: 400 },

@@ -61,17 +61,17 @@ export function ProfileForm({ initialName, initialImage }: ProfileFormProps) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5"
+      className="border-border bg-card flex flex-col gap-4 rounded-xl border p-5"
     >
       <div className="flex flex-col gap-0.5">
-        <h3 className="text-sm font-semibold text-foreground">Profil Saya</h3>
-        <p className="text-xs text-muted-foreground">
+        <h3 className="text-foreground text-sm font-semibold">Profil Saya</h3>
+        <p className="text-muted-foreground text-xs">
           Perbarui nama tampilan dan foto profil akun Anda.
         </p>
       </div>
 
       <div className="flex items-center gap-4">
-        <div className="relative size-16 overflow-hidden rounded-full border border-border bg-muted">
+        <div className="border-border bg-muted relative size-16 overflow-hidden rounded-full border">
           {imageDataUrl ? (
             <Image
               src={imageDataUrl}
@@ -81,7 +81,7 @@ export function ProfileForm({ initialName, initialImage }: ProfileFormProps) {
               unoptimized
             />
           ) : (
-            <span className="flex h-full w-full items-center justify-center text-lg font-semibold text-muted-foreground">
+            <span className="text-muted-foreground flex h-full w-full items-center justify-center text-lg font-semibold">
               {name.charAt(0).toUpperCase() || "?"}
             </span>
           )}
@@ -108,7 +108,7 @@ export function ProfileForm({ initialName, initialImage }: ProfileFormProps) {
             <button
               type="button"
               onClick={() => setImageDataUrl(null)}
-              className="text-xs text-muted-foreground hover:text-destructive"
+              className="text-muted-foreground hover:text-destructive text-xs"
             >
               Hapus foto
             </button>
@@ -119,7 +119,7 @@ export function ProfileForm({ initialName, initialImage }: ProfileFormProps) {
       <div className="flex flex-col gap-2">
         <label
           htmlFor="profileName"
-          className="text-sm font-medium text-foreground"
+          className="text-foreground text-sm font-medium"
         >
           Nama Tampilan
         </label>
@@ -132,7 +132,7 @@ export function ProfileForm({ initialName, initialImage }: ProfileFormProps) {
       </div>
 
       {(localError || errorMessage) && (
-        <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+        <p className="bg-destructive/10 text-destructive rounded-md px-3 py-2 text-sm">
           {localError ?? errorMessage}
         </p>
       )}

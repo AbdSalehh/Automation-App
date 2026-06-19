@@ -258,8 +258,8 @@ export function WorkflowEditor() {
     nodes?.find((node) => node.id === selectedNodeId) ?? null;
 
   return (
-    <div className="flex h-full flex-1 gap-3">
-      <div className="relative flex-1 overflow-hidden rounded-xl border border-border bg-muted/30 shadow-sm">
+    <div className="flex h-[calc(100vh-85px)]! flex-1 gap-3">
+      <div className="border-border bg-muted/30 relative flex-1 overflow-hidden rounded-xl border shadow-sm">
         <ReactFlow
           nodes={displayNodes}
           edges={displayEdges}
@@ -296,7 +296,7 @@ export function WorkflowEditor() {
         onClose={() => setIsJsonOpen(false)}
         title="Workflow JSON"
       >
-        <pre className="max-h-[60vh] overflow-auto rounded-md bg-muted p-3 font-mono text-[11px] text-foreground">
+        <pre className="bg-muted text-foreground max-h-[60vh] overflow-auto rounded-md p-3 font-mono text-[11px]">
           {JSON.stringify({ nodes, edges }, null, 2)}
         </pre>
       </Modal>

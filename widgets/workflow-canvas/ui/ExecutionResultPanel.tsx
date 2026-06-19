@@ -42,10 +42,10 @@ export function ExecutionResultPanel({
   }, [executionId, fetchExecutionDetail, clearDetail]);
 
   return (
-    <div className="flex h-56 shrink-0 flex-col border-t border-border bg-card">
-      <div className="flex items-center justify-between border-b border-border px-4 py-2">
+    <div className="border-border bg-card flex h-56 shrink-0 flex-col border-t">
+      <div className="border-border flex items-center justify-between border-b px-4 py-2">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-foreground">
+          <span className="text-foreground text-sm font-semibold">
             Hasil Eksekusi
           </span>
 
@@ -67,7 +67,7 @@ export function ExecutionResultPanel({
 
       <div className="flex-1 overflow-y-auto px-4 py-2 font-mono text-xs">
         {isLoadingDetail ? (
-          <span className="flex items-center gap-2 text-muted-foreground">
+          <span className="text-muted-foreground flex items-center gap-2">
             <Spinner /> Memuat log…
           </span>
         ) : !detail ? (

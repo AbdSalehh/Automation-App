@@ -115,8 +115,8 @@ export function DateTimePicker({
           captionLayout="dropdown"
         />
 
-        <div className="flex items-center gap-2 border-t border-border p-3">
-          <label className="text-xs font-medium text-muted-foreground">
+        <div className="border-border flex items-center gap-2 border-t p-3">
+          <label className="text-muted-foreground text-xs font-medium">
             Jam
           </label>
 

@@ -71,7 +71,7 @@ export function WorkflowEditorHeaderBar() {
 
   return (
     <div className="flex flex-1 items-center gap-3">
-      <div className="h-5 w-px bg-border" />
+      <div className="bg-border h-5 w-px" />
 
       <Link href={ROUTES.workflows}>
         <Button
@@ -84,16 +84,16 @@ export function WorkflowEditorHeaderBar() {
       </Link>
 
       <div className="flex min-w-0 flex-col">
-        <span className="truncate text-sm font-semibold text-foreground">
+        <span className="text-foreground truncate text-sm font-semibold">
           {name || "Untitled Workflow"}
         </span>
-        <span className="text-xs text-muted-foreground">Overview workflow</span>
+        <span className="text-muted-foreground text-xs">Overview workflow</span>
       </div>
 
       {isDirty && <Badge variant="warning">Belum disimpan</Badge>}
 
       {errorMessage && (
-        <span className="max-w-xs truncate text-sm text-destructive">
+        <span className="text-destructive max-w-xs truncate text-sm">
           {errorMessage}
         </span>
       )}

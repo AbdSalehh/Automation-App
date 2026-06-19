@@ -32,7 +32,12 @@ export const useSheetColumnsStore = create<SheetColumnsState>((set, get) => ({
   isLoading: false,
   errorMessage: null,
 
-  fetchColumns: async ({ credentialId, spreadsheetId, sheetName, force = false }) => {
+  fetchColumns: async ({
+    credentialId,
+    spreadsheetId,
+    sheetName,
+    force = false,
+  }) => {
     if (!credentialId || !spreadsheetId) {
       return;
     }

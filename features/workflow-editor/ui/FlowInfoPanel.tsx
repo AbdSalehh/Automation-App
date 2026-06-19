@@ -20,7 +20,7 @@ function InfoRow({ label, value }: InfoRowProps) {
   return (
     <div className="flex items-center justify-between py-1.5 text-sm">
       <span className="text-muted-foreground">{label}</span>
-      <span className="font-medium text-foreground">{value}</span>
+      <span className="text-foreground font-medium">{value}</span>
     </div>
   );
 }
@@ -53,23 +53,23 @@ export function FlowInfoPanel() {
       : "";
 
   return (
-    <aside className="flex w-80 shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-      <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
-        <h2 className="text-sm font-semibold text-foreground">Flow</h2>
+    <aside className="border-border bg-card flex w-80 shrink-0 flex-col overflow-hidden rounded-xl border shadow-sm">
+      <div className="border-border flex shrink-0 items-center justify-between border-b px-4 py-3">
+        <h2 className="text-foreground text-sm font-semibold">Flow</h2>
         <Badge variant={isPublished ? "success" : "neutral"}>
           {isPublished ? "Active" : "Draft"}
         </Badge>
       </div>
 
-      <ScrollArea className="flex-1">
-        <div className="flex flex-col gap-6 p-4">
+      <ScrollArea className="h-full flex-1">
+        <div className="flex flex-col gap-6 p-4 pb-20">
           <section className="flex flex-col gap-3">
-            <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            <h3 className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
               Info
             </h3>
 
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              <label className="text-muted-foreground mb-1 block text-xs font-medium">
                 Name
               </label>
               <Input
@@ -79,7 +79,7 @@ export function FlowInfoPanel() {
             </div>
 
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              <label className="text-muted-foreground mb-1 block text-xs font-medium">
                 Description
               </label>
               <Textarea rows={2} placeholder="Add a short description..." />
@@ -87,7 +87,7 @@ export function FlowInfoPanel() {
           </section>
 
           <section className="flex flex-col gap-1">
-            <h3 className="mb-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            <h3 className="text-muted-foreground mb-1 text-xs font-semibold tracking-wide uppercase">
               Properties
             </h3>
 
@@ -99,7 +99,7 @@ export function FlowInfoPanel() {
           </section>
 
           <section className="flex flex-col gap-1">
-            <h3 className="mb-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            <h3 className="text-muted-foreground mb-1 text-xs font-semibold tracking-wide uppercase">
               Runtime Settings
             </h3>
 
@@ -107,7 +107,7 @@ export function FlowInfoPanel() {
             <InfoRow label="Timeout (ms)" value="3000" />
             <InfoRow label="Retry attempts" value="2" />
 
-            <label className="mt-2 flex items-center gap-2 text-sm text-foreground">
+            <label className="text-foreground mt-2 flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
                 checked={isPublished}
@@ -121,16 +121,16 @@ export function FlowInfoPanel() {
 
           {hasWebhookTrigger && (
             <section className="flex flex-col gap-2">
-              <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              <h3 className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
                 Webhook URL
               </h3>
 
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Kirim HTTP POST ke URL ini untuk menjalankan workflow. Body JSON
                 akan diteruskan sebagai data trigger.
               </p>
 
-              <code className="block break-all rounded-md bg-muted p-2 text-xs text-foreground">
+              <code className="bg-muted text-foreground block rounded-md p-2 text-xs break-all">
                 {webhookUrl || "Simpan workflow dulu untuk mendapatkan URL"}
               </code>
 
@@ -154,20 +154,20 @@ export function FlowInfoPanel() {
 
           {scheduleNode && (
             <section className="flex flex-col gap-2">
-              <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              <h3 className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
                 Schedule
               </h3>
 
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Cron:{" "}
-                <code className="rounded bg-muted px-1 py-0.5">
+                <code className="bg-muted rounded px-1 py-0.5">
                   {String(scheduleNode.data.config?.cron ?? "belum diatur")}
                 </code>
               </p>
 
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Hubungkan scheduler eksternal (Vercel Cron / cron-job.org) ke{" "}
-                <code className="rounded bg-muted px-1 py-0.5">/api/cron</code>{" "}
+                <code className="bg-muted rounded px-1 py-0.5">/api/cron</code>{" "}
                 setiap menit.
               </p>
             </section>

@@ -386,6 +386,52 @@ export function getNodeTypeDef(nodeKind: NodeKind): NodeTypeDef | undefined {
   return NODE_TYPES.find((nodeType) => nodeType.kind === nodeKind);
 }
 
+/** Nama brand yang punya berkas SVG resmi di `public/icons`. */
+export type NodeBrandIcon =
+  | "whatsapp"
+  | "telegram"
+  | "gmail"
+  | "google-sheets"
+  | "google-calendar"
+  | "gemini"
+  | "google-drive";
+
+/** Pemetaan family ke ikon brand resmi (mayoritas node bermerek lewat family). */
+const BRAND_ICON_BY_FAMILY: Partial<Record<NodeFamily, NodeBrandIcon>> = {
+  whatsapp: "whatsapp",
+  telegram: "telegram",
+  google_sheets: "google-sheets",
+  google_calendar: "google-calendar",
+  google_drive: "google-drive",
+};
+
+/** Pemetaan kind spesifik yang tidak memiliki family namun tetap bermerek. */
+const BRAND_ICON_BY_KIND: Partial<Record<NodeKind, NodeBrandIcon>> = {
+  gmail_send: "gmail",
+  ai_gemini: "gemini",
+};
+
+/**
+ * Mengembalikan ikon brand resmi untuk sebuah kind bila tersedia (mis. WhatsApp,
+ * Gmail, Google Sheets). Mengembalikan null untuk node generik yang memakai
+ * ikon lucide biasa.
+ */
+export function getNodeBrandIcon(nodeKind: NodeKind): NodeBrandIcon | null {
+  const byKind = BRAND_ICON_BY_KIND[nodeKind];
+
+  if (byKind) {
+    return byKind;
+  }
+
+  const definition = getNodeTypeDef(nodeKind);
+
+  if (definition?.family && BRAND_ICON_BY_FAMILY[definition.family]) {
+    return BRAND_ICON_BY_FAMILY[definition.family] ?? null;
+  }
+
+  return null;
+}
+
 /**
  * Mengembalikan semua operasi (kind) milik satu family pada kategori tertentu.
  * Dipakai dropdown Operation untuk berpindah antar operasi sejenis.

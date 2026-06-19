@@ -43,24 +43,24 @@ export function ExecutionHistory() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Executions</h1>
-        <p className="text-sm text-muted-foreground">
+        <h1 className="text-foreground text-2xl font-bold">Executions</h1>
+        <p className="text-muted-foreground text-sm">
           Riwayat eksekusi workflow beserta log audit.
         </p>
       </div>
 
       {isLoading ? (
-        <span className="flex items-center gap-2 text-sm text-muted-foreground">
+        <span className="text-muted-foreground flex items-center gap-2 text-sm">
           <Spinner /> Memuat…
         </span>
       ) : executions.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border py-12 text-center text-muted-foreground">
+        <div className="border-border text-muted-foreground rounded-xl border border-dashed py-12 text-center">
           Belum ada eksekusi.
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <div className="border-border bg-card overflow-hidden rounded-xl border">
           <table className="w-full text-sm">
-            <thead className="bg-muted text-left text-xs text-muted-foreground uppercase">
+            <thead className="bg-muted text-muted-foreground text-left text-xs uppercase">
               <tr>
                 <th className="px-4 py-2">Workflow</th>
                 <th className="px-4 py-2">Status</th>
@@ -70,10 +70,10 @@ export function ExecutionHistory() {
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-border">
+            <tbody className="divide-border divide-y">
               {executions.map((execution) => (
                 <tr key={execution.id} className="hover:bg-accent/40">
-                  <td className="px-4 py-2 font-medium text-foreground">
+                  <td className="text-foreground px-4 py-2 font-medium">
                     {execution.workflowName ?? execution.workflowId}
                   </td>
                   <td className="px-4 py-2">
@@ -81,16 +81,16 @@ export function ExecutionHistory() {
                       {execution.status}
                     </Badge>
                   </td>
-                  <td className="px-4 py-2 text-muted-foreground">
+                  <td className="text-muted-foreground px-4 py-2">
                     {formatDateTime(execution.startedAt)}
                   </td>
-                  <td className="px-4 py-2 text-muted-foreground">
+                  <td className="text-muted-foreground px-4 py-2">
                     {formatDuration(execution.startedAt, execution.finishedAt)}
                   </td>
                   <td className="px-4 py-2 text-right">
                     <button
                       onClick={() => toggleDetail(execution.id)}
-                      className="text-sm text-primary hover:underline"
+                      className="text-primary text-sm hover:underline"
                     >
                       {openExecutionId === execution.id ? "Tutup" : "Detail"}
                     </button>
@@ -101,14 +101,14 @@ export function ExecutionHistory() {
           </table>
 
           {openExecutionId && (
-            <div className="border-t border-border bg-muted/50 px-4 py-3">
+            <div className="border-border bg-muted/50 border-t px-4 py-3">
               {isLoadingDetail || !detail ? (
-                <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span className="text-muted-foreground flex items-center gap-2 text-xs">
                   <Spinner /> Memuat log…
                 </span>
               ) : (
                 <div className="flex flex-col gap-2">
-                  <p className="text-xs font-semibold text-muted-foreground">
+                  <p className="text-muted-foreground text-xs font-semibold">
                     Node Logs
                   </p>
 

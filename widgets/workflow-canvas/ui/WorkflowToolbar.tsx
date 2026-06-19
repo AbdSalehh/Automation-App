@@ -19,7 +19,7 @@ export function WorkflowToolbar({ onRun }: WorkflowToolbarProps) {
   const { name, isDirty, isExecuting, errorMessage } = useWorkflowStore();
 
   return (
-    <div className="flex h-14 items-center gap-3 border-b border-border bg-card px-4">
+    <div className="border-border bg-card flex h-14 items-center gap-3 border-b px-4">
       <Link href={ROUTES.workflows}>
         <Button variant="ghost" size="icon-sm" aria-label="Kembali">
           <ChevronLeftIcon />
@@ -27,16 +27,16 @@ export function WorkflowToolbar({ onRun }: WorkflowToolbarProps) {
       </Link>
 
       <div className="flex flex-col">
-        <span className="text-sm font-semibold text-foreground">
+        <span className="text-foreground text-sm font-semibold">
           {name || "Untitled Workflow"}
         </span>
-        <span className="text-xs text-muted-foreground">Overview workflow</span>
+        <span className="text-muted-foreground text-xs">Overview workflow</span>
       </div>
 
       {isDirty && <Badge variant="warning">Belum disimpan</Badge>}
 
       {errorMessage && (
-        <span className="text-sm text-destructive">{errorMessage}</span>
+        <span className="text-destructive text-sm">{errorMessage}</span>
       )}
 
       <div className="ml-auto flex items-center gap-1.5">

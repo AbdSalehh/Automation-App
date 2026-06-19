@@ -12,11 +12,13 @@ export type {
   NodeTypeDef,
   WorkflowNodeData,
   NodeFamily,
+  NodeBrandIcon,
 } from "./model/node.model";
 export {
   NODE_TYPES,
   NODE_FAMILIES,
   getNodeTypeDef,
+  getNodeBrandIcon,
   getFamilyOperations,
   getSiblingOperations,
 } from "./model/node.model";

@@ -83,7 +83,7 @@ export function HtmlEmailDialog({ value, onChange }: HtmlEmailDialogProps) {
               className="h-80 resize-none font-mono text-xs"
             />
 
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Mendukung {"{{template}}"} untuk data dinamis seperti {"{{nama}}"}
               .
             </p>
@@ -95,7 +95,7 @@ export function HtmlEmailDialog({ value, onChange }: HtmlEmailDialogProps) {
               sandbox=""
               srcDoc={draftHtml}
               className={cn(
-                "h-80 w-full rounded-md border border-border bg-white",
+                "border-border h-80 w-full rounded-md border bg-white",
               )}
             />
           </TabsContent>

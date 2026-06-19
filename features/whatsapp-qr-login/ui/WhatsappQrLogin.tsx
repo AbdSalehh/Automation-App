@@ -44,14 +44,14 @@ export const WhatsappQrLogin = () => {
   }, [sessionId, pollSessionStatus, subscribeSession, unsubscribeSession]);
 
   return (
-    <div className="flex flex-col items-center gap-4 rounded-xl border border-border bg-card p-6">
+    <div className="border-border bg-card flex flex-col items-center gap-4 rounded-xl border p-6">
       <div className="flex flex-col items-center gap-1">
-        <h2 className="text-lg font-semibold text-foreground">
+        <h2 className="text-foreground text-lg font-semibold">
           Hubungkan WhatsApp (Baileys)
         </h2>
 
-        <p className="text-xs text-muted-foreground">
-          Status: <span className="font-medium text-foreground">{status}</span>
+        <p className="text-muted-foreground text-xs">
+          Status: <span className="text-foreground font-medium">{status}</span>
         </p>
       </div>
 
@@ -64,7 +64,7 @@ export const WhatsappQrLogin = () => {
       {!isReady && qrDataUrl && (
         <div
           className={cn(
-            "rounded-xl border border-border p-4 shadow-sm",
+            "border-border rounded-xl border p-4 shadow-sm",
             "bg-white transition-all",
           )}
         >
@@ -79,15 +79,15 @@ export const WhatsappQrLogin = () => {
       )}
 
       {!isReady && !qrDataUrl && (
-        <div className="flex h-[264px] w-[264px] flex-col items-center justify-center gap-3 rounded-xl border border-border bg-muted/30">
-          <Spinner className="h-8 w-8 text-muted-foreground" />
-          <p className="text-xs text-muted-foreground">
+        <div className="border-border bg-muted/30 flex h-[264px] w-[264px] flex-col items-center justify-center gap-3 rounded-xl border">
+          <Spinner className="text-muted-foreground h-8 w-8" />
+          <p className="text-muted-foreground text-xs">
             {isPolling ? "Memuat status sesi..." : "Menyiapkan QR code..."}
           </p>
         </div>
       )}
 
-      <p className="max-w-xs text-center text-xs text-muted-foreground">
+      <p className="text-muted-foreground max-w-xs text-center text-xs">
         Buka WhatsApp di ponsel, masuk ke Perangkat Tertaut, lalu pindai kode di
         atas.
       </p>

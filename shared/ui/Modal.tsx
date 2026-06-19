@@ -41,17 +41,17 @@ export function Modal({ open, onClose, title, children, footer }: ModalProps) {
       onClick={onClose}
     >
       <div
-        className="flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-border bg-card shadow-xl"
+        className="border-border bg-card flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-xl border shadow-xl"
         onClick={(clickEvent) => clickEvent.stopPropagation()}
       >
         {title && (
-          <div className="flex items-center justify-between border-b border-border px-5 py-3">
-            <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+          <div className="border-border flex items-center justify-between border-b px-5 py-3">
+            <h2 className="text-foreground text-lg font-semibold">{title}</h2>
 
             <button
               onClick={onClose}
               aria-label="Tutup"
-              className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+              className="text-muted-foreground hover:bg-accent hover:text-foreground rounded p-1"
             >
               <XIcon className="size-5" />
             </button>
@@ -61,7 +61,7 @@ export function Modal({ open, onClose, title, children, footer }: ModalProps) {
         <div className="flex-1 overflow-y-auto px-5 py-4">{children}</div>
 
         {footer && (
-          <div className="flex justify-end gap-2 border-t border-border px-5 py-3">
+          <div className="border-border flex justify-end gap-2 border-t px-5 py-3">
             {footer}
           </div>
         )}

@@ -61,14 +61,14 @@ function SearchInputInner({
   }, [debouncedSearch, currentSearch, pushSearch]);
 
   return (
-    <div className={`relative flex-1 max-w-xs ${className}`}>
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-40 pointer-events-none" />
+    <div className={`relative max-w-xs flex-1 ${className}`}>
+      <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 opacity-40" />
       <input
         type="search"
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
         placeholder={placeholder}
-        className="w-full pl-9 pr-8 py-2 rounded-xl text-sm border dark:border-neutral-700 border-neutral-200 dark:bg-neutral-800 bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/30 transition-all"
+        className="focus:ring-primary-500/30 w-full rounded-xl border border-neutral-200 bg-white py-2 pr-8 pl-9 text-sm transition-all focus:ring-2 focus:outline-none dark:border-neutral-700 dark:bg-neutral-800"
       />
       {inputValue && (
         <button
@@ -76,14 +76,14 @@ function SearchInputInner({
             setInputValue("");
             pushSearch("");
           }}
-          className="absolute right-3 top-1/2 -translate-y-1/2 opacity-40 hover:opacity-70 transition-opacity"
+          className="absolute top-1/2 right-3 -translate-y-1/2 opacity-40 transition-opacity hover:opacity-70"
           aria-label="Hapus pencarian"
         >
-          <X className="w-3.5 h-3.5" />
+          <X className="h-3.5 w-3.5" />
         </button>
       )}
       {isPending && (
-        <div className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+        <div className="border-primary-500 absolute top-1/2 right-2 h-3.5 w-3.5 -translate-y-1/2 animate-spin rounded-full border-2 border-t-transparent" />
       )}
     </div>
   );
@@ -93,8 +93,8 @@ export default function SearchInput(props: SearchInputProps) {
   return (
     <Suspense
       fallback={
-        <div className={`relative flex-1 max-w-xs ${props.className || ""}`}>
-          <div className="w-full pl-9 pr-8 py-2 h-[38px] rounded-xl border dark:border-neutral-700 border-neutral-200 dark:bg-neutral-800 bg-white opacity-50 animate-pulse" />
+        <div className={`relative max-w-xs flex-1 ${props.className || ""}`}>
+          <div className="h-[38px] w-full animate-pulse rounded-xl border border-neutral-200 bg-white py-2 pr-8 pl-9 opacity-50 dark:border-neutral-700 dark:bg-neutral-800" />
         </div>
       }
     >

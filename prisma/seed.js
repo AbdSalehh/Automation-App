@@ -1,5 +1,5 @@
 /**
- * Database seed for the AutoFlow automation platform.
+ * Database seed for the Fluxera automation platform.
  *
  * Creates an admin user and the reference reminder workflow described in
  * docs/workflow-design-google-sheet-whatsapp-reminder.md:
@@ -498,7 +498,7 @@ async function main() {
   } else {
     adminUser = await prisma.user.create({
       data: {
-        name: "Admin AutoFlow",
+        name: "Admin Fluxera",
         email: ADMIN_EMAIL,
         role: "admin",
         isActive: true,

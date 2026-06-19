@@ -14,9 +14,7 @@ export async function GET() {
       orderBy: { name: "desc" },
     });
 
-    const nextSeq = lastCase
-      ? Number(lastCase.name.split("-")[2]) + 1
-      : 1;
+    const nextSeq = lastCase ? Number(lastCase.name.split("-")[2]) + 1 : 1;
     const caseId = `${prefix}${String(nextSeq).padStart(4, "0")}`;
 
     return ok({ caseId });

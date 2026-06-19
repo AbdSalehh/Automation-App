@@ -52,7 +52,7 @@ export function CreateWorkflowButton() {
           </>
         }
       >
-        <label className="mb-1 block text-sm font-medium text-foreground">
+        <label className="text-foreground mb-1 block text-sm font-medium">
           Nama Workflow
         </label>
 

@@ -65,8 +65,8 @@ export function ConditionBuilder({
     });
 
   return (
-    <div className="flex flex-col gap-3 rounded-md border border-border bg-muted/30 p-3">
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+    <div className="border-border bg-muted/30 flex flex-col gap-3 rounded-md border p-3">
+      <div className="text-muted-foreground flex items-center gap-2 text-xs">
         <span>Cocokkan</span>
 
         <Select
@@ -89,7 +89,7 @@ export function ConditionBuilder({
       </div>
 
       {rules.length === 0 && (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-muted-foreground text-xs">
           Belum ada kondisi. Tambahkan minimal satu.
         </p>
       )}
@@ -100,10 +100,10 @@ export function ConditionBuilder({
         return (
           <div
             key={ruleIndex}
-            className="flex flex-col gap-2 rounded-md border border-border bg-card p-2"
+            className="border-border bg-card flex flex-col gap-2 rounded-md border p-2"
           >
             <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-muted-foreground">
+              <span className="text-muted-foreground text-xs font-medium">
                 Kolom
               </span>
 
@@ -137,7 +137,7 @@ export function ConditionBuilder({
               <button
                 type="button"
                 onClick={() => removeRule(ruleIndex)}
-                className="shrink-0 text-muted-foreground hover:text-destructive"
+                className="text-muted-foreground hover:text-destructive shrink-0"
                 aria-label="Hapus kondisi"
               >
                 <Trash2Icon className="size-4" />

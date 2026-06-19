@@ -1,4 +1,4 @@
-export const APP_NAME = "AutoFlow";
+export const APP_NAME = "Fluxera";
 
 /**
  * Model Gemini default untuk seluruh fitur AI (classifier, builder, node).
@@ -24,6 +24,7 @@ export const GEMINI_MODELS: { value: string; label: string }[] = [
 
 export const ROUTES = {
   home: "/",
+  dashboard: "/dashboard",
   workflows: "/workflows",
   workflow: (id: string) => `/workflows/${id}`,
   credentials: "/credentials",

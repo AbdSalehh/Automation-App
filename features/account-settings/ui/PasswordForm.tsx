@@ -47,11 +47,11 @@ export function PasswordForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5"
+      className="border-border bg-card flex flex-col gap-4 rounded-xl border p-5"
     >
       <div className="flex flex-col gap-0.5">
-        <h3 className="text-sm font-semibold text-foreground">Ubah Password</h3>
-        <p className="text-xs text-muted-foreground">
+        <h3 className="text-foreground text-sm font-semibold">Ubah Password</h3>
+        <p className="text-muted-foreground text-xs">
           Gunakan password yang kuat dan tidak dipakai di tempat lain.
         </p>
       </div>
@@ -59,7 +59,7 @@ export function PasswordForm() {
       <div className="flex flex-col gap-2">
         <label
           htmlFor="currentPassword"
-          className="text-sm font-medium text-foreground"
+          className="text-foreground text-sm font-medium"
         >
           Password Lama
         </label>
@@ -77,7 +77,7 @@ export function PasswordForm() {
       <div className="flex flex-col gap-2">
         <label
           htmlFor="newPassword"
-          className="text-sm font-medium text-foreground"
+          className="text-foreground text-sm font-medium"
         >
           Password Baru
         </label>
@@ -93,7 +93,7 @@ export function PasswordForm() {
       <div className="flex flex-col gap-2">
         <label
           htmlFor="confirmPassword"
-          className="text-sm font-medium text-foreground"
+          className="text-foreground text-sm font-medium"
         >
           Konfirmasi Password Baru
         </label>
@@ -109,7 +109,7 @@ export function PasswordForm() {
       </div>
 
       {(localError || errorMessage) && (
-        <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+        <p className="bg-destructive/10 text-destructive rounded-md px-3 py-2 text-sm">
           {localError ?? errorMessage}
         </p>
       )}

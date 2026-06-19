@@ -70,12 +70,12 @@ export function DateCalculatorConfig({
   return (
     <div className="flex flex-col gap-4">
       {/* Mode switch */}
-      <div className="flex items-center justify-between rounded-md border border-border bg-muted/20 px-3 py-2">
+      <div className="border-border bg-muted/20 flex items-center justify-between rounded-md border px-3 py-2">
         <div className="flex flex-col">
-          <Label className="text-xs font-medium text-foreground">
+          <Label className="text-foreground text-xs font-medium">
             Tanggal Absolut
           </Label>
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-muted-foreground text-[11px]">
             Pakai tanggal tetap dari kalender
           </span>
         </div>
@@ -90,7 +90,7 @@ export function DateCalculatorConfig({
 
       {isAbsolute ? (
         <div>
-          <Label className="mb-1 block text-xs font-medium text-muted-foreground">
+          <Label className="text-muted-foreground mb-1 block text-xs font-medium">
             Pilih Tanggal
           </Label>
 
@@ -133,7 +133,7 @@ export function DateCalculatorConfig({
         <>
           {/* Base column */}
           <div>
-            <Label className="mb-1 block text-xs font-medium text-muted-foreground">
+            <Label className="text-muted-foreground mb-1 block text-xs font-medium">
               Kolom Tanggal Acuan
             </Label>
 
@@ -161,7 +161,7 @@ export function DateCalculatorConfig({
 
           {/* Operation */}
           <div>
-            <Label className="mb-1 block text-xs font-medium text-muted-foreground">
+            <Label className="text-muted-foreground mb-1 block text-xs font-medium">
               Operasi
             </Label>
 
@@ -182,14 +182,14 @@ export function DateCalculatorConfig({
 
           {/* Offset units */}
           <div>
-            <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+            <Label className="text-muted-foreground mb-1.5 block text-xs font-medium">
               Selisih Waktu
             </Label>
 
             <div className="grid grid-cols-2 gap-2">
               {OFFSET_UNITS.map((unit) => (
                 <div key={unit.key} className="flex flex-col gap-1">
-                  <span className="text-[11px] text-muted-foreground">
+                  <span className="text-muted-foreground text-[11px]">
                     {unit.label}
                   </span>
 
@@ -211,7 +211,7 @@ export function DateCalculatorConfig({
 
       {/* Shared time-of-day override */}
       <div>
-        <Label className="mb-1 block text-xs font-medium text-muted-foreground">
+        <Label className="text-muted-foreground mb-1 block text-xs font-medium">
           Jam Eksekusi (opsional)
         </Label>
 
@@ -223,7 +223,7 @@ export function DateCalculatorConfig({
           }
         />
 
-        <p className="mt-1 text-xs text-muted-foreground">
+        <p className="text-muted-foreground mt-1 text-xs">
           Setel jam tertentu pada tanggal hasil. Kosongkan untuk pakai jam asli.
         </p>
       </div>

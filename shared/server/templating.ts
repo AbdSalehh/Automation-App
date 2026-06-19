@@ -50,9 +50,10 @@ function evaluateRule(
   data: Record<string, unknown>,
 ): boolean {
   const rawCellValue = data[rule.field];
-  const cellValue = rawCellValue === undefined || rawCellValue === null
-    ? ""
-    : String(rawCellValue);
+  const cellValue =
+    rawCellValue === undefined || rawCellValue === null
+      ? ""
+      : String(rawCellValue);
 
   const comparison = resolveTemplate(rule.value ?? "", data);
 

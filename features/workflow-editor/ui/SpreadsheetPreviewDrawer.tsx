@@ -159,7 +159,7 @@ export function SpreadsheetPreviewDrawer() {
 
           {/* Drawer panel */}
           <motion.div
-            className="relative flex flex-col rounded-t-xl border-t border-border bg-card shadow-2xl"
+            className="border-border bg-card relative flex flex-col rounded-t-xl border-t shadow-2xl"
             style={{ height: `${heightVh}vh` }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
@@ -172,14 +172,14 @@ export function SpreadsheetPreviewDrawer() {
               className="group flex h-5 shrink-0 cursor-ns-resize touch-none items-center justify-center"
               aria-label="Ubah ukuran panel"
             >
-              <GripHorizontalIcon className="size-4 text-border transition-colors group-hover:text-muted-foreground" />
+              <GripHorizontalIcon className="text-border group-hover:text-muted-foreground size-4 transition-colors" />
             </div>
 
             {/* Header */}
-            <div className="flex shrink-0 items-center justify-between border-b border-border px-5 py-3">
+            <div className="border-border flex shrink-0 items-center justify-between border-b px-5 py-3">
               <div className="flex items-center gap-2">
-                <TableIcon className="size-4 text-primary" />
-                <span className="text-sm font-semibold text-foreground">
+                <TableIcon className="text-primary size-4" />
+                <span className="text-foreground text-sm font-semibold">
                   Data Preview
                 </span>
 
@@ -202,7 +202,7 @@ export function SpreadsheetPreviewDrawer() {
 
             {/* Sheet tabs */}
             {sheetList.length > 0 && (
-              <div className="flex shrink-0 gap-1 overflow-x-auto border-b border-border bg-muted/30 px-4 py-1.5">
+              <div className="border-border bg-muted/30 flex shrink-0 gap-1 overflow-x-auto border-b px-4 py-1.5">
                 {sheetList.map((sheetName) => (
                   <button
                     key={sheetName}
@@ -224,7 +224,7 @@ export function SpreadsheetPreviewDrawer() {
             {/* Body */}
             {isLoading && (
               <div className="grid flex-1 place-items-center">
-                <span className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="text-muted-foreground flex items-center gap-2 text-sm">
                   <Spinner /> Memuat data…
                 </span>
               </div>
@@ -232,54 +232,54 @@ export function SpreadsheetPreviewDrawer() {
 
             {!isLoading && errorMessage && (
               <div className="grid flex-1 place-items-center p-6">
-                <p className="text-sm text-destructive">{errorMessage}</p>
+                <p className="text-destructive text-sm">{errorMessage}</p>
               </div>
             )}
 
             {!isLoading && data && data.headers.length > 0 && (
               <div className="flex flex-1 overflow-hidden">
                 {/* Left metadata panel */}
-                <ScrollArea className="w-52 shrink-0 border-r border-border">
+                <ScrollArea className="border-border w-52 shrink-0 border-r">
                   <div className="flex flex-col gap-4 p-4">
                     <div>
-                      <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      <p className="text-muted-foreground mb-0.5 text-[10px] font-semibold tracking-wide uppercase">
                         Sheet Aktif
                       </p>
-                      <p className="truncate text-sm font-medium text-foreground">
+                      <p className="text-foreground truncate text-sm font-medium">
                         {activeSheet || "Sheet1"}
                       </p>
                     </div>
 
                     <div>
-                      <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      <p className="text-muted-foreground mb-0.5 text-[10px] font-semibold tracking-wide uppercase">
                         Total Baris
                       </p>
-                      <p className="text-sm font-medium text-foreground">
+                      <p className="text-foreground text-sm font-medium">
                         {data.totalRows.toLocaleString()}
                       </p>
                     </div>
 
                     <div>
-                      <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      <p className="text-muted-foreground mb-0.5 text-[10px] font-semibold tracking-wide uppercase">
                         Status
                       </p>
                       <Badge variant="success">View Only</Badge>
                     </div>
 
                     <div>
-                      <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      <p className="text-muted-foreground mb-2 text-[10px] font-semibold tracking-wide uppercase">
                         Kolom ({data.headers.length})
                       </p>
                       <div className="flex flex-col gap-1">
                         {data.headers.map((header, columnIndex) => (
                           <div
                             key={header}
-                            className="flex items-center gap-2 rounded-md bg-muted px-2 py-1 text-[11px]"
+                            className="bg-muted flex items-center gap-2 rounded-md px-2 py-1 text-[11px]"
                           >
-                            <span className="grid size-4 shrink-0 place-items-center rounded bg-card font-mono text-[10px] font-semibold text-muted-foreground">
+                            <span className="bg-card text-muted-foreground grid size-4 shrink-0 place-items-center rounded font-mono text-[10px] font-semibold">
                               {indexToColumnLetter(columnIndex)}
                             </span>
-                            <span className="truncate text-foreground">
+                            <span className="text-foreground truncate">
                               {header}
                             </span>
                           </div>
@@ -297,7 +297,7 @@ export function SpreadsheetPreviewDrawer() {
             )}
 
             {!isLoading && data && data.headers.length === 0 && (
-              <div className="grid flex-1 place-items-center text-sm text-muted-foreground">
+              <div className="text-muted-foreground grid flex-1 place-items-center text-sm">
                 Sheet kosong atau tidak memiliki header.
               </div>
             )}

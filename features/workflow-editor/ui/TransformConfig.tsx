@@ -76,7 +76,7 @@ export function TransformConfig({
 
       <TabsContent value="keyvalue" className="mt-3 flex flex-col gap-3">
         {mappings.length === 0 && (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             Belum ada field. Tambahkan minimal satu pemetaan.
           </p>
         )}
@@ -84,7 +84,7 @@ export function TransformConfig({
         {mappings.map((mapping) => (
           <div
             key={mapping.id}
-            className="flex flex-col gap-2 rounded-md border border-border bg-muted/20 p-2"
+            className="border-border bg-muted/20 flex flex-col gap-2 rounded-md border p-2"
           >
             <div className="flex items-center gap-2">
               <Input
@@ -99,7 +99,7 @@ export function TransformConfig({
               <button
                 type="button"
                 onClick={() => removeMapping(mapping.id)}
-                className="shrink-0 text-muted-foreground hover:text-destructive"
+                className="text-muted-foreground hover:text-destructive shrink-0"
                 aria-label="Hapus field"
               >
                 <Trash2Icon className="size-4" />
@@ -129,7 +129,7 @@ export function TransformConfig({
       </TabsContent>
 
       <TabsContent value="code" className="mt-3">
-        <Label className="mb-1 block text-xs font-medium text-muted-foreground">
+        <Label className="text-muted-foreground mb-1 block text-xs font-medium">
           JavaScript Transform
         </Label>
 
@@ -141,7 +141,7 @@ export function TransformConfig({
           onChange={(changeEvent) => onCodeChange(changeEvent.target.value)}
         />
 
-        <p className="mt-1 text-xs text-muted-foreground">
+        <p className="text-muted-foreground mt-1 text-xs">
           Akses data lewat <code className="font-mono">payload</code> dan{" "}
           <code className="font-mono">$now</code>. Kembalikan objek hasil dengan{" "}
           <code className="font-mono">return</code>.

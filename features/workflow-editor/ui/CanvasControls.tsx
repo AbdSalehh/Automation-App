@@ -34,7 +34,7 @@ export function CanvasControls({
   return (
     <>
       <Panel position="bottom-left">
-        <div className="flex items-center gap-1 rounded-xl border border-border bg-card/90 p-1 shadow-lg backdrop-blur">
+        <div className="border-border bg-card/90 flex items-center gap-1 rounded-xl border p-1 shadow-lg backdrop-blur">
           <ControlButton
             label="Toggle minimap"
             isActive={isMiniMapVisible}
@@ -57,7 +57,7 @@ export function CanvasControls({
       </Panel>
 
       <Panel position="bottom-right">
-        <div className="flex items-center gap-0.5 rounded-xl border border-border bg-card/90 p-1 shadow-lg backdrop-blur">
+        <div className="border-border bg-card/90 flex items-center gap-0.5 rounded-xl border p-1 shadow-lg backdrop-blur">
           <ControlButton
             label="Perkecil"
             onClick={() => zoomOut({ duration: 200 })}
@@ -68,7 +68,7 @@ export function CanvasControls({
           <button
             type="button"
             onClick={() => fitView({ duration: 300 })}
-            className="min-w-12 rounded-lg px-2 py-1.5 text-xs font-semibold text-foreground tabular-nums transition-colors hover:bg-muted"
+            className="text-foreground hover:bg-muted min-w-12 rounded-lg px-2 py-1.5 text-xs font-semibold tabular-nums transition-colors"
           >
             {zoomPercent}%
           </button>
@@ -105,7 +105,7 @@ function ControlButton({
       aria-label={label}
       onClick={onClick}
       className={cn(
-        "grid size-8 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+        "text-muted-foreground hover:bg-muted hover:text-foreground grid size-8 place-items-center rounded-lg transition-colors",
         isActive && "bg-primary/10 text-primary",
       )}
     >

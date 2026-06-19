@@ -49,14 +49,14 @@ export function AgentPipelineNode({ data }: NodeProps) {
   return (
     <div
       className={cn(
-        "w-56 rounded-xl border-2 bg-card p-4 shadow-sm",
+        "bg-card w-56 rounded-xl border-2 p-4 shadow-sm",
         style.accent,
       )}
     >
       <Handle
         type="target"
         position={Position.Left}
-        className="size-2! border-none! bg-muted-foreground/40!"
+        className="bg-muted-foreground/40! size-2! border-none!"
       />
 
       <div className="flex items-center gap-3">
@@ -70,10 +70,10 @@ export function AgentPipelineNode({ data }: NodeProps) {
         </span>
 
         <div className="flex flex-col">
-          <span className="text-sm font-semibold text-foreground">
+          <span className="text-foreground text-sm font-semibold">
             {nodeData.title}
           </span>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-muted-foreground text-xs">
             {nodeData.subtitle}
           </span>
         </div>
@@ -82,7 +82,7 @@ export function AgentPipelineNode({ data }: NodeProps) {
       <Handle
         type="source"
         position={Position.Right}
-        className="size-2! border-none! bg-muted-foreground/40!"
+        className="bg-muted-foreground/40! size-2! border-none!"
       />
     </div>
   );

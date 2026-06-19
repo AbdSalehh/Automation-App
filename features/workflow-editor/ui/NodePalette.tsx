@@ -2,15 +2,17 @@
 
 import { useMemo, useState } from "react";
 import { PlusIcon, SearchIcon } from "lucide-react";
-import { Button, Input, Icon, ScrollArea } from "@/shared/ui";
+import { Button, Input, Icon, BrandIcon, ScrollArea } from "@/shared/ui";
 import { cn } from "@/shared/lib/utils";
 import {
   NODE_TYPES,
   NODE_FAMILIES,
+  getNodeBrandIcon,
   useWorkflowStore,
   type NodeCategory,
   type NodeKind,
   type NodeFamily,
+  type NodeBrandIcon,
 } from "@/entities/workflow";
 
 const CATEGORY_ORDER: NodeCategory[] = ["trigger", "action", "logic"];
@@ -37,6 +39,7 @@ interface PaletteEntry {
   label: string;
   description: string;
   icon: string;
+  brand: NodeBrandIcon | null;
   defaultKind: NodeKind;
 }
 
@@ -56,6 +59,7 @@ function buildPaletteEntries(category: NodeCategory): PaletteEntry[] {
           label: nodeType.label,
           description: nodeType.description,
           icon: nodeType.icon,
+          brand: getNodeBrandIcon(nodeType.kind),
           defaultKind: nodeType.kind,
         });
 
@@ -75,6 +79,7 @@ function buildPaletteEntries(category: NodeCategory): PaletteEntry[] {
         label: family.label,
         description: `${family.label} — pilih operasinya setelah ditambahkan.`,
         icon: family.icon,
+        brand: getNodeBrandIcon(nodeType.kind),
         defaultKind: nodeType.kind,
       });
     },
@@ -103,12 +108,12 @@ export function NodePalette() {
   );
 
   return (
-    <aside className="flex w-64 shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-      <div className="flex flex-col gap-3 border-b border-border p-3">
-        <h2 className="text-sm font-semibold text-foreground">Node Library</h2>
+    <aside className="border-border bg-card flex h-[calc(100vh-85px)]! w-64 shrink-0 flex-col overflow-hidden rounded-xl border shadow-sm">
+      <div className="border-border flex flex-col gap-3 border-b p-3">
+        <h2 className="text-foreground text-sm font-semibold">Node Library</h2>
 
         <div className="relative">
-          <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+          <SearchIcon className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
           <Input
             value={searchTerm}
             onChange={(changeEvent) => setSearchTerm(changeEvent.target.value)}
@@ -123,7 +128,7 @@ export function NodePalette() {
         </Button>
       </div>
 
-      <ScrollArea className="flex-1">
+      <ScrollArea className="h-full flex-1 pb-30">
         <div className="p-3">
           {entriesByCategory.map(({ category, entries }) => {
             const visibleEntries = entries.filter((entry) =>
@@ -136,7 +141,7 @@ export function NodePalette() {
 
             return (
               <div key={category} className="mb-5">
-                <p className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-wide uppercase">
                   {CATEGORY_LABELS[category]}
                 </p>
 
@@ -147,17 +152,23 @@ export function NodePalette() {
                       type="button"
                       title={entry.description}
                       onClick={() => addNodeByKind(entry.defaultKind)}
-                      className="flex items-center gap-2 rounded-lg border border-border bg-background px-2.5 py-2 text-left transition-colors hover:border-primary/40 hover:bg-accent"
+                      className="border-border bg-background hover:border-primary/40 hover:bg-accent flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition-colors"
                     >
                       <span
                         className={cn(
                           "grid size-6 shrink-0 place-items-center rounded-md",
-                          CATEGORY_ICON_STYLES[category],
+                          entry.brand
+                            ? "ring-border bg-white ring-1"
+                            : CATEGORY_ICON_STYLES[category],
                         )}
                       >
-                        <Icon name={entry.icon} className="size-3.5" />
+                        {entry.brand ? (
+                          <BrandIcon name={entry.brand} className="size-3.5" />
+                        ) : (
+                          <Icon name={entry.icon} className="size-3.5" />
+                        )}
                       </span>
-                      <span className="truncate text-xs font-medium text-foreground">
+                      <span className="text-foreground truncate text-xs font-medium">
                         {entry.label}
                       </span>
                     </button>

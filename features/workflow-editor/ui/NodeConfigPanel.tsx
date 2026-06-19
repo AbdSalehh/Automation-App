@@ -551,9 +551,9 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
 
   return (
     <>
-      <aside className="flex w-80 shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-        <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
-          <h2 className="text-sm font-semibold text-foreground">
+      <aside className="border-border bg-card flex w-80 shrink-0 flex-col overflow-hidden rounded-xl border shadow-sm">
+        <div className="border-border flex shrink-0 items-center justify-between border-b px-4 py-3">
+          <h2 className="text-foreground text-sm font-semibold">
             Node Properties
           </h2>
 
@@ -566,10 +566,10 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
           </button>
         </div>
 
-        <ScrollArea className="flex-1">
-          <div className="flex flex-col gap-4 p-4">
+        <ScrollArea className="h-full flex-1">
+          <div className="flex flex-col gap-4 p-4 pb-20">
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              <label className="text-muted-foreground mb-1 block text-xs font-medium">
                 Label
               </label>
 
@@ -580,14 +580,14 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                 }
               />
 
-              <p className="mt-1.5 text-xs text-muted-foreground">
+              <p className="text-muted-foreground mt-1.5 text-xs">
                 {nodeTypeDefinition?.description}
               </p>
             </div>
 
             {siblingOperations.length > 1 && (
               <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                <label className="text-muted-foreground mb-1 block text-xs font-medium">
                   Operation
                 </label>
 
@@ -608,7 +608,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                   </SelectContent>
                 </Select>
 
-                <p className="mt-1.5 text-xs text-muted-foreground">
+                <p className="text-muted-foreground mt-1.5 text-xs">
                   Pilih operasi untuk node ini. Konfigurasi di bawah
                   menyesuaikan pilihan.
                 </p>
@@ -617,7 +617,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
 
             {isWhatsAppSend && (
               <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                <label className="text-muted-foreground mb-1 block text-xs font-medium">
                   Provider
                 </label>
 
@@ -650,7 +650,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
 
             {effectiveCredentialType && (
               <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                <label className="text-muted-foreground mb-1 block text-xs font-medium">
                   Kredensial
                 </label>
 
@@ -686,7 +686,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
             {(isSheetReadNode || isSheetUpdateNode) && (
               <>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                  <label className="text-muted-foreground mb-1 block text-xs font-medium">
                     Spreadsheet ID
                   </label>
 
@@ -719,7 +719,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                  <label className="text-muted-foreground mb-1 block text-xs font-medium">
                     Nama Sheet
                   </label>
 
@@ -731,7 +731,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                     }
                   />
 
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="text-muted-foreground mt-1 text-xs">
                     Membaca seluruh kolom otomatis dari sheet ini.
                   </p>
                 </div>
@@ -739,7 +739,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                 <button
                   type="button"
                   onClick={handleRefreshColumns}
-                  className="self-start text-xs text-primary hover:underline disabled:opacity-50"
+                  className="text-primary self-start text-xs hover:underline disabled:opacity-50"
                   disabled={isLoadingColumns}
                 >
                   {isLoadingColumns ? "Memuat..." : "↻ Muat kolom sheet"}
@@ -751,7 +751,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
             {isSheetReadNode && (
               <>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                  <label className="text-muted-foreground mb-1 block text-xs font-medium">
                     Kolom yang Dibaca
                   </label>
 
@@ -762,13 +762,13 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                     placeholder="Semua kolom (default)"
                   />
 
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="text-muted-foreground mt-1 text-xs">
                     Kosongkan untuk membaca semua kolom.
                   </p>
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                  <label className="text-muted-foreground mb-1 block text-xs font-medium">
                     Maks Baris
                   </label>
 
@@ -787,7 +787,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
             {isSheetUpdateNode && (
               <>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                  <label className="text-muted-foreground mb-1 block text-xs font-medium">
                     Cari Baris Berdasarkan Kolom (opsional)
                   </label>
 
@@ -819,7 +819,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                     </SelectContent>
                   </Select>
 
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="text-muted-foreground mt-1 text-xs">
                     Gunakan ini untuk balasan WA: cari baris yang kolomnya cocok
                     dengan nilai di bawah (mis. kolom Nomor = {"{{sender}}"}).
                   </p>
@@ -827,7 +827,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
 
                 {String(node.data.config.matchColumn ?? "") && (
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    <label className="text-muted-foreground mb-1 block text-xs font-medium">
                       Nilai yang Dicari
                     </label>
 
@@ -861,7 +861,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
             {usesConditionBuilder && (
               <div>
                 <div className="mb-1 flex items-center justify-between">
-                  <label className="block text-xs font-medium text-muted-foreground">
+                  <label className="text-muted-foreground block text-xs font-medium">
                     Kondisi
                   </label>
 
@@ -869,7 +869,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                     <button
                       type="button"
                       onClick={handleRefreshColumns}
-                      className="text-xs text-primary hover:underline disabled:opacity-50"
+                      className="text-primary text-xs hover:underline disabled:opacity-50"
                       disabled={isLoadingColumns}
                     >
                       {isLoadingColumns ? "Memuat..." : "↻ Muat kolom sheet"}
@@ -921,7 +921,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                   </p>
                 )}
 
-                <p className="mt-1.5 text-xs text-muted-foreground">
+                <p className="text-muted-foreground mt-1.5 text-xs">
                   {node.data.kind === "filter"
                     ? "Hanya baris yang lolos kondisi yang diteruskan ke node berikutnya."
                     : "Flow lanjut ke node berikutnya hanya jika ada baris yang cocok."}
@@ -959,7 +959,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
 
             {configFields.map((configField) => (
               <div key={configField.key}>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                <label className="text-muted-foreground mb-1 block text-xs font-medium">
                   {configField.label}
                 </label>
 
@@ -1033,7 +1033,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                       <button
                         type="button"
                         onClick={handleRefreshColumns}
-                        className="shrink-0 text-sm text-primary hover:underline disabled:opacity-50"
+                        className="text-primary shrink-0 text-sm hover:underline disabled:opacity-50"
                         disabled={isLoadingColumns}
                         title="Muat ulang kolom dari spreadsheet"
                       >
@@ -1095,7 +1095,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                 )}
 
                 {configField.hint && (
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="text-muted-foreground mt-1 text-xs">
                     {configField.hint}
                   </p>
                 )}
@@ -1119,9 +1119,9 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
             )}
 
             {/* Per-node Test Run */}
-            <div className="flex flex-col gap-2 rounded-md border border-border bg-muted/20 p-2.5">
+            <div className="border-border bg-muted/20 flex flex-col gap-2 rounded-md border p-2.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-foreground">
+                <span className="text-foreground text-xs font-semibold">
                   Test Node
                 </span>
 
@@ -1150,7 +1150,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                       : "border-rose-200 bg-rose-50 text-rose-700",
                   )}
                 >
-                  <pre className="whitespace-pre-wrap break-all">
+                  <pre className="break-all whitespace-pre-wrap">
                     {testResult.ok
                       ? JSON.stringify(testResult.output, null, 2)
                       : testResult.error}
@@ -1158,7 +1158,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                 </div>
               )}
 
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-muted-foreground text-[11px]">
                 Menjalankan node ini saja dengan data contoh. Node konektor
                 tetap memanggil API aslinya.
               </p>

@@ -105,7 +105,7 @@ export function CredentialForm({ onCreated }: CredentialFormProps) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div>
-        <label className="mb-1 block text-sm font-medium text-foreground">
+        <label className="text-foreground mb-1 block text-sm font-medium">
           Tipe Konektor
         </label>
 
@@ -133,7 +133,7 @@ export function CredentialForm({ onCreated }: CredentialFormProps) {
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-foreground">
+        <label className="text-foreground mb-1 block text-sm font-medium">
           Nama Kredensial
         </label>
 
@@ -149,7 +149,7 @@ export function CredentialForm({ onCreated }: CredentialFormProps) {
 
       {credentialFields.map((credentialField) => (
         <div key={credentialField.key}>
-          <label className="mb-1 block text-sm font-medium text-foreground">
+          <label className="text-foreground mb-1 block text-sm font-medium">
             {credentialField.label}
           </label>
 
@@ -165,7 +165,7 @@ export function CredentialForm({ onCreated }: CredentialFormProps) {
       ))}
 
       {isGoogleOAuth && (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-muted-foreground text-xs">
           Setelah mengisi Client ID & Client Secret, klik tombol di bawah untuk
           login Google dan memberi izin. Refresh token akan disimpan otomatis,
           tanpa perlu OAuth Playground.
@@ -173,7 +173,7 @@ export function CredentialForm({ onCreated }: CredentialFormProps) {
       )}
 
       {testMessage && <p className="text-sm text-emerald-600">{testMessage}</p>}
-      {testError && <p className="text-sm text-destructive">{testError}</p>}
+      {testError && <p className="text-destructive text-sm">{testError}</p>}
 
       {isGoogleOAuth ? (
         <Button

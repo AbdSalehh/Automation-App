@@ -18,7 +18,7 @@ export function AgentPipelineCanvas() {
   );
 
   return (
-    <div className="h-[420px] w-full overflow-hidden rounded-xl border border-border bg-muted/30">
+    <div className="border-border bg-muted/30 h-[420px] w-full overflow-hidden rounded-xl border">
       <ReactFlow
         nodes={AGENT_PIPELINE_NODES}
         edges={AGENT_PIPELINE_EDGES}

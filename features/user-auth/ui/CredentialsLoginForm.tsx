@@ -41,7 +41,7 @@ export function CredentialsLoginForm() {
   return (
     <form onSubmit={handleSubmit} className="flex w-full flex-col gap-3">
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="email" className="text-sm font-medium text-foreground">
+        <label htmlFor="email" className="text-foreground text-sm font-medium">
           Email
         </label>
         <Input
@@ -58,7 +58,7 @@ export function CredentialsLoginForm() {
       <div className="flex flex-col gap-1.5">
         <label
           htmlFor="password"
-          className="text-sm font-medium text-foreground"
+          className="text-foreground text-sm font-medium"
         >
           Password
         </label>
@@ -74,7 +74,7 @@ export function CredentialsLoginForm() {
       </div>
 
       {error && (
-        <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+        <p className="bg-destructive/10 text-destructive rounded-md px-3 py-2 text-sm">
           {error}
         </p>
       )}

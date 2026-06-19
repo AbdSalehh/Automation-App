@@ -60,7 +60,7 @@ export function MultiSelect({
       <button
         type="button"
         onClick={() => setIsOpen((previous) => !previous)}
-        className="flex min-h-9 w-full flex-wrap items-center gap-1 rounded-md border border-input bg-transparent px-2 py-1.5 text-left text-sm shadow-xs"
+        className="border-input flex min-h-9 w-full flex-wrap items-center gap-1 rounded-md border bg-transparent px-2 py-1.5 text-left text-sm shadow-xs"
       >
         {value.length === 0 && (
           <span className="text-muted-foreground">{placeholder}</span>
@@ -88,9 +88,9 @@ export function MultiSelect({
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-md border border-border bg-popover p-1 shadow-md">
+        <div className="border-border bg-popover absolute z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-md border p-1 shadow-md">
           {remainingOptions.length === 0 && !allowCustom && (
-            <p className="px-2 py-1.5 text-xs text-muted-foreground">
+            <p className="text-muted-foreground px-2 py-1.5 text-xs">
               Tidak ada pilihan lain
             </p>
           )}
@@ -100,14 +100,14 @@ export function MultiSelect({
               key={option}
               type="button"
               onClick={() => toggleValue(option)}
-              className="block w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground"
+              className="hover:bg-accent hover:text-accent-foreground block w-full rounded-sm px-2 py-1.5 text-left text-sm"
             >
               {option}
             </button>
           ))}
 
           {allowCustom && (
-            <div className="flex items-center gap-1 border-t border-border p-1">
+            <div className="border-border flex items-center gap-1 border-t p-1">
               <input
                 value={customInput}
                 onChange={(changeEvent) =>

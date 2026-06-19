@@ -53,12 +53,12 @@ export function SheetWriteTargets({
 
   return (
     <div className="flex flex-col gap-2">
-      <label className="block text-xs font-medium text-muted-foreground">
+      <label className="text-muted-foreground block text-xs font-medium">
         Kolom yang Ditulis
       </label>
 
       {targets.length === 0 && (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-muted-foreground text-xs">
           Belum ada kolom. Tambahkan kolom yang ingin di-update.
         </p>
       )}
@@ -66,7 +66,7 @@ export function SheetWriteTargets({
       {targets.map((target, targetIndex) => (
         <div
           key={targetIndex}
-          className="flex flex-col gap-2 rounded-md border border-border bg-muted/30 p-2"
+          className="border-border bg-muted/30 flex flex-col gap-2 rounded-md border p-2"
         >
           <div className="flex items-center gap-2">
             <Select
@@ -99,7 +99,7 @@ export function SheetWriteTargets({
             <button
               type="button"
               onClick={() => removeTarget(targetIndex)}
-              className="shrink-0 text-muted-foreground hover:text-destructive"
+              className="text-muted-foreground hover:text-destructive shrink-0"
               aria-label="Hapus kolom"
             >
               <Trash2Icon className="size-4" />
@@ -115,10 +115,10 @@ export function SheetWriteTargets({
             }
           />
 
-          <label className="flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">
+          <label className="text-muted-foreground flex cursor-pointer items-center gap-2 text-xs">
             <input
               type="checkbox"
-              className="size-3.5 rounded border-border"
+              className="border-border size-3.5 rounded"
               checked={Boolean(target.append)}
               onChange={(changeEvent) =>
                 updateTarget(targetIndex, {
@@ -142,7 +142,7 @@ export function SheetWriteTargets({
         Tambah Kolom
       </Button>
 
-      <p className="text-xs text-muted-foreground">
+      <p className="text-muted-foreground text-xs">
         Mendukung {"{{kolom}}"}, hasil WA ({"{{__waMessageId}}"},{" "}
         {"{{__waTarget}}"}, {"{{__waSentAt}}"}) dan waktu balasan{" "}
         {"{{__replyAt}}"}.

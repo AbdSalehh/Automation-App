@@ -62,9 +62,9 @@ export function OnboardingForm() {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <p className="text-sm font-medium text-foreground">Tujuan Penggunaan</p>
-        <p className="text-xs text-muted-foreground">
-          Apa tujuan utama kamu menggunakan AutoFlow?
+        <p className="text-foreground text-sm font-medium">Tujuan Penggunaan</p>
+        <p className="text-muted-foreground text-xs">
+          Apa tujuan utama kamu menggunakan Fluxera?
         </p>
       </div>
 
@@ -78,14 +78,14 @@ export function OnboardingForm() {
               "flex flex-col items-start rounded-lg border p-4 text-left transition-all",
               "hover:border-primary hover:bg-primary/5",
               formData.usagePurpose === option.value
-                ? "border-primary bg-primary/5 ring-1 ring-primary"
+                ? "border-primary bg-primary/5 ring-primary ring-1"
                 : "border-border bg-card",
             )}
           >
-            <span className="text-sm font-medium text-foreground">
+            <span className="text-foreground text-sm font-medium">
               {option.label}
             </span>
-            <span className="mt-0.5 text-xs text-muted-foreground">
+            <span className="text-muted-foreground mt-0.5 text-xs">
               {option.description}
             </span>
           </button>
@@ -95,7 +95,7 @@ export function OnboardingForm() {
       <div className="flex flex-col gap-2">
         <label
           htmlFor="organisation"
-          className="text-sm font-medium text-foreground"
+          className="text-foreground text-sm font-medium"
         >
           Nama organisasi / perusahaan{" "}
           <span className="text-muted-foreground font-normal">(opsional)</span>
@@ -111,7 +111,7 @@ export function OnboardingForm() {
       </div>
 
       {error && (
-        <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+        <p className="bg-destructive/10 text-destructive rounded-md px-3 py-2 text-sm">
           {error}
         </p>
       )}
@@ -121,7 +121,7 @@ export function OnboardingForm() {
         disabled={isLoading || !formData.usagePurpose}
         className="w-full"
       >
-        {isLoading ? "Menyimpan..." : "Mulai Gunakan AutoFlow"}
+        {isLoading ? "Menyimpan..." : "Mulai Gunakan Fluxera"}
       </Button>
     </form>
   );

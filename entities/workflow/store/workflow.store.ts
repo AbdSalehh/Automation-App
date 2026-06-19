@@ -167,7 +167,9 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
         node.data.kind === "google_sheets_update" ||
         node.data.kind === "google_sheets_append";
 
-      const spreadsheetId = String(node.data.config?.spreadsheetId ?? "").trim();
+      const spreadsheetId = String(
+        node.data.config?.spreadsheetId ?? "",
+      ).trim();
       const credentialId = node.data.credentialId ?? "";
 
       if (isSheetNode && spreadsheetId && credentialId) {

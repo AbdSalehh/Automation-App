@@ -33,13 +33,13 @@ export function AgentSettingsPanel() {
   }, [fetchStatus]);
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5">
+    <div className="border-border bg-card flex flex-col gap-4 rounded-xl border p-5">
       <div className="flex items-center justify-between gap-4">
         <div className="flex flex-col gap-0.5">
-          <h3 className="text-sm font-semibold text-foreground">
+          <h3 className="text-foreground text-sm font-semibold">
             Agen Chat-Action (Telegram)
           </h3>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             Aktifkan agar bisa membuat & menjalankan otomasi lewat chat bot
             Telegram bertenaga Gemini.
           </p>
@@ -49,7 +49,7 @@ export function AgentSettingsPanel() {
           className={
             enabled
               ? "rounded-full bg-green-500/10 px-3 py-1 text-xs font-medium text-green-600"
-              : "rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground"
+              : "bg-muted text-muted-foreground rounded-full px-3 py-1 text-xs font-medium"
           }
         >
           {enabled ? "Aktif" : "Nonaktif"}
@@ -57,7 +57,7 @@ export function AgentSettingsPanel() {
       </div>
 
       {isLoading ? (
-        <p className="text-sm text-muted-foreground">Memuat status...</p>
+        <p className="text-muted-foreground text-sm">Memuat status...</p>
       ) : (
         <div className="flex flex-col gap-4">
           {enabled && (
@@ -71,7 +71,7 @@ export function AgentSettingsPanel() {
           <div className="flex flex-col gap-2">
             <label
               htmlFor="agentBotToken"
-              className="text-sm font-medium text-foreground"
+              className="text-foreground text-sm font-medium"
             >
               Bot Token Telegram
             </label>
@@ -87,7 +87,7 @@ export function AgentSettingsPanel() {
           <div className="flex flex-col gap-2">
             <label
               htmlFor="agentGeminiKey"
-              className="text-sm font-medium text-foreground"
+              className="text-foreground text-sm font-medium"
             >
               Gemini API Key
             </label>
@@ -103,7 +103,7 @@ export function AgentSettingsPanel() {
           <div className="flex flex-col gap-2">
             <label
               htmlFor="agentGeminiModel"
-              className="text-sm font-medium text-foreground"
+              className="text-foreground text-sm font-medium"
             >
               Model Gemini
             </label>
@@ -119,13 +119,13 @@ export function AgentSettingsPanel() {
                 </NativeSelectOption>
               ))}
             </NativeSelect>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Flash-Lite cocok saat Flash sedang sibuk (high-traffic).
             </p>
           </div>
 
           {error && (
-            <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <p className="bg-destructive/10 text-destructive rounded-md px-3 py-2 text-sm">
               {error}
             </p>
           )}

@@ -126,7 +126,7 @@ export function ScheduleTriggerConfig({
         </TabsList>
 
         <TabsContent value="interval" className="mt-3 flex flex-col gap-2">
-          <Label className="text-xs font-medium text-muted-foreground">
+          <Label className="text-muted-foreground text-xs font-medium">
             Jalankan setiap
           </Label>
 
@@ -163,13 +163,13 @@ export function ScheduleTriggerConfig({
             </Select>
           </div>
 
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-muted-foreground text-[11px]">
             Mis. setiap 5 menit, atau setiap 12 jam.
           </p>
         </TabsContent>
 
         <TabsContent value="daily" className="mt-3 flex flex-col gap-2">
-          <Label className="text-xs font-medium text-muted-foreground">
+          <Label className="text-muted-foreground text-xs font-medium">
             Setiap hari pada jam
           </Label>
 
@@ -184,14 +184,14 @@ export function ScheduleTriggerConfig({
             }}
           />
 
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-muted-foreground text-[11px]">
             Mis. kirim reminder setiap jam 09:00 pagi.
           </p>
         </TabsContent>
 
         <TabsContent value="weekly" className="mt-3 flex flex-col gap-3">
           <div className="flex flex-col gap-2">
-            <Label className="text-xs font-medium text-muted-foreground">
+            <Label className="text-muted-foreground text-xs font-medium">
               Hari
             </Label>
 
@@ -219,7 +219,7 @@ export function ScheduleTriggerConfig({
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label className="text-xs font-medium text-muted-foreground">
+            <Label className="text-muted-foreground text-xs font-medium">
               Pada jam
             </Label>
 
@@ -237,10 +237,10 @@ export function ScheduleTriggerConfig({
         </TabsContent>
       </Tabs>
 
-      <div className="rounded-md border border-border bg-muted/20 px-3 py-2">
-        <span className="text-[11px] text-muted-foreground">
+      <div className="border-border bg-muted/20 rounded-md border px-3 py-2">
+        <span className="text-muted-foreground text-[11px]">
           Cron aktif:{" "}
-          <code className="font-mono text-foreground">{currentCron}</code>
+          <code className="text-foreground font-mono">{currentCron}</code>
         </span>
       </div>
     </div>

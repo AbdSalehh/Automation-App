@@ -1,10 +1,11 @@
 "use client";
 
 import { Handle, Position, type NodeProps } from "@xyflow/react";
-import { Icon, Spinner } from "@/shared/ui";
+import { Icon, BrandIcon, Spinner } from "@/shared/ui";
 import { cn } from "@/shared/lib/utils";
 import {
   getNodeTypeDef,
+  getNodeBrandIcon,
   type WorkflowNodeData,
   type ConditionGroup,
 } from "@/entities/workflow";
@@ -144,11 +145,11 @@ function NodeBody({ nodeData }: { nodeData: WorkflowNodeData }) {
       return (
         <SectionShell title="Logic Conditions">
           {expression ? (
-            <code className="block break-all font-mono text-[11px] text-foreground">
+            <code className="text-foreground block font-mono text-[11px] break-all">
               IF ({expression})
             </code>
           ) : (
-            <p className="text-[11px] italic text-muted-foreground">
+            <p className="text-muted-foreground text-[11px] italic">
               Belum ada ekspresi
             </p>
           )}
@@ -167,7 +168,7 @@ function NodeBody({ nodeData }: { nodeData: WorkflowNodeData }) {
             {rules.slice(0, 3).map((rule, ruleIndex) => (
               <code
                 key={ruleIndex}
-                className="block wrap-break-word font-mono text-[11px] text-foreground"
+                className="text-foreground block font-mono text-[11px] wrap-break-word"
               >
                 {ruleIndex === 0
                   ? "IF "
@@ -177,7 +178,7 @@ function NodeBody({ nodeData }: { nodeData: WorkflowNodeData }) {
             ))}
           </div>
         ) : (
-          <p className="text-[11px] italic text-muted-foreground">
+          <p className="text-muted-foreground text-[11px] italic">
             Belum ada kondisi
           </p>
         )}
@@ -195,11 +196,11 @@ function NodeBody({ nodeData }: { nodeData: WorkflowNodeData }) {
       return (
         <SectionShell title="Transform Logic">
           {code ? (
-            <code className="line-clamp-3 block whitespace-pre-wrap break-all font-mono text-[11px] text-foreground">
+            <code className="text-foreground line-clamp-3 block font-mono text-[11px] break-all whitespace-pre-wrap">
               {code}
             </code>
           ) : (
-            <p className="text-[11px] italic text-muted-foreground">
+            <p className="text-muted-foreground text-[11px] italic">
               Belum ada kode
             </p>
           )}
@@ -224,14 +225,14 @@ function NodeBody({ nodeData }: { nodeData: WorkflowNodeData }) {
                   {mapping.key || "field"}
                 </span>
                 <span className="text-muted-foreground">←</span>
-                <span className="truncate text-muted-foreground">
+                <span className="text-muted-foreground truncate">
                   {mapping.value || "—"}
                 </span>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-[11px] italic text-muted-foreground">
+          <p className="text-muted-foreground text-[11px] italic">
             Belum ada pemetaan
           </p>
         )}
@@ -256,17 +257,17 @@ function NodeBody({ nodeData }: { nodeData: WorkflowNodeData }) {
         <div className="flex flex-col gap-1">
           {entries.map(([key, value]) => (
             <div key={key} className="flex items-start justify-between gap-2">
-              <span className="shrink-0 text-[11px] capitalize text-muted-foreground">
+              <span className="text-muted-foreground shrink-0 text-[11px] capitalize">
                 {formatConfigKey(key)}
               </span>
-              <span className="line-clamp-2 text-right text-[11px] font-medium wrap-break-word text-foreground">
+              <span className="text-foreground line-clamp-2 text-right text-[11px] font-medium wrap-break-word">
                 {formatConfigValue(value)}
               </span>
             </div>
           ))}
         </div>
       ) : (
-        <p className="text-[11px] italic text-muted-foreground">
+        <p className="text-muted-foreground text-[11px] italic">
           Belum dikonfigurasi
         </p>
       )}
@@ -274,7 +275,7 @@ function NodeBody({ nodeData }: { nodeData: WorkflowNodeData }) {
   );
 }
 
-/** Shared wrapper giving each body section a labeled, tinted block. */
+/** Shared wrapper giving each body section a labeled, rounded, tinted block. */
 function SectionShell({
   title,
   children,
@@ -283,8 +284,8 @@ function SectionShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="border-t border-border bg-muted/20 px-3 py-2">
-      <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+    <div className="border-border/70 bg-muted/40 rounded-lg border px-2.5 py-2">
+      <p className="text-muted-foreground mb-1 text-[10px] font-semibold tracking-wide uppercase">
         {title}
       </p>
       {children}
@@ -300,6 +301,9 @@ export function WorkflowNode({ data, selected }: NodeProps) {
 
   const handleBg = CATEGORY_HANDLE_BG[category];
   const namedOutputs = nodeTypeDef?.outputs ?? [];
+
+  /** Ikon brand resmi (WhatsApp, Gmail, dll.) bila node ini bermerek. */
+  const brandIcon = getNodeBrandIcon(nodeData.kind);
 
   /** Transform gets its own badge tint even though its category is "logic". */
   const badgeKey = nodeData.kind === "transform" ? "transform" : category;
@@ -336,9 +340,9 @@ export function WorkflowNode({ data, selected }: NodeProps) {
   return (
     <div
       className={cn(
-        "w-[280px] overflow-hidden rounded-xl border border-border bg-card shadow-md transition-shadow hover:shadow-lg",
+        "border-border bg-card w-[280px] rounded-xl border p-2 shadow-md transition-shadow hover:shadow-lg",
         runRingStyle,
-        selected && "ring-2 ring-primary ring-offset-2",
+        selected && "ring-primary ring-2 ring-offset-2",
       )}
     >
       {!isTrigger && (
@@ -346,28 +350,34 @@ export function WorkflowNode({ data, selected }: NodeProps) {
           type="target"
           position={Position.Left}
           className={cn(
-            "size-3! rounded-full! border-2! border-card!",
+            "border-card! size-3! rounded-full! border-2!",
             handleBg,
           )}
         />
       )}
 
       {/* Header */}
-      <div className="flex items-center gap-2.5 px-3 pb-2.5 pt-3">
+      <div className="flex items-center gap-2.5 px-1.5 pt-1 pb-2">
         <span
           className={cn(
             "grid size-7 shrink-0 place-items-center rounded-lg",
-            CATEGORY_ICON_STYLES[category],
+            brandIcon
+              ? "ring-border bg-white ring-1"
+              : CATEGORY_ICON_STYLES[category],
           )}
         >
-          <Icon name={nodeTypeDef?.icon ?? "CircleHelp"} className="size-4" />
+          {brandIcon ? (
+            <BrandIcon name={brandIcon} className="size-4" />
+          ) : (
+            <Icon name={nodeTypeDef?.icon ?? "CircleHelp"} className="size-4" />
+          )}
         </span>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <span className="truncate text-sm font-semibold text-foreground">
+          <span className="text-foreground truncate text-sm font-semibold">
             {nodeData.label}
           </span>
-          <span className="truncate text-[11px] text-muted-foreground">
+          <span className="text-muted-foreground truncate text-[11px]">
             {nodeTypeDef?.description}
           </span>
         </div>
@@ -386,85 +396,93 @@ export function WorkflowNode({ data, selected }: NodeProps) {
         )}
       </div>
 
-      {/* Kind-specific body */}
-      <NodeBody nodeData={nodeData} />
+      {/* Body sections — each a distinct rounded block */}
+      <div className="mt-2 flex flex-col gap-2">
+        {/* Kind-specific body */}
+        <NodeBody nodeData={nodeData} />
 
-      {/* Input section (hidden for triggers) */}
-      {!isTrigger && (
-        <div className="flex items-center gap-2 border-t border-border px-3 py-2 text-[11px]">
-          <span className="size-1.5 rounded-full bg-muted-foreground/40" />
-          <span className="text-muted-foreground">Input</span>
-          <span className="ml-auto font-mono text-[10px] text-muted-foreground/50">
-            {"{}"}
-          </span>
-        </div>
-      )}
+        {/* Input block (hidden for triggers) */}
+        {!isTrigger && (
+          <div className="border-border/70 bg-muted/40 rounded-lg border px-2.5 py-2">
+            <p className="text-muted-foreground mb-1 text-[10px] font-semibold tracking-wide uppercase">
+              Input
+            </p>
+            <div className="flex items-center gap-2 text-[11px]">
+              <span className="bg-muted-foreground/40 size-1.5 rounded-full" />
+              <span className="text-muted-foreground">Input</span>
+              <span className="text-muted-foreground/50 ml-auto font-mono text-[10px]">
+                {"{}"}
+              </span>
+            </div>
+          </div>
+        )}
 
-      {/* Output section — one relatively-positioned row per named output */}
-      <div className="border-t border-border">
-        <div className="px-3 pt-2">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+        {/* Output block — one row per named output */}
+        <div className="border-border/70 bg-muted/40 rounded-lg border px-2.5 py-2">
+          <p className="text-muted-foreground mb-1 text-[10px] font-semibold tracking-wide uppercase">
             Output
           </p>
-        </div>
 
-        {namedOutputs.length > 0 ? (
-          namedOutputs.map((outputKey) => {
-            const branchHandle = BRANCH_OUTPUT_HANDLES[outputKey];
+          {namedOutputs.length > 0 ? (
+            <div className="flex flex-col gap-1">
+              {namedOutputs.map((outputKey) => {
+                const branchHandle = BRANCH_OUTPUT_HANDLES[outputKey];
 
-            return (
-              <div
-                key={outputKey}
-                className="relative flex items-center gap-2 px-3 py-1.5 text-[11px]"
-              >
-                <span
-                  className={cn(
-                    "size-1.5 shrink-0 rounded-full",
-                    branchHandle
-                      ? branchHandle.replace("!", "")
-                      : CATEGORY_DOT_STYLES[category],
-                  )}
-                />
-                <span className="truncate text-foreground">{outputKey}</span>
-                <span className="ml-auto font-mono text-[10px] text-muted-foreground/50">
-                  {"{}"}
-                </span>
+                return (
+                  <div
+                    key={outputKey}
+                    className="relative flex items-center gap-2 text-[11px]"
+                  >
+                    <span
+                      className={cn(
+                        "size-1.5 shrink-0 rounded-full",
+                        branchHandle
+                          ? branchHandle.replace("!", "")
+                          : CATEGORY_DOT_STYLES[category],
+                      )}
+                    />
+                    <span className="text-foreground truncate">
+                      {outputKey}
+                    </span>
+                    <span className="text-muted-foreground/50 ml-auto font-mono text-[10px]">
+                      {"{}"}
+                    </span>
 
-                {branchHandle && (
-                  <Handle
-                    id={outputKey}
-                    type="source"
-                    position={Position.Right}
-                    className={cn(
-                      "size-3! rounded-full! border-2! border-card!",
-                      branchHandle,
+                    {branchHandle && (
+                      <Handle
+                        id={outputKey}
+                        type="source"
+                        position={Position.Right}
+                        className={cn(
+                          "border-card! size-3! rounded-full! border-2!",
+                          branchHandle,
+                        )}
+                      />
                     )}
-                  />
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-muted-foreground flex items-center gap-2 text-[11px]">
+              <span
+                className={cn(
+                  "size-1.5 rounded-full",
+                  CATEGORY_DOT_STYLES[category],
                 )}
-              </div>
-            );
-          })
-        ) : (
-          <div className="flex items-center gap-2 px-3 py-1.5 text-[11px] text-muted-foreground">
-            <span
-              className={cn(
-                "size-1.5 rounded-full",
-                CATEGORY_DOT_STYLES[category],
-              )}
-            />
-            Output
-          </div>
-        )}
+              />
+              Output
+            </div>
+          )}
 
-        {previewSummary && (
-          <div className="border-t border-border/40 px-3 py-1.5">
-            <span className="line-clamp-2 font-mono text-[10px] text-muted-foreground">
-              {previewSummary}
-            </span>
-          </div>
-        )}
-
-        <div className="pb-2" />
+          {previewSummary && (
+            <div className="border-border/50 mt-1.5 border-t pt-1.5">
+              <span className="text-muted-foreground line-clamp-2 font-mono text-[10px]">
+                {previewSummary}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Single source handle for non-branching nodes. */}
@@ -473,7 +491,7 @@ export function WorkflowNode({ data, selected }: NodeProps) {
           type="source"
           position={Position.Right}
           className={cn(
-            "size-3! rounded-full! border-2! border-card!",
+            "border-card! size-3! rounded-full! border-2!",
             handleBg,
           )}
         />

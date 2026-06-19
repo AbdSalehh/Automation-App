@@ -23,7 +23,7 @@ export function WorkflowCanvas({ workflowId }: WorkflowCanvasProps) {
 
   if (isLoading) {
     return (
-      <div className="grid flex-1 place-items-center text-muted-foreground">
+      <div className="text-muted-foreground grid flex-1 place-items-center">
         <span className="flex items-center gap-2">
           <Spinner /> Memuat editor…
         </span>
@@ -34,7 +34,7 @@ export function WorkflowCanvas({ workflowId }: WorkflowCanvasProps) {
   return (
     <ReactFlowProvider>
       <div className="flex h-full flex-1 flex-col">
-        <div className="flex flex-1 gap-3 overflow-hidden bg-muted/30 p-3">
+        <div className="bg-muted/30 flex flex-1 gap-3 overflow-hidden p-3">
           <NodePalette />
           <WorkflowEditor />
         </div>

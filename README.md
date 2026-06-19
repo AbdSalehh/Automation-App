@@ -1,6 +1,6 @@
-# AutoFlow — Workflow Automation
+# Fluxera — Workflow Automation
 
-AutoFlow adalah platform automasi alur kerja (workflow) berbasis node secara visual. Platform ini dirancang agar pengguna dapat membuat, mengonfigurasi, dan menjalankan otomatisasi proses bisnis mereka sendiri (seperti membaca data dari Spreadsheet, mengevaluasi kondisi, dan mengirim pesan WhatsApp) melalui antarmuka _drag-and-drop_ yang intuitif.
+Fluxera adalah platform automasi alur kerja (workflow) berbasis node secara visual. Platform ini dirancang agar pengguna dapat membuat, mengonfigurasi, dan menjalankan otomatisasi proses bisnis mereka sendiri (seperti membaca data dari Spreadsheet, mengevaluasi kondisi, dan mengirim pesan WhatsApp) melalui antarmuka _drag-and-drop_ yang intuitif.
 
 Proyek ini dibangun secara full-stack menggunakan **Next.js (App Router)**, **React Flow**, **Prisma**, dan **NextAuth (Auth.js v5)**, sehingga tidak membutuhkan server backend terpisah; semua API dilayani melalui integrasi _Next.js Route Handlers_.
 

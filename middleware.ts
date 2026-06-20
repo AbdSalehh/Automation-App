@@ -60,9 +60,11 @@ export const config = {
   runtime: "nodejs",
   matcher: [
     /**
-     * Terapkan ke semua rute kecuali aset statis Next.js, file gambar, dan
-     * webhook publik (yang dipanggil oleh layanan eksternal seperti Telegram).
+     * Terapkan ke semua rute kecuali: aset statis Next.js, file gambar, webhook
+     * publik (dipanggil layanan eksternal seperti Telegram), endpoint NextAuth
+     * (`api/auth` di-poll sangat sering oleh klien sehingga membebani Redis),
+     * dan cron internal. Mengecualikan ini mencegah ledakan koneksi Redis.
      */
-    "/((?!_next/static|_next/image|favicon.ico|api/webhooks|.*\\.(?:webp|png|jpg|jpeg|svg|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|api/webhooks|api/auth|api/cron|.*\\.(?:webp|png|jpg|jpeg|svg|ico)$).*)",
   ],
 };

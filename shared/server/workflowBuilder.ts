@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { prisma } from "@/shared/lib/prisma";
-import { GEMINI_MODEL } from "@/shared/config/constants";
-import { requestExternal } from "@/shared/server/httpClient";
+import { generateText } from "@/shared/server/ai/generate";
+import type { AiChain } from "@/shared/server/ai/types";
 import {
   NODE_TYPES,
   type NodeKind,
@@ -223,53 +223,34 @@ async function assignCredentials(
 }
 
 /**
- * Membangun workflow dari permintaan bahasa alami memakai Gemini.
+ * Membangun workflow dari permintaan bahasa alami memakai rantai penyedia AI
+ * (dengan fallback otomatis bila penyedia utama gagal).
  *
  * @param prompt permintaan pengguna (mis. "buatkan otomasi pencatat pengeluaran")
- * @param geminiApiKey API key Gemini milik pengguna (dari kredensial)
+ * @param chain rantai penyedia AI milik pengguna
  */
 export async function buildWorkflowFromPrompt(
   prompt: string,
-  geminiApiKey: string,
+  chain: AiChain,
   ownerId: string,
-  model: string = GEMINI_MODEL,
   existingContext?: string,
 ): Promise<BuiltWorkflow> {
   /**
-   * Untuk mode edit: konteks workflow lama disisipkan agar Gemini
-   * mempertahankan node yang tidak diubah dan hanya menyesuaikan yang diminta.
+   * Untuk mode edit: konteks workflow lama disisipkan agar AI mempertahankan
+   * node yang tidak diubah dan hanya menyesuaikan yang diminta.
    */
   const userPrompt = existingContext
     ? `${existingContext}\n\nPermintaan perubahan: ${prompt}`
     : prompt;
 
-  const response = await requestExternal(
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey.trim()}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      data: {
-        system_instruction: { parts: [{ text: buildSystemPrompt() }] },
-        contents: [{ parts: [{ text: userPrompt }] }],
-        generationConfig: { temperature: 0.2 },
-      },
-    },
-  );
-
-  if (!response.ok) {
-    throw new Error(
-      `Builder: Gemini gagal merespons (status ${response.status})`,
-    );
-  }
-
-  const body = response.body as {
-    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-  };
-
-  const rawText = body.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+  const rawText = await generateText({
+    chain,
+    systemInstruction: buildSystemPrompt(),
+    prompt: userPrompt,
+  });
 
   if (!rawText) {
-    throw new Error("Builder: Gemini tidak menghasilkan output");
+    throw new Error("Builder: penyedia AI tidak menghasilkan output");
   }
 
   let parsed: RawBuilderResult;

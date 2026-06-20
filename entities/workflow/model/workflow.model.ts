@@ -37,6 +37,10 @@ export interface WorkflowSummary {
   isPublished: boolean;
   updatedAt: string;
   nodeCount: number;
+  triggerKind: string | null;
+  executionCount: number;
+  lastExecutionStatus: string | null;
+  lastExecutionAt: string | null;
 }
 
 export interface CreateWorkflowPayload {

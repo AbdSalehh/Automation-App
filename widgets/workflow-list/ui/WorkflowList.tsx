@@ -133,8 +133,8 @@ export function WorkflowList() {
       <WorkflowStatsCards
         total={summary.total}
         active={summary.active}
-        paused={summary.paused}
         draft={summary.draft}
+        totalExecutions={summary.totalExecutions}
       />
 
       <WorkflowFilterBar

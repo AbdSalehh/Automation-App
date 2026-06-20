@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { motion } from "motion/react";
 import { staggerContainer, staggerItem } from "@/shared/lib/motion-presets";
 import { useWorkflowListStore } from "@/entities/workflow";
+import { useMetricsStore } from "@/entities/metrics";
 import {
   DashboardGreeting,
   DashboardCacheCard,
@@ -22,20 +23,20 @@ interface DashboardClientProps {
 }
 
 /**
- * Render interaktif dashboard. Mengambil daftar workflow nyata dari store untuk
- * kartu statistik & Recent Workflows; metrik lain memakai data dummy
- * representatif (sesuai kesepakatan) hingga backend menyediakannya.
+ * Render interaktif dashboard. Mengambil daftar workflow dan metrik nyata dari
+ * store untuk kartu statistik, tren eksekusi, dan daftar eksekusi terbaru.
  */
 export function DashboardClient({ name }: DashboardClientProps) {
   const { workflows, fetchWorkflows } = useWorkflowListStore();
+  const { dashboard, fetchDashboardMetrics } = useMetricsStore();
 
   useEffect(() => {
     fetchWorkflows();
-  }, [fetchWorkflows]);
+    fetchDashboardMetrics();
+  }, [fetchWorkflows, fetchDashboardMetrics]);
 
-  const activeWorkflows = workflows.filter(
-    (workflow) => workflow.isPublished,
-  ).length;
+  const executionTrend =
+    dashboard?.dailyTrend.map((point) => point.total) ?? [];
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8">
@@ -44,8 +45,11 @@ export function DashboardClient({ name }: DashboardClientProps) {
       <DashboardOverviewPanel />
 
       <DashboardStatsCards
-        activeWorkflows={activeWorkflows || workflows.length}
-        credentials={8}
+        activeWorkflows={dashboard?.activeWorkflows ?? 0}
+        credentials={dashboard?.credentials ?? 0}
+        executionsToday={dashboard?.executionsToday ?? 0}
+        successRate={dashboard?.successRate ?? 0}
+        executionTrend={executionTrend}
       />
 
       <motion.div
@@ -58,7 +62,9 @@ export function DashboardClient({ name }: DashboardClientProps) {
           <DashboardRecentWorkflows workflows={workflows} />
         </motion.div>
         <motion.div variants={staggerItem}>
-          <DashboardRecentExecutions />
+          <DashboardRecentExecutions
+            executions={dashboard?.recentExecutions ?? []}
+          />
         </motion.div>
         <motion.div variants={staggerItem} className="flex flex-col gap-5">
           <DashboardCredentials />

@@ -9,22 +9,30 @@ import { cn } from "@/shared/lib/utils";
 interface DashboardStatsCardsProps {
   activeWorkflows: number;
   credentials: number;
+  executionsToday: number;
+  successRate: number;
+  executionTrend: number[];
 }
 
 /** Empat kartu statistik utama dashboard dengan sparkline (gambar 1). */
 export function DashboardStatsCards({
   activeWorkflows,
   credentials,
+  executionsToday,
+  successRate,
+  executionTrend,
 }: DashboardStatsCardsProps) {
+  const hasTrend = executionTrend.some((point) => point > 0);
+
   const cards = [
     {
       label: "Active Workflows",
       value: String(activeWorkflows),
-      hint: "↑ 12% vs yesterday",
-      hintClass: "text-emerald-600",
+      hint: "Workflow terpublikasi",
+      hintClass: "text-muted-foreground",
       icon: ZapIcon,
       iconClass: "bg-orange-100 text-orange-600",
-      trend: [12, 18, 14, 22, 19, 26, 24],
+      trend: hasTrend ? executionTrend : null,
       trendColor: "#f97316",
     },
     {
@@ -39,23 +47,23 @@ export function DashboardStatsCards({
     },
     {
       label: "Executions Today",
-      value: "4,928",
-      hint: "↑ 98.2% success rate",
+      value: executionsToday.toLocaleString("id-ID"),
+      hint: `${successRate}% success rate`,
       hintClass: "text-emerald-600",
       icon: BarChart3Icon,
       iconClass: "bg-orange-100 text-orange-600",
-      trend: [40, 52, 48, 61, 55, 67, 72],
+      trend: hasTrend ? executionTrend : null,
       trendColor: "#f97316",
     },
     {
-      label: "Redis Cache",
-      value: "Healthy",
-      valueClass: "text-emerald-600",
-      hint: "2ms avg latency",
+      label: "Success Rate",
+      value: `${successRate}%`,
+      valueClass: successRate >= 90 ? "text-emerald-600" : "text-amber-600",
+      hint: "Eksekusi bulan ini",
       hintClass: "text-muted-foreground",
       icon: LayersIcon,
       iconClass: "bg-emerald-100 text-emerald-600",
-      trend: [88, 91, 89, 94, 92, 96, 98],
+      trend: hasTrend ? executionTrend : null,
       trendColor: "#10b981",
     },
   ];

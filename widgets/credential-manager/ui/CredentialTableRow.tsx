@@ -3,31 +3,22 @@
 import {
   CheckCircle2Icon,
   AlertTriangleIcon,
-  PencilIcon,
-  MoreVerticalIcon,
   KeyRoundIcon,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { Badge, Button, BrandIcon } from "@/shared/ui";
+import { Badge, BrandIcon } from "@/shared/ui";
 import { cn } from "@/shared/lib/utils";
 import { staggerItem } from "@/shared/lib/motion-presets";
-import {
-  CREDENTIAL_TYPE_LABELS,
-  type CredentialType,
-} from "@/shared/config/constants";
 import type { Credential } from "@/entities/credential";
 import { deriveCredentialMetrics } from "../lib/credentialMetrics";
+import { CredentialRowActions } from "./CredentialRowActions";
 
 interface CredentialTableRowProps {
   credential: Credential;
-  onRemove: (credentialId: string) => void;
 }
 
 /** Satu baris tabel kredensial dengan metrik (gambar 1). */
-export function CredentialTableRow({
-  credential,
-  onRemove,
-}: CredentialTableRowProps) {
+export function CredentialTableRow({ credential }: CredentialTableRowProps) {
   const metrics = deriveCredentialMetrics(credential);
   const isExpired = metrics.status === "expired";
 
@@ -125,33 +116,7 @@ export function CredentialTableRow({
       </td>
 
       <td className="px-4 py-3">
-        <div className="flex items-center justify-end gap-1">
-          {isExpired ? (
-            <Button
-              variant="outline"
-              size="sm"
-              className="border-orange-300 text-orange-600 hover:bg-orange-50"
-            >
-              Update
-            </Button>
-          ) : (
-            <button
-              type="button"
-              className="text-muted-foreground hover:bg-accent hover:text-foreground grid size-8 place-items-center rounded-md"
-              aria-label="Edit kredensial"
-            >
-              <PencilIcon className="size-4" />
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={() => onRemove(credential.id)}
-            className="text-muted-foreground hover:bg-accent hover:text-foreground grid size-8 place-items-center rounded-md"
-            aria-label={`Aksi untuk ${CREDENTIAL_TYPE_LABELS[credential.type as CredentialType]}`}
-          >
-            <MoreVerticalIcon className="size-4" />
-          </button>
-        </div>
+        <CredentialRowActions credential={credential} />
       </td>
     </motion.tr>
   );

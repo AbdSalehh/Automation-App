@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -7,11 +8,13 @@ import {
   PlayIcon,
   InfoIcon,
   SettingsIcon,
+  ScrollTextIcon,
 } from "lucide-react";
 import { Button, Badge, Spinner, toast } from "@/shared/ui";
 import { ROUTES } from "@/shared/config/constants";
 import { useWorkflowStore } from "@/entities/workflow";
 import { useWhatsappSessionStore } from "@/entities/whatsapp-session";
+import { WorkflowLogsSheet } from "@/widgets/execution-history";
 
 /**
  * Renders workflow editor toolbar controls inside the shared AppHeader.
@@ -24,10 +27,19 @@ export function WorkflowEditorHeaderBar() {
 
   const isEditorPage = /^\/workflows\/[^/]+$/.test(pathname ?? "");
 
-  const { name, isDirty, isExecuting, errorMessage, executeWorkflow, nodes } =
-    useWorkflowStore();
+  const {
+    workflowId,
+    name,
+    isDirty,
+    isExecuting,
+    errorMessage,
+    executeWorkflow,
+    nodes,
+  } = useWorkflowStore();
 
   const { checkIsSessionActive } = useWhatsappSessionStore();
+
+  const [isLogsOpen, setIsLogsOpen] = useState(false);
 
   if (!isEditorPage) {
     return null;
@@ -109,6 +121,13 @@ export function WorkflowEditorHeaderBar() {
           Run
         </Button>
 
+        {workflowId && (
+          <Button variant="ghost" size="sm" onClick={() => setIsLogsOpen(true)}>
+            <ScrollTextIcon />
+            Logs
+          </Button>
+        )}
+
         <Button variant="ghost" size="icon-sm" aria-label="Info">
           <InfoIcon />
         </Button>
@@ -117,6 +136,14 @@ export function WorkflowEditorHeaderBar() {
           <SettingsIcon />
         </Button>
       </div>
+
+      {workflowId && (
+        <WorkflowLogsSheet
+          workflowId={workflowId}
+          open={isLogsOpen}
+          onOpenChange={setIsLogsOpen}
+        />
+      )}
     </div>
   );
 }

@@ -1,8 +1,8 @@
 import { prisma } from "@/shared/lib/prisma";
 import { getRedisClient } from "@/shared/lib/redis";
-import { GEMINI_MODEL } from "@/shared/config/constants";
 import { runWorkflow } from "@/shared/server/engine";
 import { buildWorkflowFromPrompt } from "@/shared/server/workflowBuilder";
+import type { AiChain } from "@/shared/server/ai/types";
 import type { FlowNode } from "@/entities/workflow/model/workflow.model";
 import {
   getNodeTypeDef,
@@ -53,8 +53,8 @@ export interface AgentRouterArgs {
   /** Identitas pengirim pada channel (mis. chatId Telegram). */
   sender: string;
   message: string;
-  geminiApiKey: string;
-  geminiModel: string;
+  /** Rantai penyedia AI milik pemilik (utama + fallback). */
+  chain: AiChain;
   transport: AgentTransport;
 }
 
@@ -118,8 +118,7 @@ async function loadWorkflowContext(
 async function buildAndReply(
   ownerId: string,
   prompt: string,
-  geminiApiKey: string,
-  geminiModel: string,
+  chain: AiChain,
   reply: AgentTransport["reply"],
   existingWorkflowId?: string,
 ): Promise<void> {
@@ -159,9 +158,8 @@ async function buildAndReply(
 
   const built = await buildWorkflowFromPrompt(
     prompt,
-    geminiApiKey,
+    chain,
     ownerId,
-    geminiModel,
     existingContext,
   );
 
@@ -399,8 +397,7 @@ async function setWorkflowPublished(
 async function runPendingAction(
   pending: PendingState,
   ownerId: string,
-  geminiApiKey: string,
-  geminiModel: string,
+  chain: AiChain,
   reply: AgentTransport["reply"],
 ): Promise<{ action: string }> {
   if (pending.type === "delete") {
@@ -443,8 +440,7 @@ async function runPendingAction(
     await buildAndReply(
       ownerId,
       pending.prompt ?? "",
-      geminiApiKey,
-      geminiModel,
+      chain,
       reply,
       pending.type === "edit" ? pending.workflowId : undefined,
     );
@@ -468,8 +464,7 @@ async function runPendingAction(
 export async function handleAgentMessage(
   args: AgentRouterArgs,
 ): Promise<{ action: string }> {
-  const { ownerId, sender, message, geminiApiKey, transport } = args;
-  const geminiModel = args.geminiModel || GEMINI_MODEL;
+  const { ownerId, sender, message, chain, transport } = args;
 
   /**
    * Tampilkan indikator "sedang mengetik" secepatnya agar pengguna tahu pesan
@@ -496,13 +491,7 @@ export async function handleAgentMessage(
     if (pending && CONFIRM_WORDS.includes(normalized)) {
       await redis.del(key);
 
-      return runPendingAction(
-        pending,
-        ownerId,
-        geminiApiKey,
-        geminiModel,
-        transport.reply,
-      );
+      return runPendingAction(pending, ownerId, chain, transport.reply);
     }
 
     if (pending && CANCEL_WORDS.includes(normalized)) {
@@ -522,12 +511,7 @@ export async function handleAgentMessage(
   let intentResult;
 
   try {
-    intentResult = await classifyIntent(
-      message,
-      workflows,
-      geminiApiKey,
-      geminiModel,
-    );
+    intentResult = await classifyIntent(message, workflows, chain);
   } catch (error) {
     console.error("[agent] classifyIntent gagal:", error);
 

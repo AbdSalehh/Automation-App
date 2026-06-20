@@ -1,5 +1,5 @@
 import { CredentialManager } from "@/widgets/credential-manager";
-import { WhatsappQrLogin } from "@/features/whatsapp-qr-login";
+import { WhatsappLinkCard } from "@/features/whatsapp-qr-login";
 
 export function CredentialsView() {
   return (
@@ -7,7 +7,7 @@ export function CredentialsView() {
       <CredentialManager />
 
       <div className="max-w-md">
-        <WhatsappQrLogin />
+        <WhatsappLinkCard />
       </div>
     </div>
   );

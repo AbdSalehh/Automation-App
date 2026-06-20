@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 @theme inline {
   --color-background: var(--background);
@@ -98,7 +99,28 @@
 }
 
 @layer base {
+  /* Custom scrollbar style */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #e5e5e5; /* Tailwind neutral-200 */
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #d4d4d4; /* Tailwind neutral-300 */
+  }
+
   * {
+    scrollbar-width: thin;
+    scrollbar-color: #e5e5e5 transparent;
     border-color: var(--border);
     outline-color: color-mix(in oklch, var(--ring) 50%, transparent);
   }

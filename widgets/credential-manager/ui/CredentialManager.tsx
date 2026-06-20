@@ -36,13 +36,8 @@ const TABLE_HEADERS = [
 ];
 
 export function CredentialManager() {
-  const {
-    credentials,
-    isLoading,
-    errorMessage,
-    fetchCredentials,
-    removeCredential,
-  } = useCredentialStore();
+  const { credentials, isLoading, errorMessage, fetchCredentials } =
+    useCredentialStore();
 
   const [filters, setFilters] = useState<CredentialFilters>(INITIAL_FILTERS);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -157,7 +152,6 @@ export function CredentialManager() {
                   <CredentialTableRow
                     key={credential.id}
                     credential={credential}
-                    onRemove={removeCredential}
                   />
                 ))}
               </motion.tbody>

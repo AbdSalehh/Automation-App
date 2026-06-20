@@ -1,7 +1,7 @@
 import { prisma } from "@/shared/lib/prisma";
-import { GEMINI_MODEL } from "@/shared/config/constants";
 import { decryptJson } from "@/shared/lib/crypto";
-import { requestExternal } from "@/shared/server/httpClient";
+import { generateText } from "@/shared/server/ai/generate";
+import type { AiChain } from "@/shared/server/ai/types";
 
 /**
  * Classifier maksud (intent) untuk router agen WhatsApp.
@@ -134,52 +134,27 @@ function extractJson(rawText: string): IntentResult {
 }
 
 /**
- * Mengklasifikasi pesan pengguna menjadi intent terstruktur memakai Gemini.
+ * Mengklasifikasi pesan pengguna menjadi intent terstruktur memakai rantai
+ * penyedia AI (dengan fallback otomatis bila penyedia utama gagal).
  *
- * @param message pesan masuk dari WhatsApp
+ * @param message pesan masuk dari channel chat
  * @param workflows ringkasan workflow milik pemilik (konteks tanya-jawab)
- * @param geminiApiKey API key Gemini milik pemilik
+ * @param chain rantai penyedia AI milik pemilik
  */
 export async function classifyIntent(
   message: string,
   workflows: WorkflowContext[],
-  geminiApiKey: string,
-  model: string = GEMINI_MODEL,
+  chain: AiChain,
 ): Promise<IntentResult> {
-  const response = await requestExternal(
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey.trim()}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      data: {
-        system_instruction: {
-          parts: [{ text: buildClassifierPrompt(workflows) }],
-        },
-        contents: [{ parts: [{ text: message }] }],
-        generationConfig: {
-          temperature: 0.2,
-          responseMimeType: "application/json",
-        },
-      },
-    },
-  );
-
-  if (!response.ok) {
-    throw new Error(
-      `Classifier: Gemini gagal merespons (status ${response.status}): ${JSON.stringify(
-        response.body,
-      )}`,
-    );
-  }
-
-  const body = response.body as {
-    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-  };
-
-  const rawText = body.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+  const rawText = await generateText({
+    chain,
+    systemInstruction: buildClassifierPrompt(workflows),
+    prompt: message,
+    expectJson: true,
+  });
 
   if (!rawText) {
-    throw new Error("Classifier: Gemini tidak menghasilkan output");
+    throw new Error("Classifier: penyedia AI tidak menghasilkan output");
   }
 
   return extractJson(rawText);

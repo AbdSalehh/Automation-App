@@ -31,10 +31,9 @@ const TRIGGER_ICONS: Record<string, typeof ClockIcon> = {
 
 const STATUS_BADGE: Record<
   string,
-  { label: string; variant: "success" | "warning" | "neutral" }
+  { label: string; variant: "success" | "neutral" }
 > = {
   active: { label: "Active", variant: "success" },
-  paused: { label: "Paused", variant: "warning" },
   draft: { label: "Draft", variant: "neutral" },
 };
 
@@ -65,16 +64,9 @@ export function WorkflowTableRow({
             >
               {workflow.name}
             </Link>
-            <div className="mt-1 flex flex-wrap gap-1">
-              {metrics.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="bg-muted text-muted-foreground rounded px-1.5 py-0.5 text-[10px] font-medium"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
+            <span className="text-muted-foreground mt-0.5 text-xs">
+              v{workflow.version} · {metrics.stepCount} node
+            </span>
           </div>
         </div>
       </td>
@@ -95,7 +87,9 @@ export function WorkflowTableRow({
 
       <td className="px-4 py-3">
         <div className="flex items-center gap-2">
-          {metrics.lastExecutionOk ? (
+          {!metrics.hasExecution ? (
+            <ClockIcon className="text-muted-foreground size-4" />
+          ) : metrics.lastExecutionOk ? (
             <CheckCircle2Icon className="size-4 text-emerald-500" />
           ) : (
             <XCircleIcon className="size-4 text-red-500" />
@@ -104,14 +98,17 @@ export function WorkflowTableRow({
             <span
               className={cn(
                 "text-sm font-medium",
-                metrics.lastExecutionOk ? "text-emerald-600" : "text-red-600",
+                !metrics.hasExecution
+                  ? "text-muted-foreground"
+                  : metrics.lastExecutionOk
+                    ? "text-emerald-600"
+                    : "text-red-600",
               )}
             >
               {metrics.lastExecutionLabel}
             </span>
             <span className="text-muted-foreground text-xs">
-              {metrics.lastExecutionAt} · {metrics.stepCount} steps ·{" "}
-              {metrics.durationLabel}
+              {metrics.lastExecutionAt} · {metrics.stepCount} steps
             </span>
           </div>
         </div>

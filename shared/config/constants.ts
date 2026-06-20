@@ -22,6 +22,106 @@ export const GEMINI_MODELS: { value: string; label: string }[] = [
   { value: "gemini-flash-lite-latest", label: "Gemini Flash-Lite (terbaru)" },
 ];
 
+/**
+ * Penyedia AI yang didukung agen chat-action. Setiap penyedia punya daftar
+ * model populer untuk dropdown UI. OpenAI & OpenRouter memakai Chat Completions,
+ * Gemini memakai endpoint nativnya.
+ */
+export type AiProviderId =
+  | "gemini"
+  | "openai"
+  | "openrouter"
+  | "groq"
+  | "mistral";
+
+export const AI_PROVIDERS: { value: AiProviderId; label: string }[] = [
+  { value: "gemini", label: "Google Gemini (gratis)" },
+  { value: "groq", label: "Groq (gratis)" },
+  { value: "mistral", label: "Mistral AI (gratis)" },
+  { value: "openrouter", label: "OpenRouter (ada model gratis)" },
+  { value: "openai", label: "OpenAI (berbayar)" },
+];
+
+export const AI_PROVIDER_MODELS: Record<
+  AiProviderId,
+  { value: string; label: string }[]
+> = {
+  gemini: GEMINI_MODELS,
+  openai: [
+    { value: "gpt-4o-mini", label: "GPT-4o mini (hemat)" },
+    { value: "gpt-4o", label: "GPT-4o" },
+    { value: "gpt-4.1-mini", label: "GPT-4.1 mini" },
+    { value: "gpt-4.1", label: "GPT-4.1" },
+  ],
+  openrouter: [
+    {
+      value: "google/gemini-2.0-flash-exp:free",
+      label: "Gemini 2.0 Flash (gratis)",
+    },
+    {
+      value: "deepseek/deepseek-r1:free",
+      label: "DeepSeek R1 (gratis)",
+    },
+    {
+      value: "meta-llama/llama-3.3-70b-instruct:free",
+      label: "Llama 3.3 70B (gratis)",
+    },
+    {
+      value: "meta-llama/llama-3.3-70b-instruct",
+      label: "Llama 3.3 70B Instruct",
+    },
+    {
+      value: "deepseek/deepseek-chat",
+      label: "DeepSeek Chat",
+    },
+    {
+      value: "anthropic/claude-3.5-sonnet",
+      label: "Claude 3.5 Sonnet",
+    },
+  ],
+  groq: [
+    {
+      value: "llama-3.3-70b-versatile",
+      label: "Llama 3.3 70B Versatile (gratis)",
+    },
+    {
+      value: "llama-3.1-8b-instant",
+      label: "Llama 3.1 8B Instant (gratis)",
+    },
+    {
+      value: "openai/gpt-oss-120b",
+      label: "GPT-OSS 120B (gratis)",
+    },
+    {
+      value: "gemma2-9b-it",
+      label: "Gemma2 9B (gratis)",
+    },
+  ],
+  mistral: [
+    {
+      value: "mistral-small-latest",
+      label: "Mistral Small (gratis)",
+    },
+    {
+      value: "open-mistral-nemo",
+      label: "Open Mistral Nemo (gratis)",
+    },
+    {
+      value: "mistral-large-latest",
+      label: "Mistral Large",
+    },
+  ],
+};
+
+/** Model default per penyedia, dipakai saat pengguna belum memilih. */
+export const AI_PROVIDER_DEFAULT_MODEL: Record<AiProviderId, string> = {
+  gemini: GEMINI_MODEL,
+  openai: "gpt-4o-mini",
+  openrouter: "google/gemini-2.0-flash-exp:free",
+  groq: "llama-3.3-70b-versatile",
+  mistral: "mistral-small-latest",
+};
+
 export const ROUTES = {
   home: "/",
   dashboard: "/dashboard",
@@ -30,6 +130,7 @@ export const ROUTES = {
   credentials: "/credentials",
   executions: "/executions",
   settings: "/settings",
+  users: "/users",
   login: "/login",
   onboarding: "/onboarding",
   terms: "/terms",
@@ -42,8 +143,11 @@ export const API_ROUTES = {
   executeWorkflow: (id: string) => `/workflows/${id}/execute`,
   credentials: "/credentials",
   credential: (id: string) => `/credentials/${id}`,
+  credentialTest: (id: string) => `/credentials/${id}/test`,
   testConnector: "/connectors/test",
   executions: "/executions",
+  metricsDashboard: "/metrics/dashboard",
+  metricsWorkflow: (id: string) => `/metrics/workflow/${id}`,
   logs: "/logs",
   generateCase: "/generate-case",
   users: "/users",

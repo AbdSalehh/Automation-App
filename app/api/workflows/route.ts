@@ -18,7 +18,11 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const pagination = parsePagination(searchParams, { limit: 20 });
 
-    const allSummaries = await cacheQuery(
+    /**
+     * Ringkasan dasar (nama, versi, jumlah node, trigger) di-cache karena hanya
+     * berubah saat workflow diedit.
+     */
+    const baseSummaries = await cacheQuery(
       cacheKeys.workflowList(user.id),
       async () => {
         const workflows = await prisma.workflow.findMany({
@@ -26,16 +30,66 @@ export async function GET(request: Request) {
           orderBy: { updatedAt: "desc" },
         });
 
-        return workflows.map((workflow) => ({
-          id: workflow.id,
-          name: workflow.name,
-          version: workflow.version,
-          isPublished: workflow.isPublished,
-          updatedAt: workflow.updatedAt.toISOString(),
-          nodeCount: (JSON.parse(workflow.nodes || "[]") as unknown[]).length,
-        }));
+        return workflows.map((workflow) => {
+          const flowNodes = JSON.parse(workflow.nodes || "[]") as {
+            data?: { kind?: string };
+          }[];
+
+          const triggerNode = flowNodes.find((flowNode) =>
+            String(flowNode.data?.kind ?? "").includes("trigger"),
+          );
+
+          return {
+            id: workflow.id,
+            name: workflow.name,
+            version: workflow.version,
+            isPublished: workflow.isPublished,
+            updatedAt: workflow.updatedAt.toISOString(),
+            nodeCount: flowNodes.length,
+            triggerKind: triggerNode?.data?.kind ?? null,
+          };
+        });
       },
     );
+
+    /**
+     * Agregat eksekusi dihitung segar setiap request karena berubah independen
+     * dari penyuntingan workflow (run manual, schedule, webhook).
+     */
+    const workflowIds = baseSummaries.map((summary) => summary.id);
+
+    const [executionCounts, latestExecutions] = await Promise.all([
+      prisma.execution.groupBy({
+        by: ["workflowId"],
+        where: { workflowId: { in: workflowIds } },
+        _count: { _all: true },
+      }),
+      prisma.execution.findMany({
+        where: { workflowId: { in: workflowIds } },
+        orderBy: { startedAt: "desc" },
+        distinct: ["workflowId"],
+        select: { workflowId: true, status: true, startedAt: true },
+      }),
+    ]);
+
+    const countByWorkflow = new Map(
+      executionCounts.map((row) => [row.workflowId, row._count._all]),
+    );
+
+    const latestByWorkflow = new Map(
+      latestExecutions.map((row) => [row.workflowId, row]),
+    );
+
+    const allSummaries = baseSummaries.map((summary) => {
+      const latest = latestByWorkflow.get(summary.id);
+
+      return {
+        ...summary,
+        executionCount: countByWorkflow.get(summary.id) ?? 0,
+        lastExecutionStatus: latest?.status ?? null,
+        lastExecutionAt: latest?.startedAt.toISOString() ?? null,
+      };
+    });
 
     const totalItems = allSummaries.length;
     const start = (pagination.page - 1) * pagination.limit;

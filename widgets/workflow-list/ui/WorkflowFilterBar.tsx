@@ -1,7 +1,14 @@
 "use client";
 
 import { SearchIcon, RotateCcwIcon } from "lucide-react";
-import { Input, NativeSelect, NativeSelectOption } from "@/shared/ui";
+import {
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/ui";
 
 export interface WorkflowFilters {
   search: string;
@@ -37,45 +44,50 @@ export function WorkflowFilterBar({
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <NativeSelect
+        <Select
           value={filters.status}
-          onChange={(event) =>
-            onChange({ ...filters, status: event.target.value })
-          }
-          className="w-36"
+          onValueChange={(value) => onChange({ ...filters, status: value })}
         >
-          <NativeSelectOption value="all">All Status</NativeSelectOption>
-          <NativeSelectOption value="active">Active</NativeSelectOption>
-          <NativeSelectOption value="paused">Paused</NativeSelectOption>
-          <NativeSelectOption value="draft">Draft</NativeSelectOption>
-        </NativeSelect>
+          <SelectTrigger className="w-36">
+            <SelectValue placeholder="All Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="draft">Draft</SelectItem>
+          </SelectContent>
+        </Select>
 
-        <NativeSelect
+        <Select
           value={filters.triggerType}
-          onChange={(event) =>
-            onChange({ ...filters, triggerType: event.target.value })
+          onValueChange={(value) =>
+            onChange({ ...filters, triggerType: value })
           }
-          className="w-36"
         >
-          <NativeSelectOption value="all">All Types</NativeSelectOption>
-          <NativeSelectOption value="Cron">Cron</NativeSelectOption>
-          <NativeSelectOption value="Webhook">Webhook</NativeSelectOption>
-          <NativeSelectOption value="Google Sheets">
-            Google Sheets
-          </NativeSelectOption>
-        </NativeSelect>
+          <SelectTrigger className="w-36">
+            <SelectValue placeholder="All Types" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Types</SelectItem>
+            <SelectItem value="Cron">Cron</SelectItem>
+            <SelectItem value="Webhook">Webhook</SelectItem>
+            <SelectItem value="Google Sheets">Google Sheets</SelectItem>
+          </SelectContent>
+        </Select>
 
-        <NativeSelect
+        <Select
           value={filters.sort}
-          onChange={(event) =>
-            onChange({ ...filters, sort: event.target.value })
-          }
-          className="w-36"
+          onValueChange={(value) => onChange({ ...filters, sort: value })}
         >
-          <NativeSelectOption value="latest">Latest</NativeSelectOption>
-          <NativeSelectOption value="name">Name</NativeSelectOption>
-          <NativeSelectOption value="executions">Executions</NativeSelectOption>
-        </NativeSelect>
+          <SelectTrigger className="w-36">
+            <SelectValue placeholder="Sort" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="latest">Latest</SelectItem>
+            <SelectItem value="name">Name</SelectItem>
+            <SelectItem value="executions">Executions</SelectItem>
+          </SelectContent>
+        </Select>
 
         <button
           type="button"

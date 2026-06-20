@@ -18,9 +18,16 @@ interface CredentialState {
 
   fetchCredentials: () => Promise<void>;
   createCredential: (payload: CreateCredentialPayload) => Promise<boolean>;
+  updateCredential: (
+    credentialId: string,
+    payload: { name?: string; data?: Record<string, string> },
+  ) => Promise<boolean>;
   removeCredential: (credentialId: string) => Promise<void>;
   testCredential: (
     payload: CreateCredentialPayload,
+  ) => Promise<{ ok: boolean; message: string }>;
+  testCredentialById: (
+    credentialId: string,
   ) => Promise<{ ok: boolean; message: string }>;
   credentialsByType: (credentialType: string) => Credential[];
 }
@@ -64,6 +71,31 @@ export const useCredentialStore = create<CredentialState>((set, get) => ({
     }
   },
 
+  updateCredential: async (credentialId, payload) => {
+    set({ isSubmitting: true, errorMessage: null });
+
+    try {
+      const updatedCredential = await credentialService.update(
+        credentialId,
+        payload,
+      );
+
+      set((state) => ({
+        credentials: state.credentials.map((credential) =>
+          credential.id === credentialId ? updatedCredential : credential,
+        ),
+      }));
+
+      return true;
+    } catch {
+      set({ errorMessage: "Gagal memperbarui kredensial." });
+
+      return false;
+    } finally {
+      set({ isSubmitting: false });
+    }
+  },
+
   removeCredential: async (credentialId) => {
     await credentialService.remove(credentialId);
     set((state) => ({
@@ -78,6 +110,16 @@ export const useCredentialStore = create<CredentialState>((set, get) => ({
 
     try {
       return await credentialService.test(payload);
+    } finally {
+      set({ isTesting: false });
+    }
+  },
+
+  testCredentialById: async (credentialId) => {
+    set({ isTesting: true });
+
+    try {
+      return await credentialService.testById(credentialId);
     } finally {
       set({ isTesting: false });
     }

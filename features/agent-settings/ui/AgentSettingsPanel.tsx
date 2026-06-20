@@ -1,28 +1,31 @@
 "use client";
 
 import { useEffect } from "react";
-import { Button, Input, NativeSelect, NativeSelectOption } from "@/shared/ui";
-import { GEMINI_MODELS } from "@/shared/config/constants";
+import { PlusIcon } from "lucide-react";
+import { Button, Input } from "@/shared/ui";
 import { useAgentSettingsStore } from "../model/agentSettings.store";
+import { ProviderRow } from "./ProviderRow";
 
 /**
- * Panel pengaturan Agen Chat-Action. Saat diaktifkan, pengguna mengisi Bot
- * Token Telegram (BotFather) + Gemini API key dan memilih model. Seluruh state
- * loading/error dikelola di store.
+ * Panel pengaturan Agen Chat-Action (Telegram). Pengguna mengisi Bot Token
+ * (BotFather) dan satu atau beberapa penyedia AI. Penyedia teratas dipakai
+ * lebih dulu; bila gagal, sistem otomatis turun ke penyedia berikutnya
+ * (fallback). Seluruh state loading/error dikelola di store.
  */
 export function AgentSettingsPanel() {
   const {
     enabled,
-    geminiModel,
     botToken,
-    geminiApiKey,
+    providers,
     isLoading,
     isSaving,
     error,
     successMessage,
     setBotToken,
-    setGeminiApiKey,
-    setGeminiModel,
+    addProvider,
+    removeProvider,
+    updateProvider,
+    moveProvider,
     fetchStatus,
     saveConfig,
     disableAgent,
@@ -41,7 +44,7 @@ export function AgentSettingsPanel() {
           </h3>
           <p className="text-muted-foreground text-xs">
             Aktifkan agar bisa membuat & menjalankan otomasi lewat chat bot
-            Telegram bertenaga Gemini.
+            Telegram dengan dukungan beberapa penyedia AI.
           </p>
         </div>
 
@@ -62,9 +65,8 @@ export function AgentSettingsPanel() {
         <div className="flex flex-col gap-4">
           {enabled && (
             <p className="rounded-md bg-green-500/10 px-3 py-2 text-sm text-green-700">
-              Agen aktif menggunakan model{" "}
-              <span className="font-medium">{geminiModel}</span>. Isi ulang
-              formulir di bawah untuk mengganti bot/key/model.
+              Agen aktif. Isi ulang formulir di bawah untuk mengganti bot atau
+              penyedia AI (API key tidak ditampilkan demi keamanan).
             </p>
           )}
 
@@ -84,44 +86,38 @@ export function AgentSettingsPanel() {
             />
           </div>
 
-          <div className="flex flex-col gap-2">
-            <label
-              htmlFor="agentGeminiKey"
-              className="text-foreground text-sm font-medium"
-            >
-              Gemini API Key
-            </label>
-            <Input
-              id="agentGeminiKey"
-              type="password"
-              placeholder="AIza..."
-              value={geminiApiKey}
-              onChange={(event) => setGeminiApiKey(event.target.value)}
-            />
-          </div>
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <label className="text-foreground text-sm font-medium">
+                Penyedia AI & Fallback
+              </label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addProvider}
+              >
+                <PlusIcon className="size-4" />
+                Tambah Penyedia
+              </Button>
+            </div>
 
-          <div className="flex flex-col gap-2">
-            <label
-              htmlFor="agentGeminiModel"
-              className="text-foreground text-sm font-medium"
-            >
-              Model Gemini
-            </label>
-            <NativeSelect
-              id="agentGeminiModel"
-              className="w-full"
-              value={geminiModel}
-              onChange={(event) => setGeminiModel(event.target.value)}
-            >
-              {GEMINI_MODELS.map((model) => (
-                <NativeSelectOption key={model.value} value={model.value}>
-                  {model.label}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
             <p className="text-muted-foreground text-xs">
-              Flash-Lite cocok saat Flash sedang sibuk (high-traffic).
+              Penyedia paling atas dipakai lebih dulu. Bila gagal merespons,
+              sistem otomatis mencoba penyedia berikutnya.
             </p>
+
+            {providers.map((provider, index) => (
+              <ProviderRow
+                key={provider.id}
+                provider={provider}
+                index={index}
+                total={providers.length}
+                onUpdate={(patch) => updateProvider(provider.id, patch)}
+                onRemove={() => removeProvider(provider.id)}
+                onMove={(direction) => moveProvider(provider.id, direction)}
+              />
+            ))}
           </div>
 
           {error && (

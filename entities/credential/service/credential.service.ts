@@ -24,6 +24,18 @@ export const credentialService = {
     return response.data;
   },
 
+  update: async (
+    credentialId: string,
+    payload: { name?: string; data?: Record<string, string> },
+  ): Promise<Credential> => {
+    const { data: response } = await apiClient.patch<ApiResponse<Credential>>(
+      API_ROUTES.credential(credentialId),
+      payload,
+    );
+
+    return response.data;
+  },
+
   remove: async (credentialId: string): Promise<void> => {
     await apiClient.delete(API_ROUTES.credential(credentialId));
   },
@@ -34,6 +46,16 @@ export const credentialService = {
     const { data: response } = await apiClient.post<
       ApiResponse<{ connected: boolean }>
     >(API_ROUTES.testConnector, payload);
+
+    return { ok: response.data.connected, message: response.message };
+  },
+
+  testById: async (
+    credentialId: string,
+  ): Promise<{ ok: boolean; message: string }> => {
+    const { data: response } = await apiClient.post<
+      ApiResponse<{ connected: boolean }>
+    >(API_ROUTES.credentialTest(credentialId));
 
     return { ok: response.data.connected, message: response.message };
   },

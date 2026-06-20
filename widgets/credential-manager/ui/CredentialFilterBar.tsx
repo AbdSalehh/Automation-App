@@ -1,7 +1,14 @@
 "use client";
 
 import { SearchIcon } from "lucide-react";
-import { Input, NativeSelect, NativeSelectOption } from "@/shared/ui";
+import {
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/ui";
 
 export interface CredentialFilters {
   search: string;
@@ -35,44 +42,48 @@ export function CredentialFilterBar({
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <NativeSelect
+        <Select
           value={filters.type}
-          onChange={(event) =>
-            onChange({ ...filters, type: event.target.value })
-          }
-          className="w-36"
+          onValueChange={(value) => onChange({ ...filters, type: value })}
         >
-          <NativeSelectOption value="all">All Types</NativeSelectOption>
-          <NativeSelectOption value="WhatsApp">WhatsApp</NativeSelectOption>
-          <NativeSelectOption value="Gmail">Gmail</NativeSelectOption>
-          <NativeSelectOption value="Google Sheets">
-            Google Sheets
-          </NativeSelectOption>
-          <NativeSelectOption value="Telegram">Telegram</NativeSelectOption>
-        </NativeSelect>
+          <SelectTrigger className="w-36">
+            <SelectValue placeholder="All Types" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Types</SelectItem>
+            <SelectItem value="WhatsApp">WhatsApp</SelectItem>
+            <SelectItem value="Gmail">Gmail</SelectItem>
+            <SelectItem value="Google Sheets">Google Sheets</SelectItem>
+            <SelectItem value="Telegram">Telegram</SelectItem>
+          </SelectContent>
+        </Select>
 
-        <NativeSelect
+        <Select
           value={filters.status}
-          onChange={(event) =>
-            onChange({ ...filters, status: event.target.value })
-          }
-          className="w-36"
+          onValueChange={(value) => onChange({ ...filters, status: value })}
         >
-          <NativeSelectOption value="all">All Status</NativeSelectOption>
-          <NativeSelectOption value="active">Active</NativeSelectOption>
-          <NativeSelectOption value="expired">Expired</NativeSelectOption>
-        </NativeSelect>
+          <SelectTrigger className="w-36">
+            <SelectValue placeholder="All Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="expired">Expired</SelectItem>
+          </SelectContent>
+        </Select>
 
-        <NativeSelect
+        <Select
           value={filters.sort}
-          onChange={(event) =>
-            onChange({ ...filters, sort: event.target.value })
-          }
-          className="w-40"
+          onValueChange={(value) => onChange({ ...filters, sort: value })}
         >
-          <NativeSelectOption value="name">Name (A-Z)</NativeSelectOption>
-          <NativeSelectOption value="latest">Latest</NativeSelectOption>
-        </NativeSelect>
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="Sort" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="name">Name (A-Z)</SelectItem>
+            <SelectItem value="latest">Latest</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );

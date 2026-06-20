@@ -1,107 +1,115 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { requireUser } from "@/shared/auth";
 import { prisma } from "@/shared/lib/prisma";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import {
+  handleRoute,
+  forbidden,
+  created,
+  unprocessable,
+  okPaginated,
+  parsePagination,
+} from "@/shared/api/http";
 
 const createUserSchema = z.object({
   name: z.string().min(1).max(100),
   email: z.string().email(),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  password: z.string().min(8, "Password minimal 8 karakter"),
   role: z.enum(["user", "admin"]).default("user"),
 });
 
 /**
- * GET /api/users
- *
- * Returns all users. Admin-only.
+ * GET /api/users — daftar seluruh user. Hanya admin.
  */
-export async function GET() {
-  const sessionUser = await requireUser().catch(() => null);
+export async function GET(request: NextRequest) {
+  return handleRoute(async () => {
+    const sessionUser = await requireUser();
 
-  if (!sessionUser) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+    if (sessionUser.role !== "admin") {
+      return forbidden();
+    }
 
-  if (sessionUser.role !== "admin") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+    const { page, limit } = parsePagination(new URL(request.url).searchParams, {
+      limit: 50,
+    });
 
-  const users = await prisma.user.findMany({
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      image: true,
-      role: true,
-      isActive: true,
-      onboardingCompleted: true,
-      createdAt: true,
-    },
-    orderBy: { createdAt: "desc" },
+    const [users, totalItems] = await Promise.all([
+      prisma.user.findMany({
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+          role: true,
+          isActive: true,
+          isLocked: true,
+          approvalStatus: true,
+          onboardingCompleted: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.user.count(),
+    ]);
+
+    return okPaginated(users, totalItems, { page, limit });
   });
-
-  return NextResponse.json(users);
 }
 
 /**
- * POST /api/users
- *
- * Creates a new user with email + password (credential-based).
- * Admin-only. The new user will be prompted to complete onboarding on first login.
+ * POST /api/users — buat user baru (email + password). Hanya admin.
  */
 export async function POST(request: NextRequest) {
-  const sessionUser = await requireUser().catch(() => null);
+  return handleRoute(async () => {
+    const sessionUser = await requireUser();
 
-  if (!sessionUser) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+    if (sessionUser.role !== "admin") {
+      return forbidden();
+    }
 
-  if (sessionUser.role !== "admin") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+    const body = await request.json();
+    const parsed = createUserSchema.safeParse(body);
 
-  const body = await request.json();
-  const parsed = createUserSchema.safeParse(body);
+    if (!parsed.success) {
+      return unprocessable("Data tidak valid");
+    }
 
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Invalid request", details: parsed.error.flatten() },
-      { status: 422 },
-    );
-  }
+    const { name, email, password, role } = parsed.data;
 
-  const { name, email, password, role } = parsed.data;
+    const existingUser = await prisma.user.findUnique({ where: { email } });
 
-  const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      return unprocessable("Email sudah terdaftar");
+    }
 
-  if (existingUser) {
-    return NextResponse.json(
-      { error: "A user with this email already exists" },
-      { status: 409 },
-    );
-  }
+    const passwordHash = await bcrypt.hash(password, 12);
 
-  const passwordHash = await bcrypt.hash(password, 12);
+    const newUser = await prisma.user.create({
+      data: {
+        name,
+        email,
+        role,
+        passwordHash,
+        isActive: true,
+        onboardingCompleted: false,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        image: true,
+        role: true,
+        isActive: true,
+        isLocked: true,
+        approvalStatus: true,
+        onboardingCompleted: true,
+        createdAt: true,
+      },
+    });
 
-  const newUser = await prisma.user.create({
-    data: {
-      name,
-      email,
-      role,
-      passwordHash,
-      isActive: true,
-      onboardingCompleted: false,
-    },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      isActive: true,
-      createdAt: true,
-    },
+    return created(newUser, "Pengguna berhasil dibuat");
   });
-
-  return NextResponse.json(newUser, { status: 201 });
 }

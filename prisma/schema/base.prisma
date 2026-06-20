@@ -21,6 +21,13 @@ model User {
     role     String  @default("user")
     isActive Boolean @default(true)
 
+    /// Dikunci otomatis setelah gagal login credential beruntun; admin bisa membuka.
+    isLocked Boolean @default(false)
+
+    /// "pending" | "approved" | "rejected". Default approved agar akun lama &
+    /// akun credential buatan admin bisa langsung login. User Google baru = pending.
+    approvalStatus String @default("approved")
+
     /// Password hash for credential-based (admin-created) accounts. Null for OAuth users.
     passwordHash String?
 

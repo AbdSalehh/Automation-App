@@ -1,26 +1,50 @@
 import { prisma } from "@/shared/lib/prisma";
 import { requireUser } from "@/shared/auth";
 import { encryptJson, decryptJson } from "@/shared/lib/crypto";
-import { GEMINI_MODEL } from "@/shared/config/constants";
 import { requestExternal } from "@/shared/server/httpClient";
 import { handleRoute, ok, badRequest } from "@/shared/api/http";
+import {
+  buildChainFromConfig,
+  type AgentChatConfig,
+} from "@/shared/server/agentChatConfig";
+import type { AiProviderConfig } from "@/shared/server/ai/types";
 
 /**
- * Konfigurasi Agen Chat-Action (Telegram + Gemini).
+ * Konfigurasi Agen Chat-Action (Telegram + penyedia AI).
  *
- * GET  — status aktif + model terpilih (tanpa membocorkan secret).
+ * GET  — status aktif + daftar penyedia (tanpa membocorkan API key).
  * POST — simpan/ganti kredensial `agent_chat` lalu daftarkan webhook Telegram
  *        agar pesan masuk diterima realtime.
  */
 
 interface AgentConfigBody {
   botToken?: string;
-  geminiApiKey?: string;
-  geminiModel?: string;
+  /** Daftar penyedia AI terurut (indeks 0 = utama, sisanya fallback). */
+  providers?: AiProviderConfig[];
 }
 
 const baseUrl = (): string =>
   process.env.APP_URL ?? process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+
+/** Menyaring penyedia yang lengkap (punya provider, apiKey, dan model). */
+function sanitizeProviders(
+  providers: AiProviderConfig[] | undefined,
+): AiProviderConfig[] {
+  if (!Array.isArray(providers)) {
+    return [];
+  }
+
+  return providers
+    .filter(
+      (provider) =>
+        provider?.provider && provider.apiKey?.trim() && provider.model?.trim(),
+    )
+    .map((provider) => ({
+      provider: provider.provider,
+      apiKey: provider.apiKey.trim(),
+      model: provider.model.trim(),
+    }));
+}
 
 export async function GET() {
   return handleRoute(async () => {
@@ -35,16 +59,21 @@ export async function GET() {
       return ok({ enabled: false }, "Agen chat-action belum aktif");
     }
 
-    const decrypted = decryptJson<Record<string, string>>(
-      credentialRecord.data,
-    );
+    const decrypted = decryptJson<AgentChatConfig>(credentialRecord.data);
+
+    const chain = buildChainFromConfig(decrypted);
+
+    /** Kembalikan metadata penyedia tanpa membocorkan API key. */
+    const providers = chain.map((provider) => ({
+      provider: provider.provider,
+      model: provider.model,
+    }));
 
     return ok(
       {
         enabled: true,
-        geminiModel: decrypted.geminiModel || GEMINI_MODEL,
+        providers,
         hasBotToken: Boolean(decrypted.botToken),
-        hasGeminiApiKey: Boolean(decrypted.geminiApiKey),
       },
       "Status agen chat-action",
     );
@@ -64,15 +93,16 @@ export async function POST(request: Request) {
     }
 
     const botToken = body.botToken?.trim() ?? "";
-    const geminiApiKey = body.geminiApiKey?.trim() ?? "";
-    const geminiModel = body.geminiModel?.trim() || GEMINI_MODEL;
+    const providers = sanitizeProviders(body.providers);
 
     if (!botToken) {
       return badRequest("Bot Token Telegram wajib diisi");
     }
 
-    if (!geminiApiKey) {
-      return badRequest("Gemini API key wajib diisi");
+    if (providers.length === 0) {
+      return badRequest(
+        "Minimal satu penyedia AI (provider, API key, dan model) wajib diisi",
+      );
     }
 
     /**
@@ -95,7 +125,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const encrypted = encryptJson({ botToken, geminiApiKey, geminiModel });
+    const encrypted = encryptJson({ botToken, providers });
 
     /** Hapus config lama (bila ada) lalu simpan yang baru. */
     await prisma.credential.deleteMany({
@@ -112,7 +142,7 @@ export async function POST(request: Request) {
     });
 
     return ok(
-      { enabled: true, geminiModel, webhookUrl },
+      { enabled: true, providerCount: providers.length, webhookUrl },
       "Agen chat-action berhasil diaktifkan",
     );
   });

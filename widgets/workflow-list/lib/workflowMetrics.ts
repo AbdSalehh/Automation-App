@@ -1,126 +1,137 @@
 import type { WorkflowSummary } from "@/entities/workflow";
 
-/** Status tampilan workflow di tabel. Diturunkan dari `isPublished` + dummy. */
-export type WorkflowDisplayStatus = "active" | "paused" | "draft";
+/** Status tampilan workflow di tabel. Diturunkan dari `isPublished`. */
+export type WorkflowDisplayStatus = "active" | "draft";
 
 export interface WorkflowMetrics {
   status: WorkflowDisplayStatus;
   triggerType: string;
   triggerDetail: string;
+  hasExecution: boolean;
   lastExecutionOk: boolean;
   lastExecutionLabel: string;
   lastExecutionAt: string;
-  durationLabel: string;
   stepCount: number;
   executions: number;
   executionTrend: number[];
-  tags: string[];
   updatedLabel: string;
 }
 
-const TRIGGERS = [
-  { type: "Cron", detail: "Every 1 hour" },
-  { type: "Cron", detail: "Every 6 hours" },
-  { type: "Webhook", detail: "/api/webhook/lead" },
-  { type: "Cron", detail: "Every day 08:00" },
-  { type: "Google Sheets", detail: "New row added" },
-  { type: "Webhook", detail: "/api/webhook/log" },
-];
+/**
+ * Pemetaan `kind` node trigger ke label & detail yang ramah dibaca pada tabel.
+ */
+const TRIGGER_LABELS: Record<string, { type: string; detail: string }> = {
+  schedule_trigger: { type: "Cron", detail: "Berbasis jadwal" },
+  webhook_trigger: { type: "Webhook", detail: "Pemicu HTTP" },
+  whatsapp_trigger: { type: "WhatsApp", detail: "Pesan masuk" },
+  telegram_trigger: { type: "Telegram", detail: "Pesan masuk" },
+  google_sheets_trigger: { type: "Google Sheets", detail: "Baris baru" },
+};
 
-const TAG_POOL = [
-  ["Finance", "Reminder"],
-  ["Marketing", "Followup"],
-  ["Sales", "Leads"],
-  ["Report"],
-  ["Marketing", "Campaign"],
-  ["System"],
-];
-
-const TIME_LABELS = [
-  "2m ago",
-  "15m ago",
-  "5m ago",
-  "1h ago",
-  "2h ago",
-  "30m ago",
-];
-
-const UPDATED_LABELS = [
-  "2 minutes ago",
-  "1 hour ago",
-  "3 hours ago",
-  "5 hours ago",
-  "1 day ago",
-  "2 days ago",
-];
-
-const DURATIONS = ["1.2s", "780ms", "320ms", "2.4s", "1.6s", "210ms"];
-
-/** Hash sederhana & deterministik dari id agar metrik dummy stabil per workflow. */
-function hashId(workflowId: string): number {
-  let hash = 0;
-
-  for (let index = 0; index < workflowId.length; index += 1) {
-    hash = (hash * 31 + workflowId.charCodeAt(index)) % 100000;
+/**
+ * Mengubah ISO timestamp menjadi label relatif singkat (mis. "5 menit lalu").
+ * Mengembalikan "-" bila nilai kosong.
+ */
+function toRelativeLabel(isoTimestamp: string | null): string {
+  if (!isoTimestamp) {
+    return "-";
   }
 
-  return hash;
+  const elapsedMs = Date.now() - new Date(isoTimestamp).getTime();
+  const elapsedMinutes = Math.floor(elapsedMs / 60000);
+
+  if (elapsedMinutes < 1) {
+    return "Baru saja";
+  }
+
+  if (elapsedMinutes < 60) {
+    return `${elapsedMinutes} menit lalu`;
+  }
+
+  const elapsedHours = Math.floor(elapsedMinutes / 60);
+
+  if (elapsedHours < 24) {
+    return `${elapsedHours} jam lalu`;
+  }
+
+  const elapsedDays = Math.floor(elapsedHours / 24);
+
+  return `${elapsedDays} hari lalu`;
 }
 
-/** Bangun deret tren naik-turun semu yang stabil dari sebuah seed. */
-function buildTrend(seed: number): number[] {
-  return Array.from({ length: 8 }, (_unused, index) => {
-    const wave = Math.sin(seed + index) * 20 + 50;
+/**
+ * Membentuk deret sparkline ringan dari jumlah eksekusi. Murni dekoratif untuk
+ * memberi konteks tren; besarannya proporsional dengan total eksekusi nyata.
+ */
+function buildTrendFromCount(executionCount: number): number[] {
+  if (executionCount === 0) {
+    return [0, 0, 0, 0, 0, 0, 0];
+  }
 
-    return Math.round(Math.abs(wave) + (index % 3) * 6);
+  const base = Math.max(1, Math.round(executionCount / 7));
+
+  return Array.from({ length: 7 }, (_unused, index) => {
+    const wave = Math.sin(index * 1.1) * 0.4 + 1;
+
+    return Math.max(1, Math.round(base * wave));
   });
 }
 
 /**
- * Menurunkan metrik tampilan untuk satu workflow. Nilai yang belum tersedia di
- * backend (eksekusi, durasi, trigger, tag) memakai data dummy deterministik
- * berbasis id sehingga konsisten antar render.
+ * Menurunkan metrik tampilan untuk satu workflow sepenuhnya dari data nyata
+ * pada ringkasan: status publikasi, trigger, jumlah & status eksekusi terakhir,
+ * serta waktu pembaruan.
  */
 export function deriveWorkflowMetrics(
   workflow: WorkflowSummary,
 ): WorkflowMetrics {
-  const seed = hashId(workflow.id);
-  const bucket = seed % 6;
-
   const status: WorkflowDisplayStatus = workflow.isPublished
-    ? seed % 4 === 0
-      ? "paused"
-      : "active"
+    ? "active"
     : "draft";
 
-  const lastExecutionOk = seed % 5 !== 0;
+  const triggerLabel = workflow.triggerKind
+    ? TRIGGER_LABELS[workflow.triggerKind]
+    : undefined;
+
+  const hasExecution = workflow.lastExecutionStatus !== null;
+  const lastExecutionOk = workflow.lastExecutionStatus === "success";
 
   return {
     status,
-    triggerType: TRIGGERS[bucket].type,
-    triggerDetail: TRIGGERS[bucket].detail,
+    triggerType: triggerLabel?.type ?? "Manual",
+    triggerDetail: triggerLabel?.detail ?? "Tanpa trigger",
+    hasExecution,
     lastExecutionOk,
-    lastExecutionLabel: lastExecutionOk ? "Success" : "Error",
-    lastExecutionAt: TIME_LABELS[bucket],
-    durationLabel: DURATIONS[bucket],
+    lastExecutionLabel: !hasExecution
+      ? "Belum jalan"
+      : lastExecutionOk
+        ? "Success"
+        : workflow.lastExecutionStatus === "running"
+          ? "Running"
+          : "Error",
+    lastExecutionAt: toRelativeLabel(workflow.lastExecutionAt),
     stepCount: workflow.nodeCount,
-    executions: 28 + (seed % 520),
-    executionTrend: buildTrend(seed),
-    tags: TAG_POOL[bucket],
-    updatedLabel: UPDATED_LABELS[bucket],
+    executions: workflow.executionCount,
+    executionTrend: buildTrendFromCount(workflow.executionCount),
+    updatedLabel: toRelativeLabel(workflow.updatedAt),
   };
 }
 
 /** Ringkasan agregat untuk kartu statistik di atas tabel. */
 export function summarizeWorkflows(workflows: WorkflowSummary[]) {
-  const statuses = workflows.map(
-    (workflow) => deriveWorkflowMetrics(workflow).status,
+  const activeCount = workflows.filter(
+    (workflow) => workflow.isPublished,
+  ).length;
+
+  const totalExecutions = workflows.reduce(
+    (runningTotal, workflow) => runningTotal + workflow.executionCount,
+    0,
   );
 
   return {
     total: workflows.length,
-    active: statuses.filter((status) => status === "active").length,
-    paused: statuses.filter((status) => status === "paused").length,
-    draft: statuses.filter((status) => status === "draft").length,
+    active: activeCount,
+    draft: workflows.length - activeCount,
+    totalExecutions,
   };
 }

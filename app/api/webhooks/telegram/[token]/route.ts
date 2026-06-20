@@ -1,6 +1,5 @@
 import { prisma } from "@/shared/lib/prisma";
 import { decryptJson } from "@/shared/lib/crypto";
-import { GEMINI_MODEL } from "@/shared/config/constants";
 import { handleRoute, ok, badRequest } from "@/shared/api/http";
 import { runWorkflow, resumeWaitingReplies } from "@/shared/server/engine";
 import { requestExternal } from "@/shared/server/httpClient";
@@ -8,6 +7,11 @@ import {
   handleAgentMessage,
   type AgentTransport,
 } from "@/shared/server/agent/agentRouter";
+import {
+  buildChainFromConfig,
+  type AgentChatConfig as StoredAgentChatConfig,
+} from "@/shared/server/agentChatConfig";
+import type { AiChain } from "@/shared/server/ai/types";
 import type { FlowNode } from "@/entities/workflow/model/workflow.model";
 
 /**
@@ -41,8 +45,8 @@ interface TelegramUpdate {
 
 interface AgentChatConfig {
   ownerId: string;
-  geminiApiKey: string;
-  geminiModel: string;
+  /** Rantai penyedia AI terurut (utama + fallback). */
+  chain: AiChain;
 }
 
 /** Mencari kredensial agen chat-action yang botToken-nya cocok. */
@@ -55,15 +59,14 @@ async function findAgentChatConfig(
 
   for (const credentialRecord of agentCredentials) {
     try {
-      const decrypted = decryptJson<Record<string, string>>(
+      const decrypted = decryptJson<StoredAgentChatConfig>(
         credentialRecord.data,
       );
 
       if (decrypted.botToken === botToken) {
         return {
           ownerId: credentialRecord.userId,
-          geminiApiKey: decrypted.geminiApiKey ?? "",
-          geminiModel: decrypted.geminiModel || GEMINI_MODEL,
+          chain: buildChainFromConfig(decrypted),
         };
       }
     } catch {
@@ -221,8 +224,8 @@ export async function POST(
         return ok({ ignored: true }, "Callback bukan untuk agen chat-action");
       }
 
-      if (!agentConfig.geminiApiKey) {
-        return badRequest("Agen chat-action belum memiliki Gemini API key");
+      if (agentConfig.chain.length === 0) {
+        return badRequest("Agen chat-action belum memiliki penyedia AI");
       }
 
       const transport = createTelegramTransport(token, String(callbackChatId));
@@ -231,8 +234,7 @@ export async function POST(
         ownerId: agentConfig.ownerId,
         sender: String(callbackChatId),
         message: callbackText,
-        geminiApiKey: agentConfig.geminiApiKey,
-        geminiModel: agentConfig.geminiModel,
+        chain: agentConfig.chain,
         transport,
       });
 
@@ -255,8 +257,8 @@ export async function POST(
     const agentConfig = await findAgentChatConfig(token);
 
     if (agentConfig) {
-      if (!agentConfig.geminiApiKey) {
-        return badRequest("Agen chat-action belum memiliki Gemini API key");
+      if (agentConfig.chain.length === 0) {
+        return badRequest("Agen chat-action belum memiliki penyedia AI");
       }
 
       const transport = createTelegramTransport(token, String(chatId));
@@ -265,8 +267,7 @@ export async function POST(
         ownerId: agentConfig.ownerId,
         sender: String(chatId),
         message: text,
-        geminiApiKey: agentConfig.geminiApiKey,
-        geminiModel: agentConfig.geminiModel,
+        chain: agentConfig.chain,
         transport,
       });
 

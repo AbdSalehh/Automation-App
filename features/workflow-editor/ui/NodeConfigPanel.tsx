@@ -329,6 +329,101 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
   ],
   schedule_trigger: [],
   function: [{ key: "code", label: "Kode JavaScript", multiline: true }],
+  switch: [
+    {
+      key: "field",
+      label: "Field yang Dievaluasi",
+      placeholder: "status atau {{status}}",
+      hint: "Nama field dari data masuk yang nilainya dibandingkan.",
+    },
+    {
+      key: "value",
+      label: "Nilai Target",
+      placeholder: "approved atau {{target}}",
+      hint: "Hanya baris dengan nilai field sama dengan ini yang diteruskan.",
+    },
+  ],
+  merge: [],
+  loop: [
+    {
+      key: "batchSize",
+      label: "Ukuran Batch",
+      placeholder: "1",
+      hint: "Jumlah item per batch yang diproses bertahap. Default 1.",
+    },
+  ],
+  no_op: [],
+  slack_send: [
+    {
+      key: "webhookUrl",
+      label: "Slack Incoming Webhook URL",
+      placeholder: "https://hooks.slack.com/services/...",
+      hint: "Buat di Slack: Apps → Incoming Webhooks.",
+    },
+    {
+      key: "text",
+      label: "Pesan",
+      multiline: true,
+      placeholder: "Ada lead baru: {{name}} dari {{company}}!",
+    },
+  ],
+  discord_send: [
+    {
+      key: "webhookUrl",
+      label: "Discord Webhook URL",
+      placeholder: "https://discord.com/api/webhooks/...",
+      hint: "Buat di Server Settings → Integrations → Webhooks.",
+    },
+    {
+      key: "content",
+      label: "Pesan",
+      multiline: true,
+      placeholder: "Notifikasi: {{message}}",
+    },
+  ],
+  rss_read: [
+    {
+      key: "url",
+      label: "URL Feed",
+      placeholder: "https://techcrunch.com/feed/",
+      hint: "Alamat RSS/Atom feed yang akan dibaca.",
+    },
+    {
+      key: "limit",
+      label: "Maks Item",
+      placeholder: "20",
+    },
+  ],
+  ai_openai: [
+    {
+      key: "provider",
+      label: "Penyedia",
+      selectOptions: [
+        { value: "openai", label: "OpenAI" },
+        { value: "openrouter", label: "OpenRouter" },
+      ],
+      hint: "OpenAI langsung, atau OpenRouter sebagai gateway multi-model.",
+    },
+    {
+      key: "model",
+      label: "Model",
+      placeholder: "gpt-4o-mini",
+    },
+    {
+      key: "systemInstruction",
+      label: "Peran AI (System Instruction)",
+      multiline: true,
+      placeholder: "Kamu adalah asisten yang merangkum artikel dalam 3 poin.",
+      hint: "Mendefinisikan persona/peran AI dan format balasan.",
+    },
+    {
+      key: "prompt",
+      label: "Prompt / Pesan",
+      multiline: true,
+      placeholder: "{{message}}",
+      hint: "Pesan yang diproses AI. Gunakan {{template}} dari data masuk.",
+    },
+  ],
 };
 
 const CONDITION_NODE_KINDS = new Set(["condition", "filter"]);

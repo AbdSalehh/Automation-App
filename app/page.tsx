@@ -1,18 +1,13 @@
-import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/shared/auth";
-import { ROUTES } from "@/shared/config/constants";
 import { LandingView } from "@/views/landing";
 
+/**
+ * Halaman beranda publik. Selalu menampilkan landing page, termasuk untuk
+ * pengguna yang sudah login, sehingga "/" tetap dapat diakses kapan pun.
+ * Status login diteruskan agar header bisa menampilkan tombol yang sesuai.
+ */
 export default async function Home() {
   const user = await getCurrentUser();
 
-  if (!user) {
-    return <LandingView />;
-  }
-
-  if (!user.onboardingCompleted) {
-    redirect(ROUTES.onboarding);
-  }
-
-  redirect(ROUTES.workflows);
+  return <LandingView isAuthenticated={Boolean(user)} />;
 }

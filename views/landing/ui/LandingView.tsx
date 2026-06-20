@@ -11,14 +11,18 @@ import { LandingFooter } from "./LandingFooter";
 /**
  * Landing page publik bertema terang/oranye. Dirakit dari sub-komponen per
  * bagian (header, hero, fitur, cara kerja, integrasi, CTA, footer) sesuai
- * aturan dekomposisi FSD. Pengguna yang sudah login diarahkan ke daftar
- * workflow oleh server (lihat app/page.tsx).
+ * aturan dekomposisi FSD. Halaman ini tetap dapat diakses meski pengguna sudah
+ * login; status login diteruskan ke header untuk menyesuaikan tombol aksi.
  */
-export function LandingView() {
+export function LandingView({
+  isAuthenticated = false,
+}: {
+  isAuthenticated?: boolean;
+}) {
   return (
     <LenisProvider>
       <div className="flex min-h-screen flex-col bg-white text-slate-900">
-        <LandingHeader />
+        <LandingHeader isAuthenticated={isAuthenticated} />
 
         <main className="flex-1">
           <LandingHero />

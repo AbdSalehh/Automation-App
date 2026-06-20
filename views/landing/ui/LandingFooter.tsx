@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { ZapIcon } from "lucide-react";
 import { APP_NAME, ROUTES } from "@/shared/config/constants";
+import { BrandLogo } from "@/shared/ui";
 
 const FOOTER_COLUMNS = [
   {
@@ -34,14 +34,7 @@ export function LandingFooter() {
     <footer className="border-t border-slate-200 bg-white">
       <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-14 sm:grid-cols-2 lg:grid-cols-4">
         <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-2">
-            <span className="grid size-8 place-items-center rounded-lg bg-linear-to-br from-orange-500 to-amber-500 text-white">
-              <ZapIcon className="size-4" />
-            </span>
-            <span className="text-base font-bold text-slate-900">
-              {APP_NAME}
-            </span>
-          </div>
+          <BrandLogo size={32} textClassName="text-base text-slate-900" />
           <p className="max-w-xs text-sm text-slate-500">
             Platform workflow automation berbasis visual node, mudah digunakan
             dan andal.

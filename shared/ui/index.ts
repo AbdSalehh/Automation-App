@@ -4,6 +4,7 @@ export { Badge, badgeVariants } from "./Badge";
 export { Modal } from "./Modal";
 export { Icon } from "./Icon";
 export { BrandIcon, type BrandIconName } from "./BrandIcon";
+export { BrandLogo } from "./BrandLogo";
 export { Sparkline } from "./Sparkline";
 export { MotionSection } from "./MotionSection";
 export { Spinner } from "./spinner";

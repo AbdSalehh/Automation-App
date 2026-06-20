@@ -32,6 +32,16 @@ import {
   waitReplyHandler,
   passthroughTriggerHandler,
 } from "./nodes/logic";
+import {
+  switchHandler,
+  mergeHandler,
+  loopHandler,
+  noOpHandler,
+} from "./nodes/flow";
+import { slackSendHandler } from "./nodes/slack";
+import { discordSendHandler } from "./nodes/discord";
+import { rssReadHandler } from "./nodes/rss";
+import { aiOpenAiHandler } from "./nodes/openai";
 
 /**
  * Registry pemetaan jenis node ke handler-nya. Menambah konektor baru cukup
@@ -76,6 +86,16 @@ const NODE_HANDLERS: Partial<Record<NodeKind, NodeHandler>> = {
   date_calculator: dateCalculatorHandler,
   schedule: scheduleHandler,
   wait_reply: waitReplyHandler,
+
+  switch: switchHandler,
+  merge: mergeHandler,
+  loop: loopHandler,
+  no_op: noOpHandler,
+
+  slack_send: slackSendHandler,
+  discord_send: discordSendHandler,
+  rss_read: rssReadHandler,
+  ai_openai: aiOpenAiHandler,
 };
 
 /** Executes a single node and returns its output. */

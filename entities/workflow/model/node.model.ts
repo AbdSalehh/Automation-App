@@ -31,7 +31,15 @@ export type NodeKind =
   | "function"
   | "transform"
   | "filter"
-  | "condition";
+  | "condition"
+  | "switch"
+  | "merge"
+  | "loop"
+  | "no_op"
+  | "slack_send"
+  | "discord_send"
+  | "rss_read"
+  | "ai_openai";
 
 /** WhatsApp delivery provider, chosen per-node via the provider dropdown. */
 export type WhatsAppProvider = "meta" | "baileys";
@@ -379,6 +387,76 @@ export const NODE_TYPES: NodeTypeDef[] = [
       "Keep only the rows that match your conditions (e.g. Pembayaran = Belum Dibayar).",
     icon: "Filter",
     outputs: ["rows", "filtered"],
+  },
+  {
+    kind: "switch",
+    category: "logic",
+    label: "Switch",
+    description:
+      "Percabangan multi-arah: arahkan data ke output berbeda berdasarkan nilai sebuah field.",
+    icon: "Split",
+    outputs: ["matched", "value"],
+  },
+  {
+    kind: "merge",
+    category: "logic",
+    label: "Merge",
+    description:
+      "Gabungkan baris dari beberapa cabang menjadi satu aliran data tunggal.",
+    icon: "Merge",
+    outputs: ["rows", "totalRows"],
+  },
+  {
+    kind: "loop",
+    category: "logic",
+    label: "Loop (Split In Batches)",
+    description:
+      "Pecah array menjadi batch berukuran tertentu agar diproses bertahap tanpa overload.",
+    icon: "Repeat",
+    outputs: ["batch", "batchIndex", "totalBatches"],
+  },
+  {
+    kind: "no_op",
+    category: "logic",
+    label: "No Operation",
+    description:
+      "Tidak melakukan apa pun; berguna sebagai penanda akhir cabang atau placeholder.",
+    icon: "CircleDashed",
+    outputs: ["rows"],
+  },
+  {
+    kind: "slack_send",
+    category: "action",
+    label: "Send Slack",
+    description: "Kirim pesan ke channel Slack lewat Incoming Webhook URL.",
+    icon: "Slack",
+    outputs: ["sent"],
+  },
+  {
+    kind: "discord_send",
+    category: "action",
+    label: "Send Discord",
+    description: "Kirim pesan ke channel Discord lewat Webhook URL.",
+    icon: "MessageSquare",
+    outputs: ["sent"],
+  },
+  {
+    kind: "rss_read",
+    category: "action",
+    label: "RSS Read",
+    description: "Ambil dan parse item terbaru dari sebuah RSS/Atom feed.",
+    icon: "Rss",
+    outputs: ["items", "count"],
+  },
+  {
+    kind: "ai_openai",
+    category: "action",
+    label: "AI OpenAI",
+    description:
+      "Hasilkan teks dengan OpenAI / OpenRouter dari prompt (alternatif Gemini).",
+    icon: "Sparkles",
+    credentialType: "openai",
+    outputs: ["text", "raw"],
   },
 ];
 

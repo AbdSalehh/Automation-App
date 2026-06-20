@@ -132,7 +132,11 @@ export const googleSheetsAppendHandler: NodeHandler = async ({
   }
 
   const accessToken = await getGoogleAccessToken(credential);
-  const spreadsheetId = String(config.spreadsheetId ?? "");
+
+  const spreadsheetId = resolveTemplate(
+    String(config.spreadsheetId ?? ""),
+    toItems(input)[0] ?? {},
+  ).trim();
 
   /** Prefer sheetName config; fall back to explicit range; default Sheet1!A1 */
   const sheetName = String(config.sheetName ?? "").trim();
@@ -191,6 +195,7 @@ export const googleSheetsAppendHandler: NodeHandler = async ({
 /** Google Sheets Read — membaca baris menjadi item beranotasi metadata. */
 export const googleSheetsReadHandler: NodeHandler = async ({
   node,
+  input,
   context,
   config,
 }) => {
@@ -205,7 +210,10 @@ export const googleSheetsReadHandler: NodeHandler = async ({
 
   const accessToken = await getGoogleAccessToken(credential);
 
-  const spreadsheetId = String(config.spreadsheetId ?? "");
+  const spreadsheetId = resolveTemplate(
+    String(config.spreadsheetId ?? ""),
+    toItems(input)[0] ?? {},
+  ).trim();
 
   if (!spreadsheetId) {
     throw new Error("Google Sheets: spreadsheetId wajib diisi");
@@ -284,14 +292,18 @@ export const googleSheetsUpdateHandler: NodeHandler = async ({
     throw new Error("Google Sheets: kredensial tidak ada");
   }
 
+  const items = toItems(input);
+
   const accessToken = await getGoogleAccessToken(credential);
-  const spreadsheetId = String(config.spreadsheetId ?? "");
+
+  const spreadsheetId = resolveTemplate(
+    String(config.spreadsheetId ?? ""),
+    items[0] ?? {},
+  ).trim();
 
   if (!spreadsheetId) {
     throw new Error("Google Sheets: spreadsheetId wajib diisi");
   }
-
-  const items = toItems(input);
 
   if (items.length === 0) {
     return { updated: 0, note: "Tidak ada baris untuk di-update" };

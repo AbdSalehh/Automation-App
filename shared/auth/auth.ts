@@ -171,21 +171,47 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   callbacks: {
     /**
-     * Login Google hanya diizinkan bila akun sudah disetujui admin. Login
-     * credential tidak digerbang di sini (akun credential dibuat admin =
-     * langsung approved).
+     * Login Google hanya diizinkan bila akun sudah disetujui admin. Untuk
+     * pengguna baru, akun dibuat lebih dulu dengan status `pending` agar
+     * permintaan muncul di halaman admin, kemudian login ditolak sampai
+     * disetujui. Login credential tidak digerbang di sini (akun credential
+     * dibuat admin = langsung approved).
      */
     async signIn({ user, account }) {
       if (account?.provider !== "google") {
         return true;
       }
 
-      const dbUser = await prisma.user.findUnique({
-        where: { id: user.id },
+      const email = user.email;
+
+      if (!email) {
+        return "/login?error=PendingApproval";
+      }
+
+      const existingUser = await prisma.user.findUnique({
+        where: { email },
         select: { approvalStatus: true },
       });
 
-      if (dbUser?.approvalStatus !== "approved") {
+      /**
+       * Pengguna Google baru: buat record `pending` secara manual. Bila tidak,
+       * penolakan di callback ini akan membatalkan pembuatan user oleh adapter
+       * sehingga permintaan tidak pernah muncul di admin.
+       */
+      if (!existingUser) {
+        await prisma.user.create({
+          data: {
+            email,
+            name: user.name,
+            image: user.image,
+            approvalStatus: "pending",
+          },
+        });
+
+        return "/login?error=PendingApproval";
+      }
+
+      if (existingUser.approvalStatus !== "approved") {
         return "/login?error=PendingApproval";
       }
 

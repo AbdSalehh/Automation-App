@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
@@ -31,6 +31,23 @@ export function CredentialsLoginForm({
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  /**
+   * Login Google yang belum disetujui admin diarahkan kembali ke halaman ini
+   * dengan `?error=PendingApproval`. Tampilkan pesan ramah dari param tersebut.
+   */
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const errorCode = params.get("error");
+
+    if (errorCode === "PendingApproval") {
+      setError(
+        "Akun Google Anda sedang menunggu persetujuan admin. Anda akan bisa masuk setelah disetujui.",
+      );
+    } else if (errorCode === "AccessDenied") {
+      setError("Akses ditolak. Hubungi admin untuk informasi lebih lanjut.");
+    }
+  }, []);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();

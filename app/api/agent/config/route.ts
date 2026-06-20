@@ -4,10 +4,9 @@ import { encryptJson, decryptJson } from "@/shared/lib/crypto";
 import { requestExternal } from "@/shared/server/httpClient";
 import { handleRoute, ok, badRequest } from "@/shared/api/http";
 import {
-  buildChainFromConfig,
+  resolveChainFromConfig,
   type AgentChatConfig,
 } from "@/shared/server/agentChatConfig";
-import type { AiProviderConfig } from "@/shared/server/ai/types";
 
 /**
  * Konfigurasi Agen Chat-Action (Telegram + penyedia AI).
@@ -19,31 +18,32 @@ import type { AiProviderConfig } from "@/shared/server/ai/types";
 
 interface AgentConfigBody {
   botToken?: string;
-  /** Daftar penyedia AI terurut (indeks 0 = utama, sisanya fallback). */
-  providers?: AiProviderConfig[];
+  /** Daftar id kredensial AI terurut (indeks 0 = utama, sisanya fallback). */
+  credentialIds?: string[];
 }
 
 const baseUrl = (): string =>
   process.env.APP_URL ?? process.env.NEXTAUTH_URL ?? "http://localhost:3000";
 
-/** Menyaring penyedia yang lengkap (punya provider, apiKey, dan model). */
-function sanitizeProviders(
-  providers: AiProviderConfig[] | undefined,
-): AiProviderConfig[] {
-  if (!Array.isArray(providers)) {
+/** Menyaring id kredensial yang valid (string non-kosong, tanpa duplikat). */
+function sanitizeCredentialIds(credentialIds: string[] | undefined): string[] {
+  if (!Array.isArray(credentialIds)) {
     return [];
   }
 
-  return providers
-    .filter(
-      (provider) =>
-        provider?.provider && provider.apiKey?.trim() && provider.model?.trim(),
-    )
-    .map((provider) => ({
-      provider: provider.provider,
-      apiKey: provider.apiKey.trim(),
-      model: provider.model.trim(),
-    }));
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  for (const credentialId of credentialIds) {
+    const trimmed = String(credentialId ?? "").trim();
+
+    if (trimmed && !seen.has(trimmed)) {
+      seen.add(trimmed);
+      result.push(trimmed);
+    }
+  }
+
+  return result;
 }
 
 export async function GET() {
@@ -61,7 +61,7 @@ export async function GET() {
 
     const decrypted = decryptJson<AgentChatConfig>(credentialRecord.data);
 
-    const chain = buildChainFromConfig(decrypted);
+    const chain = await resolveChainFromConfig(decrypted, user.id);
 
     /** Kembalikan metadata penyedia tanpa membocorkan API key. */
     const providers = chain.map((provider) => ({
@@ -73,6 +73,7 @@ export async function GET() {
       {
         enabled: true,
         providers,
+        credentialIds: decrypted.credentialIds ?? [],
         hasBotToken: Boolean(decrypted.botToken),
       },
       "Status agen chat-action",
@@ -93,15 +94,27 @@ export async function POST(request: Request) {
     }
 
     const botToken = body.botToken?.trim() ?? "";
-    const providers = sanitizeProviders(body.providers);
+    const credentialIds = sanitizeCredentialIds(body.credentialIds);
 
     if (!botToken) {
       return badRequest("Bot Token Telegram wajib diisi");
     }
 
-    if (providers.length === 0) {
+    if (credentialIds.length === 0) {
+      return badRequest("Minimal satu kredensial AI wajib dipilih");
+    }
+
+    /**
+     * Pastikan semua kredensial yang dipilih benar milik pengguna dan bertipe
+     * AI agar tidak ada referensi kredensial orang lain atau tipe lain.
+     */
+    const ownedAiCredentials = await prisma.credential.count({
+      where: { userId: user.id, type: "ai", id: { in: credentialIds } },
+    });
+
+    if (ownedAiCredentials !== credentialIds.length) {
       return badRequest(
-        "Minimal satu penyedia AI (provider, API key, dan model) wajib diisi",
+        "Sebagian kredensial AI tidak valid atau bukan milik Anda",
       );
     }
 
@@ -125,7 +138,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const encrypted = encryptJson({ botToken, providers });
+    const encrypted = encryptJson({ botToken, credentialIds });
 
     /** Hapus config lama (bila ada) lalu simpan yang baru. */
     await prisma.credential.deleteMany({
@@ -142,7 +155,7 @@ export async function POST(request: Request) {
     });
 
     return ok(
-      { enabled: true, providerCount: providers.length, webhookUrl },
+      { enabled: true, providerCount: credentialIds.length, webhookUrl },
       "Agen chat-action berhasil diaktifkan",
     );
   });

@@ -44,6 +44,7 @@ import { TransformConfig, type TransformMapping } from "./TransformConfig";
 import { ExpressionInput } from "./ExpressionInput";
 import { DateTimePicker } from "./DateTimePicker";
 import { HtmlEmailDialog } from "./HtmlEmailDialog";
+import { AiAgentCredentials } from "./AiAgentCredentials";
 import type { VariableGroup } from "./VariablePicker";
 import { GEMINI_MODELS } from "@/shared/config/constants";
 import { cn } from "@/shared/lib/utils";
@@ -424,6 +425,23 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
       hint: "Pesan yang diproses AI. Gunakan {{template}} dari data masuk.",
     },
   ],
+  ai_agent: [
+    {
+      key: "systemInstruction",
+      label: "Peran AI (System Instruction)",
+      multiline: true,
+      placeholder:
+        "Kamu adalah asisten otomasi yang membalas singkat dan jelas.",
+      hint: "Mendefinisikan persona/peran AI dan format balasan.",
+    },
+    {
+      key: "prompt",
+      label: "Prompt / Pesan",
+      multiline: true,
+      placeholder: "{{message}}",
+      hint: "Pesan yang diproses AI. Gunakan {{template}} dari data masuk.",
+    },
+  ],
 };
 
 const CONDITION_NODE_KINDS = new Set(["condition", "filter"]);
@@ -743,7 +761,20 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
               </div>
             )}
 
-            {effectiveCredentialType && (
+            {node.data.kind === "ai_agent" && (
+              <AiAgentCredentials
+                selectedIds={
+                  Array.isArray(node.data.config.credentialIds)
+                    ? (node.data.config.credentialIds as string[])
+                    : []
+                }
+                onChange={(credentialIds) =>
+                  updateConfigValue("credentialIds", credentialIds)
+                }
+              />
+            )}
+
+            {effectiveCredentialType && node.data.kind !== "ai_agent" && (
               <div>
                 <label className="text-muted-foreground mb-1 block text-xs font-medium">
                   Kredensial

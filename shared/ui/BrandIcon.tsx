@@ -9,7 +9,14 @@ export type BrandIconName =
   | "google-sheets"
   | "google-calendar"
   | "gemini"
-  | "google-drive";
+  | "google-drive"
+  | "slack"
+  | "discord"
+  | "openai-chatgpt"
+  | "notion"
+  | "rss"
+  | "webhook"
+  | "azure-oracle-database";
 
 const BRAND_LABELS: Record<BrandIconName, string> = {
   whatsapp: "WhatsApp",
@@ -19,6 +26,13 @@ const BRAND_LABELS: Record<BrandIconName, string> = {
   "google-calendar": "Google Calendar",
   "google-drive": "Google Drive",
   gemini: "Gemini",
+  slack: "Slack",
+  discord: "Discord",
+  "openai-chatgpt": "OpenAI",
+  notion: "Notion",
+  rss: "RSS",
+  webhook: "Webhook",
+  "azure-oracle-database": "Database",
 };
 
 interface BrandIconProps {

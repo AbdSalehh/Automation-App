@@ -23,6 +23,7 @@ const MAX_RECONNECT_ATTEMPTS = 2;
 const globalForRedis = globalThis as unknown as {
   redisClient?: RedisClientType;
   redisConnectPromise?: Promise<RedisClientType> | null;
+  redisErrorLogged?: boolean;
 };
 
 function createRedisClient(): RedisClientType {
@@ -61,9 +62,23 @@ function createRedisClient(): RedisClientType {
     },
   });
 
+  /**
+   * Redis bersifat opsional (fail-open). Agar log tidak banjir saat Redis tidak
+   * tersedia, error hanya dicatat sekali sampai koneksi berhasil lagi.
+   */
   client.on("error", (error: unknown) => {
+    if (globalForRedis.redisErrorLogged) {
+      return;
+    }
+
+    globalForRedis.redisErrorLogged = true;
+
     const message = error instanceof Error ? error.message : String(error);
-    console.warn("[redis] connection error:", message);
+    console.warn("[redis] connection error (dibungkam sampai pulih):", message);
+  });
+
+  client.on("ready", () => {
+    globalForRedis.redisErrorLogged = false;
   });
 
   return client;

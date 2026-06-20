@@ -1,4 +1,4 @@
-import type { CredentialType } from "@/shared/config/constants";
+import { AI_PROVIDERS, type CredentialType } from "@/shared/config/constants";
 
 /** Credential as returned to the client — never includes the secret `data`. */
 export interface Credential {
@@ -21,6 +21,10 @@ export interface CredentialFieldDef {
   label: string;
   secret?: boolean;
   placeholder?: string;
+  /** Bila "select", field dirender sebagai dropdown memakai `options`. */
+  type?: "text" | "select";
+  /** Pilihan untuk field bertipe select. */
+  options?: { value: string; label: string }[];
 }
 
 export const CREDENTIAL_FIELDS: Record<CredentialType, CredentialFieldDef[]> = {
@@ -53,6 +57,28 @@ export const CREDENTIAL_FIELDS: Record<CredentialType, CredentialFieldDef[]> = {
       label: "API Key Gemini",
       secret: true,
       placeholder: "Dari aistudio.google.com → Get API key",
+    },
+  ],
+  ai: [
+    {
+      key: "provider",
+      label: "Penyedia AI",
+      type: "select",
+      options: AI_PROVIDERS.map((aiProvider) => ({
+        value: aiProvider.value,
+        label: aiProvider.label,
+      })),
+    },
+    {
+      key: "apiKey",
+      label: "API Key",
+      secret: true,
+      placeholder: "API key dari penyedia yang dipilih",
+    },
+    {
+      key: "model",
+      label: "Model",
+      placeholder: "mis. gemini-2.5-flash",
     },
   ],
   agent_chat: [

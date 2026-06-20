@@ -42,6 +42,7 @@ import { slackSendHandler } from "./nodes/slack";
 import { discordSendHandler } from "./nodes/discord";
 import { rssReadHandler } from "./nodes/rss";
 import { aiOpenAiHandler } from "./nodes/openai";
+import { aiAgentHandler } from "./nodes/ai-agent";
 
 /**
  * Registry pemetaan jenis node ke handler-nya. Menambah konektor baru cukup
@@ -96,6 +97,7 @@ const NODE_HANDLERS: Partial<Record<NodeKind, NodeHandler>> = {
   discord_send: discordSendHandler,
   rss_read: rssReadHandler,
   ai_openai: aiOpenAiHandler,
+  ai_agent: aiAgentHandler,
 };
 
 /** Executes a single node and returns its output. */

@@ -8,7 +8,7 @@ import {
   type AgentTransport,
 } from "@/shared/server/agent/agentRouter";
 import {
-  buildChainFromConfig,
+  resolveChainFromConfig,
   type AgentChatConfig as StoredAgentChatConfig,
 } from "@/shared/server/agentChatConfig";
 import type { AiChain } from "@/shared/server/ai/types";
@@ -66,7 +66,10 @@ async function findAgentChatConfig(
       if (decrypted.botToken === botToken) {
         return {
           ownerId: credentialRecord.userId,
-          chain: buildChainFromConfig(decrypted),
+          chain: await resolveChainFromConfig(
+            decrypted,
+            credentialRecord.userId,
+          ),
         };
       }
     } catch {

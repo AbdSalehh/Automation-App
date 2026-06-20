@@ -217,3 +217,22 @@ model WaitingExecution {
     @@index([workflowId, status])
     @@index([matchKey, status])
 }
+
+/// State konfirmasi agen chat-action (mis. menunggu jawaban "ya/batal").
+/// Disimpan di DB agar agen tetap berfungsi walau Redis tidak tersedia.
+model AgentPendingAction {
+    id      String @id @default(uuid())
+    ownerId String
+    /// Identitas pengirim pada channel (mis. chatId Telegram).
+    sender  String
+
+    /// Serialised JSON PendingState (type, prompt, workflowId, workflowName).
+    payload String
+
+    /// Epoch ms kapan state ini kedaluwarsa dan boleh diabaikan.
+    expiresAt BigInt
+
+    createdAt DateTime @default(now())
+
+    @@unique([ownerId, sender])
+}

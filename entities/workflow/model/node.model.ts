@@ -39,7 +39,8 @@ export type NodeKind =
   | "slack_send"
   | "discord_send"
   | "rss_read"
-  | "ai_openai";
+  | "ai_openai"
+  | "ai_agent";
 
 /** WhatsApp delivery provider, chosen per-node via the provider dropdown. */
 export type WhatsAppProvider = "meta" | "baileys";
@@ -458,6 +459,16 @@ export const NODE_TYPES: NodeTypeDef[] = [
     credentialType: "openai",
     outputs: ["text", "raw"],
   },
+  {
+    kind: "ai_agent",
+    category: "action",
+    label: "AI Agent",
+    description:
+      "Jalankan AI dengan beberapa kredensial sebagai fallback otomatis bila model utama sibuk atau gagal.",
+    icon: "Bot",
+    credentialType: "ai",
+    outputs: ["text", "rows"],
+  },
 ];
 
 export function getNodeTypeDef(nodeKind: NodeKind): NodeTypeDef | undefined {
@@ -472,7 +483,13 @@ export type NodeBrandIcon =
   | "google-sheets"
   | "google-calendar"
   | "gemini"
-  | "google-drive";
+  | "google-drive"
+  | "slack"
+  | "discord"
+  | "openai-chatgpt"
+  | "notion"
+  | "rss"
+  | "webhook";
 
 /** Pemetaan family ke ikon brand resmi (mayoritas node bermerek lewat family). */
 const BRAND_ICON_BY_FAMILY: Partial<Record<NodeFamily, NodeBrandIcon>> = {
@@ -487,6 +504,12 @@ const BRAND_ICON_BY_FAMILY: Partial<Record<NodeFamily, NodeBrandIcon>> = {
 const BRAND_ICON_BY_KIND: Partial<Record<NodeKind, NodeBrandIcon>> = {
   gmail_send: "gmail",
   ai_gemini: "gemini",
+  slack_send: "slack",
+  discord_send: "discord",
+  ai_openai: "openai-chatgpt",
+  ai_agent: "openai-chatgpt",
+  rss_read: "rss",
+  webhook_trigger: "webhook",
 };
 
 /**

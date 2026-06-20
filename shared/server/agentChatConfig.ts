@@ -1,12 +1,14 @@
-import type { AiChain, AiProviderConfig } from "./ai/types";
+import type { AiChain, AiProvider, AiProviderConfig } from "./ai/types";
 import { GEMINI_MODEL } from "@/shared/config/constants";
+import { loadCredential } from "./engine/credentials";
 
 /**
  * Helper rantai penyedia AI dari konfigurasi `agent_chat`.
  *
- * Mendukung dua bentuk penyimpanan demi kompatibilitas mundur:
- * 1. Format baru: array `providers` ([{ provider, apiKey, model }]).
- * 2. Format lama: `geminiApiKey` + `geminiModel` tunggal.
+ * Mendukung tiga bentuk penyimpanan demi kompatibilitas mundur:
+ * 1. Format terbaru: `credentialIds` (referensi ke kredensial AI terurut).
+ * 2. Format lama: array `providers` ([{ provider, apiKey, model }]).
+ * 3. Format paling lama: `geminiApiKey` + `geminiModel` tunggal.
  *
  * Server-only module.
  */
@@ -14,18 +16,19 @@ import { GEMINI_MODEL } from "@/shared/config/constants";
 /** Bentuk konfigurasi agen yang tersimpan terenkripsi di credential `agent_chat`. */
 export interface AgentChatConfig {
   botToken?: string;
-  /** Format baru: daftar penyedia AI terurut (indeks 0 = utama). */
+  /** Format terbaru: daftar id kredensial AI terurut (indeks 0 = utama). */
+  credentialIds?: string[];
+  /** Format lama: daftar penyedia AI terurut (indeks 0 = utama). */
   providers?: AiProviderConfig[];
-  /** Format lama: API key Gemini tunggal. */
+  /** Format paling lama: API key Gemini tunggal. */
   geminiApiKey?: string;
-  /** Format lama: model Gemini tunggal. */
+  /** Format paling lama: model Gemini tunggal. */
   geminiModel?: string;
 }
 
 /**
- * Menyusun rantai penyedia dari konfigurasi agen, menyaring entri yang tidak
- * lengkap. Bila hanya tersedia format lama, dikonversi menjadi satu entri
- * Gemini.
+ * Menyusun rantai dari format lama (providers / geminiApiKey). Tidak menyentuh
+ * `credentialIds` karena itu butuh akses DB (lihat `resolveChainFromConfig`).
  */
 export function buildChainFromConfig(config: AgentChatConfig): AiChain {
   if (Array.isArray(config.providers) && config.providers.length > 0) {
@@ -45,4 +48,36 @@ export function buildChainFromConfig(config: AgentChatConfig): AiChain {
   }
 
   return [];
+}
+
+/**
+ * Menyusun rantai penyedia dengan menyelesaikan `credentialIds` ke kredensial AI
+ * milik pemilik. Bila tidak ada `credentialIds`, jatuh ke format lama lewat
+ * `buildChainFromConfig`.
+ */
+export async function resolveChainFromConfig(
+  config: AgentChatConfig,
+  ownerId: string,
+): Promise<AiChain> {
+  if (Array.isArray(config.credentialIds) && config.credentialIds.length > 0) {
+    const chain: AiChain = [];
+
+    for (const credentialId of config.credentialIds) {
+      const credential = await loadCredential(credentialId, ownerId);
+
+      if (!credential?.apiKey?.trim() || !credential.model?.trim()) {
+        continue;
+      }
+
+      chain.push({
+        provider: (credential.provider?.trim() || "gemini") as AiProvider,
+        apiKey: credential.apiKey.trim(),
+        model: credential.model.trim(),
+      });
+    }
+
+    return chain;
+  }
+
+  return buildChainFromConfig(config);
 }

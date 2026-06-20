@@ -1,5 +1,10 @@
 import { prisma } from "@/shared/lib/prisma";
-import { getRedisClient } from "@/shared/lib/redis";
+import {
+  getPendingAction,
+  setPendingAction,
+  clearPendingAction,
+  type PendingState,
+} from "./agentPendingStore";
 import { runWorkflow } from "@/shared/server/engine";
 import { buildWorkflowFromPrompt } from "@/shared/server/workflowBuilder";
 import type { AiChain } from "@/shared/server/ai/types";
@@ -58,27 +63,9 @@ export interface AgentRouterArgs {
   transport: AgentTransport;
 }
 
-/** TTL state konfirmasi pembuatan (10 menit). */
-const PENDING_TTL_SECONDS = 600;
-
 /** Kata yang dianggap konfirmasi setuju / batal. */
 const CONFIRM_WORDS = ["ya", "iya", "lanjut", "setuju", "ok", "oke", "yes"];
 const CANCEL_WORDS = ["batal", "tidak", "ga", "gak", "no", "cancel"];
-
-function pendingKey(ownerId: string, sender: string): string {
-  return `agent-pending:${ownerId}:${sender}`;
-}
-
-/**
- * State konfirmasi yang disimpan di Redis. Membedakan aksi yang menunggu
- * jawaban "ya/batal": membuat baru, mengubah, atau menghapus workflow.
- */
-interface PendingState {
-  type: "create" | "edit" | "delete";
-  prompt?: string;
-  workflowId?: string;
-  workflowName?: string;
-}
 
 /** Meng-escape karakter khusus HTML agar aman dimasukkan ke balasan Telegram. */
 function escapeHtml(text: string): string {
@@ -472,30 +459,30 @@ export async function handleAgentMessage(
    */
   await transport.sendTyping();
 
-  const redis = await getRedisClient();
-  const key = pendingKey(ownerId, sender);
-  const pendingRaw = await redis.get(key);
-
   const normalized = message.trim().toLowerCase();
 
+  /**
+   * Ambil state konfirmasi dari DB. Bila gagal, anggap tidak ada agar alur
+   * tetap berlanjut (fail-open).
+   */
+  let pending: PendingState | null = null;
+
+  try {
+    pending = await getPendingAction(ownerId, sender);
+  } catch {
+    pending = null;
+  }
+
   /** Tahap konfirmasi: ada aksi yang menunggu jawaban ya/batal. */
-  if (pendingRaw) {
-    let pending: PendingState | null = null;
-
-    try {
-      pending = JSON.parse(pendingRaw) as PendingState;
-    } catch {
-      pending = null;
-    }
-
-    if (pending && CONFIRM_WORDS.includes(normalized)) {
-      await redis.del(key);
+  if (pending) {
+    if (CONFIRM_WORDS.includes(normalized)) {
+      await clearPendingAction(ownerId, sender);
 
       return runPendingAction(pending, ownerId, chain, transport.reply);
     }
 
-    if (pending && CANCEL_WORDS.includes(normalized)) {
-      await redis.del(key);
+    if (CANCEL_WORDS.includes(normalized)) {
+      await clearPendingAction(ownerId, sender);
 
       await transport.reply("👍 Baik, aksi dibatalkan.");
 
@@ -503,7 +490,7 @@ export async function handleAgentMessage(
     }
 
     /** Jawaban lain dianggap permintaan baru — hapus state lama. */
-    await redis.del(key);
+    await clearPendingAction(ownerId, sender);
   }
 
   const workflows = await loadWorkflowContext(ownerId);
@@ -621,7 +608,7 @@ export async function handleAgentMessage(
   if (intentResult.intent === "create") {
     const pending: PendingState = { type: "create", prompt: message };
 
-    await redis.setEx(key, PENDING_TTL_SECONDS, JSON.stringify(pending));
+    await setPendingAction(ownerId, sender, pending);
 
     const plan =
       intentResult.planSummary ??
@@ -658,7 +645,7 @@ export async function handleAgentMessage(
       workflowName: workflow.name,
     };
 
-    await redis.setEx(key, PENDING_TTL_SECONDS, JSON.stringify(pending));
+    await setPendingAction(ownerId, sender, pending);
 
     await transport.reply(
       `✏️ Saya akan mengubah workflow <b>${escapeHtml(
@@ -694,7 +681,7 @@ export async function handleAgentMessage(
       workflowName: workflow.name,
     };
 
-    await redis.setEx(key, PENDING_TTL_SECONDS, JSON.stringify(pending));
+    await setPendingAction(ownerId, sender, pending);
 
     await transport.reply(
       `⚠️ Yakin ingin <b>menghapus</b> workflow <b>${escapeHtml(

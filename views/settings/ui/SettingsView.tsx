@@ -2,7 +2,6 @@ import { AgentSettingsPanel } from "@/features/agent-settings";
 import { AgentPipelineCanvas } from "@/features/agent-pipeline";
 import { WhatsappLinkCard } from "@/features/whatsapp-qr-login";
 import { ProfileForm, PasswordForm } from "@/features/account-settings";
-import { Button } from "@/shared/ui";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
 import { Badge } from "@/shared/ui";
 import { requireUser } from "@/shared/auth";
@@ -100,13 +99,6 @@ export async function SettingsView() {
               </div>
               <span className="text-muted-foreground text-xs">Sekarang</span>
             </div>
-
-            <Button
-              variant="outline"
-              className="self-center border-orange-200 text-orange-500 hover:bg-orange-50 hover:text-orange-600"
-            >
-              Kelola Paket
-            </Button>
           </div>
         </section>
 

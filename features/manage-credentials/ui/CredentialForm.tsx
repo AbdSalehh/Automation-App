@@ -153,14 +153,35 @@ export function CredentialForm({ onCreated }: CredentialFormProps) {
             {credentialField.label}
           </label>
 
-          <Input
-            type={credentialField.secret ? "password" : "text"}
-            value={fieldValues[credentialField.key] ?? ""}
-            placeholder={credentialField.placeholder}
-            onChange={(changeEvent) =>
-              updateFieldValue(credentialField.key, changeEvent.target.value)
-            }
-          />
+          {credentialField.type === "select" ? (
+            <Select
+              value={fieldValues[credentialField.key] ?? ""}
+              onValueChange={(selectedValue) =>
+                updateFieldValue(credentialField.key, selectedValue)
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Pilih salah satu" />
+              </SelectTrigger>
+
+              <SelectContent>
+                {credentialField.options?.map((fieldOption) => (
+                  <SelectItem key={fieldOption.value} value={fieldOption.value}>
+                    {fieldOption.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <Input
+              type={credentialField.secret ? "password" : "text"}
+              value={fieldValues[credentialField.key] ?? ""}
+              placeholder={credentialField.placeholder}
+              onChange={(changeEvent) =>
+                updateFieldValue(credentialField.key, changeEvent.target.value)
+              }
+            />
+          )}
         </div>
       ))}
 

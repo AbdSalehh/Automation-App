@@ -19,12 +19,14 @@ export function AgentSettingsPanel() {
     credentialIds,
     isLoading,
     isSaving,
+    isReregistering,
     error,
     successMessage,
     setBotToken,
     setCredentialIds,
     fetchStatus,
     saveConfig,
+    reregisterWebhook,
     disableAgent,
   } = useAgentSettingsStore();
 
@@ -124,6 +126,19 @@ export function AgentSettingsPanel() {
                   ? "Perbarui Agen"
                   : "Aktifkan Agen"}
             </Button>
+
+            {enabled && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={reregisterWebhook}
+                disabled={isReregistering}
+              >
+                {isReregistering
+                  ? "Mendaftarkan..."
+                  : "Daftarkan Ulang Webhook"}
+              </Button>
+            )}
 
             {enabled && (
               <Button

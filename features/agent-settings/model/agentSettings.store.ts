@@ -24,6 +24,7 @@ interface AgentSettingsState {
   activeProviders: ProviderStatus[];
   isLoading: boolean;
   isSaving: boolean;
+  isReregistering: boolean;
   error: string | null;
   successMessage: string | null;
 
@@ -31,6 +32,7 @@ interface AgentSettingsState {
   setCredentialIds: (credentialIds: string[]) => void;
   fetchStatus: () => Promise<void>;
   saveConfig: () => Promise<boolean>;
+  reregisterWebhook: () => Promise<void>;
   disableAgent: () => Promise<void>;
 }
 
@@ -41,6 +43,7 @@ export const useAgentSettingsStore = create<AgentSettingsState>((set, get) => ({
   activeProviders: [],
   isLoading: false,
   isSaving: false,
+  isReregistering: false,
   error: null,
   successMessage: null,
 
@@ -105,6 +108,24 @@ export const useAgentSettingsStore = create<AgentSettingsState>((set, get) => ({
       return false;
     } finally {
       set({ isSaving: false });
+    }
+  },
+
+  /**
+   * Mendaftarkan ulang webhook Telegram untuk config yang sudah ada (mis. agar
+   * bot lama mulai menerima tombol Ya/Batal) tanpa memasukkan ulang token.
+   */
+  reregisterWebhook: async () => {
+    set({ isReregistering: true, error: null, successMessage: null });
+
+    try {
+      await apiClient.patch("/agent/config");
+
+      set({ successMessage: "Webhook berhasil didaftarkan ulang." });
+    } catch {
+      set({ error: "Gagal mendaftarkan ulang webhook." });
+    } finally {
+      set({ isReregistering: false });
     }
   },
 

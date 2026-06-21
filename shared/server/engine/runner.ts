@@ -8,6 +8,7 @@ import type { Item, RunContext, ExecOutcome, TriggerScope } from "./types";
 import { writeLog } from "./logging";
 import { isSamePhoneKey } from "./utils";
 import { runNode } from "./registry";
+import { createNotification } from "@/shared/server/notifications/createNotification";
 
 /** Jenis node trigger yang dipicu balasan masuk (WhatsApp/Telegram). */
 const REPLY_TRIGGER_KINDS = new Set(["whatsapp_trigger", "telegram_trigger"]);
@@ -218,6 +219,15 @@ async function executeNodes(
       outputByNodeId.set(node.id, output);
       lastOutput = output;
 
+      /**
+       * Simpan output node berdasarkan ref-nya agar node berikutnya bisa
+       * merujuknya lewat template `{{ref.field}}` (mis. spreadsheetId dari node
+       * create dipakai node read/append/update sesudahnya).
+       */
+      if (node.data.ref && context.nodeOutputs) {
+        context.nodeOutputs[node.data.ref] = output;
+      }
+
       /** Stop traversal down a branch when a condition node evaluates false. */
       if (
         node.data.kind === "condition" &&
@@ -350,6 +360,7 @@ export async function runWorkflow(
     ownerId: workflow.ownerId,
     workflowId,
     triggerPayload,
+    nodeOutputs: {},
   };
 
   await writeLog(execution.id, "info", `Mulai eksekusi "${workflow.name}"`);
@@ -381,6 +392,24 @@ export async function runWorkflow(
       outcome.status === "failed" ? "error" : "info",
       `Eksekusi selesai dengan status ${outcome.status}`,
     );
+
+    /**
+     * Catat notifikasi hasil run agar pengguna melihatnya di lonceng header,
+     * termasuk run dari webhook/schedule yang tidak ditonton langsung.
+     */
+    const isSuccess = outcome.status === "success";
+
+    await createNotification({
+      userId: workflow.ownerId,
+      type: isSuccess ? "workflow_success" : "workflow_failed",
+      title: isSuccess
+        ? `Workflow "${workflow.name}" berhasil dijalankan`
+        : `Workflow "${workflow.name}" gagal dijalankan`,
+      body: isSuccess
+        ? "Eksekusi selesai tanpa error."
+        : "Eksekusi berhenti karena error. Buka untuk melihat log.",
+      link: `/workflows/${workflowId}`,
+    });
   }
 
   /**
@@ -502,11 +531,26 @@ export async function resumeWorkflow(
 
   outputByNodeId.set(pauseNode.id, resumeOutput);
 
+  /**
+   * Bangun ulang peta output ber-ref dari state tersimpan agar referensi
+   * antar-node (`{{ref.field}}`) tetap bekerja setelah dilanjutkan.
+   */
+  const resumedNodeOutputs: Record<string, unknown> = {};
+
+  for (const orderedNode of orderedNodes) {
+    if (orderedNode.data.ref && outputByNodeId.has(orderedNode.id)) {
+      resumedNodeOutputs[orderedNode.data.ref] = outputByNodeId.get(
+        orderedNode.id,
+      );
+    }
+  }
+
   const context: RunContext = {
     executionId: waiting.executionId,
     ownerId: workflow.ownerId,
     workflowId: waiting.workflowId,
     triggerPayload: replyPayload,
+    nodeOutputs: resumedNodeOutputs,
   };
 
   await prisma.execution.update({

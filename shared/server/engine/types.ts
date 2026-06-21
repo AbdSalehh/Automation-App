@@ -18,6 +18,12 @@ export interface RunContext {
   workflowId: string;
   /** Optional payload that seeds trigger nodes (webhook body, etc.). */
   triggerPayload?: unknown;
+  /**
+   * Output tiap node yang sudah berjalan, dikunci oleh `node.data.ref` (mis.
+   * "n1"). Dipakai handler untuk me-resolve referensi antar-node seperti
+   * `{{n1.spreadsheetId}}`.
+   */
+  nodeOutputs?: Record<string, unknown>;
 }
 
 /** Normalised flowing value: always an array of row objects. */

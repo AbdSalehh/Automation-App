@@ -30,6 +30,8 @@ import { LabeledEdge } from "./LabeledEdge";
 import { CanvasControls } from "./CanvasControls";
 import { NodeConfigPanel } from "./NodeConfigPanel";
 import { FlowInfoPanel } from "./FlowInfoPanel";
+import { EditorSettingsSheet } from "./EditorSettingsSheet";
+import { useUserSettingStore } from "@/entities/user-setting";
 import { useRunAnimation } from "../model/useRunAnimation";
 
 export function WorkflowEditor() {
@@ -63,6 +65,19 @@ export function WorkflowEditor() {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [isMiniMapVisible, setIsMiniMapVisible] = useState(true);
   const [isJsonOpen, setIsJsonOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  const { setting, fetchSetting } = useUserSettingStore();
+
+  /** Muat preferensi editor sekali saat kanvas dibuka. */
+  useEffect(() => {
+    fetchSetting();
+  }, [fetchSetting]);
+
+  /** Selaraskan visibilitas minimap dengan preferensi tersimpan. */
+  useEffect(() => {
+    setIsMiniMapVisible(setting.showMinimap);
+  }, [setting.showMinimap]);
 
   const nodeTypes = useMemo(() => ({ workflowNode: WorkflowNode }), []);
   const edgeTypes = useMemo(() => ({ labeled: LabeledEdge }), []);
@@ -295,8 +310,8 @@ export function WorkflowEditor() {
           onNodeDoubleClick={handleNodeDoubleClick}
           onPaneClick={() => setSelectedNodeId(null)}
           fitView
-          snapToGrid
-          snapGrid={[16, 16]}
+          snapToGrid={setting.snapToGrid}
+          snapGrid={[setting.gridSize, setting.gridSize]}
           defaultEdgeOptions={{
             type: "labeled",
             style: { strokeWidth: 2, stroke: "#94a3b8" },
@@ -304,11 +319,13 @@ export function WorkflowEditor() {
           connectionLineStyle={{ strokeWidth: 2, stroke: "#94a3b8" }}
           proOptions={{ hideAttribution: true }}
         >
-          <Background gap={16} />
+          {setting.showGrid && <Background gap={setting.gridSize} />}
           <CanvasControls
             isMiniMapVisible={isMiniMapVisible}
+            showControls={setting.showControls}
             onToggleMiniMap={() => setIsMiniMapVisible((visible) => !visible)}
             onShowJson={() => setIsJsonOpen(true)}
+            onOpenSettings={() => setIsSettingsOpen(true)}
           />
           {isMiniMapVisible && <MiniMap pannable zoomable />}
         </ReactFlow>
@@ -323,6 +340,11 @@ export function WorkflowEditor() {
           {JSON.stringify({ nodes, edges }, null, 2)}
         </pre>
       </Modal>
+
+      <EditorSettingsSheet
+        open={isSettingsOpen}
+        onOpenChange={setIsSettingsOpen}
+      />
 
       {selectedNode ? (
         <NodeConfigPanel

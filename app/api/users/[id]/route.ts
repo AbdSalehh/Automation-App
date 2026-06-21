@@ -12,6 +12,7 @@ import {
   ok,
   noContent,
 } from "@/shared/api/http";
+import { createNotification } from "@/shared/server/notifications/createNotification";
 
 const USER_SELECT = {
   id: true,
@@ -84,6 +85,14 @@ export async function PATCH(
         where: { id },
         data: { approvalStatus: "approved" },
         select: USER_SELECT,
+      });
+
+      await createNotification({
+        userId: id,
+        type: "account_approved",
+        title: "Akun Anda telah disetujui",
+        body: "Selamat datang! Anda kini dapat masuk dan mulai membuat workflow.",
+        link: "/dashboard",
       });
 
       return ok(updatedUser, "Pengguna berhasil disetujui");

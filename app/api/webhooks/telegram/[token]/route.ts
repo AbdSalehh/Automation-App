@@ -37,6 +37,7 @@ interface TelegramUpdate {
     id: string;
     data?: string;
     message?: {
+      message_id?: number;
       chat?: { id?: number | string };
     };
     from?: { first_name?: string; username?: string };
@@ -202,6 +203,7 @@ export async function POST(
      */
     if (callbackQuery) {
       const callbackChatId = callbackQuery.message?.chat?.id;
+      const callbackMessageId = callbackQuery.message?.message_id;
       const callbackText = callbackQuery.data ?? "";
 
       await requestExternal(
@@ -212,6 +214,25 @@ export async function POST(
           data: { callback_query_id: callbackQuery.id },
         },
       ).catch(() => undefined);
+
+      /**
+       * Hapus tombol inline dari pesan asal setelah ditekan agar tidak bisa
+       * diklik dua kali dan tampilan menjadi bersih.
+       */
+      if (callbackChatId !== undefined && callbackMessageId !== undefined) {
+        await requestExternal(
+          `https://api.telegram.org/bot${token}/editMessageReplyMarkup`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            data: {
+              chat_id: callbackChatId,
+              message_id: callbackMessageId,
+              reply_markup: { inline_keyboard: [] },
+            },
+          },
+        ).catch(() => undefined);
+      }
 
       if (
         !callbackText ||

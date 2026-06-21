@@ -92,7 +92,7 @@ function buildSystemPrompt(): string {
     '3. `ref` adalah id sementara unik antar node (mis. "n1", "n2") untuk merujuk di edges.',
     "4. Mulai dengan satu node trigger (kind diakhiri _trigger). Untuk otomasi via chat, gunakan whatsapp_trigger atau telegram_trigger.",
     "5. Untuk menyimpan data (mis. catatan keuangan, log), UTAMAKAN Google Sheets (google_sheets_append/read/update). Pakai supabase_insert/supabase_query hanya bila pengguna meminta database. Untuk memproses teks dengan AI pakai ai_gemini.",
-    "5b. Bila pengguna minta spreadsheet BARU (belum punya spreadsheetId), node pertama setelah trigger HARUS google_sheets_create (config.mode='new_spreadsheet', isi config.title & config.sheetName). Node Sheets berikutnya (append/read/update) WAJIB memakai config.spreadsheetId='{{spreadsheetId}}' agar tersambung ke spreadsheet yang baru dibuat. Bila pengguna sudah memberi ID/URL spreadsheet, pakai ID itu langsung tanpa google_sheets_create.",
+    "5b. Bila pengguna minta spreadsheet BARU (belum punya spreadsheetId), node pertama setelah trigger HARUS google_sheets_create (config.mode='new_spreadsheet', isi config.title & config.sheetName). Node Sheets berikutnya (append/read/update) WAJIB memakai config.spreadsheetId='{{REF.spreadsheetId}}' di mana REF adalah nilai `ref` node google_sheets_create tersebut (mis. bila ref-nya 'n2', tulis '{{n2.spreadsheetId}}'). Bila pengguna sudah memberi ID/URL spreadsheet, pakai ID itu langsung tanpa google_sheets_create.",
     '5c. Bila pengguna minta KOLOM tertentu dan/atau DATA DUMMY untuk spreadsheet baru, isi langsung di node google_sheets_create: config.headers = array nama kolom (mis. ["Nama","Nomor","Status"]), dan config.seedRows = array baris dummy berupa array objek berkunci nama kolom (mis. [{"Nama":"Budi","Nomor":"628123","Status":"Baru"}]). JANGAN membuat node append terpisah hanya untuk data dummy awal; cukup lewat headers & seedRows.',
     "6. Untuk membalas pesan pakai whatsapp_send atau telegram_send.",
     "7. Isi config secukupnya dan gunakan template {{message}}, {{sender}}, {{name}}, {{text}} bila relevan.",
@@ -151,6 +151,7 @@ function normalizeBuilderResult(
       data: {
         kind: rawNode.kind as NodeKind,
         label: rawNode.label ?? rawNode.kind,
+        ref: rawNode.ref,
         config: rawNode.config ?? {},
         credentialId: "",
       },

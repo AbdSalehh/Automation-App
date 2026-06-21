@@ -92,6 +92,11 @@ export interface NodeTypeDef {
 export interface WorkflowNodeData {
   kind: NodeKind;
   label: string;
+  /**
+   * Referensi pendek & stabil (mis. "n1") untuk merujuk output node ini dari
+   * node lain lewat template `{{n1.field}}`. Ditampilkan di panel konfigurasi.
+   */
+  ref?: string;
   /** Arbitrary per-node configuration (URL, message, code, etc.). */
   config: Record<string, unknown>;
   /** Selected credential id for connector nodes. */

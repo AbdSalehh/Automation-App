@@ -9,6 +9,7 @@ import {
   ZoomOutIcon,
   SaveIcon,
   DownloadIcon,
+  SettingsIcon,
 } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
 import { Button, Spinner } from "@/shared/ui";
@@ -17,8 +18,10 @@ import { exportWorkflow } from "@/widgets/workflow-list";
 
 interface CanvasControlsProps {
   isMiniMapVisible: boolean;
+  showControls: boolean;
   onToggleMiniMap: () => void;
   onShowJson: () => void;
+  onOpenSettings: () => void;
 }
 
 /**
@@ -28,8 +31,10 @@ interface CanvasControlsProps {
  */
 export function CanvasControls({
   isMiniMapVisible,
+  showControls,
   onToggleMiniMap,
   onShowJson,
+  onOpenSettings,
 }: CanvasControlsProps) {
   const { zoomIn, zoomOut, fitView } = useReactFlow();
 
@@ -69,6 +74,10 @@ export function CanvasControls({
           <ControlButton label="Ekspor workflow" onClick={handleExport}>
             <DownloadIcon className="size-4" />
           </ControlButton>
+
+          <ControlButton label="Setelan editor" onClick={onOpenSettings}>
+            <SettingsIcon className="size-4" />
+          </ControlButton>
         </div>
       </Panel>
 
@@ -84,29 +93,31 @@ export function CanvasControls({
             {isSaving ? "Menyimpan…" : isDirty ? "Simpan" : "Tersimpan"}
           </Button>
 
-          <div className="border-border bg-card/90 flex items-center gap-0.5 rounded-xl border p-1 shadow-lg backdrop-blur">
-            <ControlButton
-              label="Perkecil"
-              onClick={() => zoomOut({ duration: 200 })}
-            >
-              <ZoomOutIcon className="size-4" />
-            </ControlButton>
+          {showControls && (
+            <div className="border-border bg-card/90 flex items-center gap-0.5 rounded-xl border p-1 shadow-lg backdrop-blur">
+              <ControlButton
+                label="Perkecil"
+                onClick={() => zoomOut({ duration: 200 })}
+              >
+                <ZoomOutIcon className="size-4" />
+              </ControlButton>
 
-            <button
-              type="button"
-              onClick={() => fitView({ duration: 300 })}
-              className="text-foreground hover:bg-muted min-w-12 rounded-lg px-2 py-1.5 text-xs font-semibold tabular-nums transition-colors"
-            >
-              {zoomPercent}%
-            </button>
+              <button
+                type="button"
+                onClick={() => fitView({ duration: 300 })}
+                className="text-foreground hover:bg-muted min-w-12 rounded-lg px-2 py-1.5 text-xs font-semibold tabular-nums transition-colors"
+              >
+                {zoomPercent}%
+              </button>
 
-            <ControlButton
-              label="Perbesar"
-              onClick={() => zoomIn({ duration: 200 })}
-            >
-              <ZoomInIcon className="size-4" />
-            </ControlButton>
-          </div>
+              <ControlButton
+                label="Perbesar"
+                onClick={() => zoomIn({ duration: 200 })}
+              >
+                <ZoomInIcon className="size-4" />
+              </ControlButton>
+            </div>
+          )}
         </div>
       </Panel>
     </>

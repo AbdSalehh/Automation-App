@@ -154,6 +154,11 @@ export const API_ROUTES = {
   user: (id: string) => `/users/${id}`,
   accountProfile: "/account/profile",
   accountPassword: "/account/password",
+  settings: "/settings",
+  notifications: "/notifications",
+  notificationRead: (id: string) => `/notifications/${id}/read`,
+  notificationsReadAll: "/notifications/read-all",
+  search: "/search",
 } as const;
 
 /** Connector types supported by the platform. Mirrors docs/n8n.md. */

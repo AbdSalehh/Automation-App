@@ -113,8 +113,35 @@ export const useWorkflowListStore = create<WorkflowListState>((set, get) => ({
         name: transfer.name,
       });
 
+      /**
+       * Pastikan setiap node punya ref stabil. Ekspor lama mungkin belum
+       * menyimpan ref, jadi isi yang kosong tanpa menimpa yang sudah ada.
+       */
+      const usedRefs = new Set(
+        transfer.nodes
+          .map((node) => node.data.ref)
+          .filter((ref): ref is string => Boolean(ref)),
+      );
+
+      let candidateIndex = 1;
+
+      const nodesWithRefs = transfer.nodes.map((node) => {
+        if (node.data.ref) {
+          return node;
+        }
+
+        while (usedRefs.has(`n${candidateIndex}`)) {
+          candidateIndex += 1;
+        }
+
+        const assignedRef = `n${candidateIndex}`;
+        usedRefs.add(assignedRef);
+
+        return { ...node, data: { ...node.data, ref: assignedRef } };
+      });
+
       await workflowService.update(createdWorkflow.id, {
-        nodes: transfer.nodes,
+        nodes: nodesWithRefs,
         edges: transfer.edges,
         bumpVersion: true,
       });

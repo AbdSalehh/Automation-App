@@ -131,6 +131,7 @@ export async function POST(request: Request) {
         data: {
           url: webhookUrl,
           allowed_updates: ["message", "callback_query"],
+          drop_pending_updates: true,
         },
       },
     );
@@ -173,5 +174,54 @@ export async function DELETE() {
     });
 
     return ok({ enabled: false }, "Agen chat-action dinonaktifkan");
+  });
+}
+
+/**
+ * Mendaftarkan ulang webhook Telegram untuk config agen yang SUDAH ada, tanpa
+ * perlu memasukkan ulang token/kredensial. Berguna untuk bot lama agar mulai
+ * menerima `callback_query` (tombol Ya/Batal).
+ */
+export async function PATCH() {
+  return handleRoute(async () => {
+    const user = await requireUser();
+
+    const credentialRecord = await prisma.credential.findFirst({
+      where: { userId: user.id, type: "agent_chat" },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (!credentialRecord) {
+      return badRequest("Agen chat-action belum aktif");
+    }
+
+    const decrypted = decryptJson<AgentChatConfig>(credentialRecord.data);
+
+    if (!decrypted.botToken) {
+      return badRequest("Config agen tidak memiliki Bot Token");
+    }
+
+    const webhookUrl = `${baseUrl()}/api/webhooks/telegram/${decrypted.botToken}`;
+
+    const webhookResponse = await requestExternal(
+      `https://api.telegram.org/bot${decrypted.botToken}/setWebhook`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        data: {
+          url: webhookUrl,
+          allowed_updates: ["message", "callback_query"],
+          drop_pending_updates: true,
+        },
+      },
+    );
+
+    if (!webhookResponse.ok) {
+      return badRequest(
+        `Telegram menolak pendaftaran ulang (status ${webhookResponse.status}).`,
+      );
+    }
+
+    return ok({ webhookUrl }, "Webhook berhasil didaftarkan ulang");
   });
 }

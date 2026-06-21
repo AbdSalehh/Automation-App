@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { motion } from "motion/react";
 import {
   ClockIcon,
@@ -12,7 +13,7 @@ import {
   Trash2Icon,
   DownloadIcon,
 } from "lucide-react";
-import { Badge, Sparkline, toast } from "@/shared/ui";
+import { Badge, Sparkline, toast, ConfirmDialog } from "@/shared/ui";
 import { ROUTES } from "@/shared/config/constants";
 import { cn } from "@/shared/lib/utils";
 import { staggerItem } from "@/shared/lib/motion-presets";
@@ -48,6 +49,13 @@ export function WorkflowTableRow({
   const TriggerIcon = TRIGGER_ICONS[metrics.triggerType] ?? ClockIcon;
   const statusBadge = STATUS_BADGE[metrics.status];
   const isActive = metrics.status === "active";
+
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+
+  const handleConfirmRemove = () => {
+    setIsConfirmOpen(false);
+    onRemove(workflow.id);
+  };
 
   /**
    * Ekspor mengambil definisi lengkap (nodes/edges) lebih dulu karena ringkasan
@@ -185,12 +193,21 @@ export function WorkflowTableRow({
           </button>
           <button
             type="button"
-            onClick={() => onRemove(workflow.id)}
+            onClick={() => setIsConfirmOpen(true)}
             className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive grid size-8 place-items-center rounded-md"
             aria-label="Hapus workflow"
           >
             <Trash2Icon className="size-4" />
           </button>
+
+          <ConfirmDialog
+            open={isConfirmOpen}
+            onOpenChange={setIsConfirmOpen}
+            title="Hapus workflow ini?"
+            description={`Workflow "${workflow.name}" akan dihapus permanen beserta riwayat eksekusinya. Tindakan ini tidak dapat dibatalkan.`}
+            confirmLabel="Hapus"
+            onConfirm={handleConfirmRemove}
+          />
           <Link
             href={ROUTES.workflow(workflow.id)}
             className="text-muted-foreground hover:bg-accent hover:text-foreground grid size-8 place-items-center rounded-md"

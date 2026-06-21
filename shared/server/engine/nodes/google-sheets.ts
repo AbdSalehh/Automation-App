@@ -41,7 +41,11 @@ export const googleSheetsCreateHandler: NodeHandler = async ({
     "Sheet1";
 
   if (mode === "new_sheet") {
-    const spreadsheetId = String(config.spreadsheetId ?? "").trim();
+    const spreadsheetId = resolveTemplate(
+      String(config.spreadsheetId ?? ""),
+      firstItem,
+      context.nodeOutputs,
+    ).trim();
 
     if (!spreadsheetId) {
       throw new Error(
@@ -222,6 +226,7 @@ export const googleSheetsAppendHandler: NodeHandler = async ({
   const spreadsheetId = resolveTemplate(
     String(config.spreadsheetId ?? ""),
     toItems(input)[0] ?? {},
+    context.nodeOutputs,
   ).trim();
 
   /** Prefer sheetName config; fall back to explicit range; default Sheet1!A1 */
@@ -299,6 +304,7 @@ export const googleSheetsReadHandler: NodeHandler = async ({
   const spreadsheetId = resolveTemplate(
     String(config.spreadsheetId ?? ""),
     toItems(input)[0] ?? {},
+    context.nodeOutputs,
   ).trim();
 
   if (!spreadsheetId) {

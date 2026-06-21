@@ -18,15 +18,41 @@ import type {
 export type { ConditionOperator, ConditionRule, ConditionGroup };
 
 /**
+ * Mengambil nilai bersarang dari sebuah objek memakai jalur titik, mis.
+ * pluck({ a: { b: 1 } }, ["a", "b"]) => 1. Mengembalikan undefined bila salah
+ * satu segmen tidak ada.
+ */
+function pluck(source: unknown, path: string[]): unknown {
+  let current: unknown = source;
+
+  for (const segment of path) {
+    if (current && typeof current === "object") {
+      current = (current as Record<string, unknown>)[segment];
+    } else {
+      return undefined;
+    }
+  }
+
+  return current;
+}
+
+/**
  * Replaces `{{field}}` placeholders in a template string with values from the
  * provided data object. Missing fields resolve to an empty string.
  *
+ * Bila `nodeOutputs` diberikan, placeholder berbentuk `{{ref.field}}` (mis.
+ * `{{n1.spreadsheetId}}`) di-resolve dari output node ber-ref tersebut. Ini
+ * memungkinkan satu node memakai hasil node lain (mis. spreadsheetId dari node
+ * create). Bila ref tidak dikenal, placeholder tetap dicocokkan ke `data`.
+ *
  * @example
  * resolveTemplate("Halo {{Nama}}", { Nama: "Budi" }) // => "Halo Budi"
+ * resolveTemplate("{{n1.spreadsheetId}}", {}, { n1: { spreadsheetId: "abc" } }) // => "abc"
  */
 export function resolveTemplate(
   template: string,
   data: Record<string, unknown>,
+  nodeOutputs?: Record<string, unknown>,
 ): string {
   if (!template) {
     return "";
@@ -34,6 +60,26 @@ export function resolveTemplate(
 
   return template.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (_match, rawKey) => {
     const key = String(rawKey).trim();
+
+    /**
+     * Referensi antar-node: `ref.field` (atau lebih dalam). Hanya dipakai bila
+     * segmen pertama benar-benar dikenal sebagai ref node, agar key datar yang
+     * kebetulan memuat titik tidak salah resolve.
+     */
+    if (nodeOutputs && key.includes(".")) {
+      const [refSegment, ...restSegments] = key.split(".");
+
+      if (Object.prototype.hasOwnProperty.call(nodeOutputs, refSegment)) {
+        const resolved = pluck(nodeOutputs[refSegment], restSegments);
+
+        if (resolved === undefined || resolved === null) {
+          return "";
+        }
+
+        return String(resolved);
+      }
+    }
+
     const value = data[key];
 
     if (value === undefined || value === null) {

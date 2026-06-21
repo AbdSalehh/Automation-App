@@ -47,8 +47,69 @@ model User {
     sessions Session[]
 
     // Domain relations
-    credentials Credential[]
-    workflows   Workflow[]
+    credentials   Credential[]
+    workflows     Workflow[]
+    userSetting   UserSetting?
+    notifications Notification[]
+}
+
+/// Preferensi editor per-pengguna (kanvas, tampilan grid, dsb.).
+model UserSetting {
+    id     String @id @default(uuid())
+    userId String @unique
+
+    /// Ukuran font label node di kanvas (px).
+    fontSize Int @default(14)
+
+    /// Tampilkan grid latar kanvas.
+    showGrid Boolean @default(true)
+
+    /// Ukuran sel grid (px).
+    gridSize Int @default(20)
+
+    /// Tempelkan node ke grid saat digeser.
+    snapToGrid Boolean @default(false)
+
+    /// Tampilkan minimap navigasi.
+    showMinimap Boolean @default(true)
+
+    /// Tampilkan tombol kontrol zoom/fit.
+    showControls Boolean @default(true)
+
+    /// Gaya garis koneksi: "bezier" | "smoothstep" | "step" | "straight".
+    connectionMode String @default("bezier")
+
+    /// Kecepatan animasi run node (ms per langkah).
+    animationSpeed Int @default(400)
+
+    updatedAt DateTime @updatedAt
+    createdAt DateTime @default(now())
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+/// Notifikasi per-pengguna (hasil run workflow, status akun, kredensial, dsb.).
+model Notification {
+    id     String @id @default(uuid())
+    userId String
+
+    /// Jenis notifikasi: "workflow_success" | "workflow_failed" |
+    /// "account_approved" | "credential_failed" | "system" | dll.
+    type String @default("system")
+
+    title String
+    body  String?
+
+    /// Tautan opsional untuk navigasi saat notifikasi diklik.
+    link String?
+
+    isRead    Boolean  @default(false)
+    createdAt DateTime @default(now())
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId, isRead])
+    @@index([userId, createdAt])
 }
 
 /// NextAuth: OAuth account linked to a User (Google, etc.)

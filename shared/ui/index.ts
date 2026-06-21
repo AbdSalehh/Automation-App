@@ -38,3 +38,18 @@ export { MultiSelect } from "./multi-select";
 export { ScrollArea, ScrollBar } from "./scroll-area";
 export { Toaster } from "./sonner";
 export { toast } from "sonner";
+export {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogOverlay,
+  AlertDialogPortal,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "./alert-dialog";
+export { ConfirmDialog } from "./ConfirmDialog";

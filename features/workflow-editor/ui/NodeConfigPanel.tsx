@@ -14,7 +14,9 @@ import {
   Textarea,
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
   MultiSelect,
@@ -538,13 +540,23 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
 
   const COMMON_TRIGGER_FIELDS = ["sender", "message", "name"];
 
-  const availableColumns = Array.from(
-    new Set([
-      ...COMMON_TRIGGER_FIELDS,
-      ...sheetSources.flatMap(
+  /** Header kolom asli yang berhasil dimuat dari spreadsheet sumber. */
+  const sheetColumns = Array.from(
+    new Set(
+      sheetSources.flatMap(
         (source) => dataBySpreadsheet[source.spreadsheetId]?.headers ?? [],
       ),
-    ]),
+    ),
+  );
+
+  /**
+   * Field yang berasal dari pesan/chat masuk (trigger), bukan kolom spreadsheet.
+   * Dipisah agar dropdown bisa mengelompokkannya dengan jelas.
+   */
+  const triggerFields = COMMON_TRIGGER_FIELDS;
+
+  const availableColumns = Array.from(
+    new Set([...triggerFields, ...sheetColumns]),
   );
 
   const handleRefreshColumns = () => {
@@ -697,6 +709,29 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                 {nodeTypeDefinition?.description}
               </p>
             </div>
+
+            {node.data.ref && (
+              <div className="border-border bg-muted/40 rounded-md border px-3 py-2">
+                <p className="text-muted-foreground text-xs">
+                  Referensi node:{" "}
+                  <code className="text-foreground font-mono font-semibold">
+                    {node.data.ref}
+                  </code>
+                </p>
+
+                <p className="text-muted-foreground mt-1 text-[11px]">
+                  Pakai di node lain dengan{" "}
+                  <code className="font-mono">
+                    {`{{${node.data.ref}.field}}`}
+                  </code>{" "}
+                  untuk memakai output node ini (mis.{" "}
+                  <code className="font-mono">
+                    {`{{${node.data.ref}.spreadsheetId}}`}
+                  </code>
+                  ).
+                </p>
+              </div>
+            )}
 
             {siblingOperations.length > 1 && (
               <div>
@@ -1146,11 +1181,29 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                             Belum ada kolom — klik ↻ Muat
                           </SelectItem>
                         ) : (
-                          availableColumns.map((column) => (
-                            <SelectItem key={column} value={column}>
-                              {column}
-                            </SelectItem>
-                          ))
+                          <>
+                            {sheetColumns.length > 0 && (
+                              <SelectGroup>
+                                <SelectLabel>Kolom Spreadsheet</SelectLabel>
+
+                                {sheetColumns.map((column) => (
+                                  <SelectItem key={column} value={column}>
+                                    {column}
+                                  </SelectItem>
+                                ))}
+                              </SelectGroup>
+                            )}
+
+                            <SelectGroup>
+                              <SelectLabel>Field dari Chat Masuk</SelectLabel>
+
+                              {triggerFields.map((field) => (
+                                <SelectItem key={field} value={field}>
+                                  {field}
+                                </SelectItem>
+                              ))}
+                            </SelectGroup>
+                          </>
                         )}
                       </SelectContent>
                     </Select>

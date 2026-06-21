@@ -55,6 +55,26 @@ function applyWorkflow(workflow: Workflow) {
   };
 }
 
+/**
+ * Menghasilkan ref node berikutnya yang belum dipakai (mis. "n1", "n2", ...).
+ * Memindai ref yang sudah ada agar tidak terjadi duplikasi.
+ */
+function nextNodeRef(existingNodes: FlowNode[]): string {
+  const usedRefs = new Set(
+    existingNodes
+      .map((node) => node.data.ref)
+      .filter((ref): ref is string => Boolean(ref)),
+  );
+
+  let candidateIndex = 1;
+
+  while (usedRefs.has(`n${candidateIndex}`)) {
+    candidateIndex += 1;
+  }
+
+  return `n${candidateIndex}`;
+}
+
 export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
   workflowId: null,
   name: "",
@@ -101,7 +121,12 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
         x: 320 + get().nodes.length * 40,
         y: 120 + get().nodes.length * 70,
       },
-      data: { kind: nodeKind, label: nodeTypeDefinition.label, config: {} },
+      data: {
+        kind: nodeKind,
+        label: nodeTypeDefinition.label,
+        ref: nextNodeRef(get().nodes),
+        config: {},
+      },
     };
 
     set((state) => ({ nodes: [...state.nodes, newNode], isDirty: true }));
@@ -163,19 +188,60 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
       { spreadsheetId: string; credentialId: string; range?: string }
     >();
 
-    get().nodes.forEach((node) => {
+    const allNodes = get().nodes;
+
+    /**
+     * Mengubah nilai spreadsheetId yang berupa referensi `{{ref.spreadsheetId}}`
+     * menjadi ID asli yang tersimpan di node ber-ref tersebut (mis. node
+     * google_sheets_create). Mengembalikan node sumber agar credentialId-nya
+     * bisa diwarisi bila node saat ini belum memilih kredensial.
+     */
+    const resolveSpreadsheetRef = (
+      rawSpreadsheetId: string,
+    ): { spreadsheetId: string; sourceNode?: FlowNode } => {
+      const referenceMatch = rawSpreadsheetId.match(
+        /^\{\{\s*([^.}]+)\.spreadsheetId\s*\}\}$/,
+      );
+
+      if (!referenceMatch) {
+        return { spreadsheetId: rawSpreadsheetId };
+      }
+
+      const referencedRef = referenceMatch[1].trim();
+
+      const referencedNode = allNodes.find(
+        (candidate) => candidate.data.ref === referencedRef,
+      );
+
+      const resolvedId = String(
+        referencedNode?.data.config?.spreadsheetId ?? "",
+      ).trim();
+
+      return { spreadsheetId: resolvedId, sourceNode: referencedNode };
+    };
+
+    allNodes.forEach((node) => {
       const isSheetNode =
         node.data.kind === "google_sheets_read" ||
         node.data.kind === "google_sheets_trigger" ||
         node.data.kind === "google_sheets_update" ||
         node.data.kind === "google_sheets_append";
 
-      const spreadsheetId = String(
+      if (!isSheetNode) {
+        return;
+      }
+
+      const rawSpreadsheetId = String(
         node.data.config?.spreadsheetId ?? "",
       ).trim();
-      const credentialId = node.data.credentialId ?? "";
 
-      if (isSheetNode && spreadsheetId && credentialId) {
+      const { spreadsheetId, sourceNode } =
+        resolveSpreadsheetRef(rawSpreadsheetId);
+
+      const credentialId =
+        node.data.credentialId || sourceNode?.data.credentialId || "";
+
+      if (spreadsheetId && credentialId) {
         sources.set(spreadsheetId, {
           spreadsheetId,
           credentialId,

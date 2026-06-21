@@ -39,6 +39,11 @@ interface TelegramUpdate {
     message?: {
       message_id?: number;
       chat?: { id?: number | string };
+      reply_markup?: {
+        inline_keyboard?: Array<
+          Array<{ text?: string; callback_data?: string }>
+        >;
+      };
     };
     from?: { first_name?: string; username?: string };
   };
@@ -214,6 +219,34 @@ export async function POST(
           data: { callback_query_id: callbackQuery.id },
         },
       ).catch(() => undefined);
+
+      /**
+       * Cari label tombol yang ditekan dari inline keyboard pesan asal, lalu
+       * kirim pesan baru terpisah "Anda memilih: <label>" agar pengguna tahu
+       * responsnya tercatat (bot tidak bisa mengirim bubble atas nama user).
+       */
+      const inlineKeyboard =
+        callbackQuery.message?.reply_markup?.inline_keyboard ?? [];
+
+      const chosenButton = inlineKeyboard
+        .flat()
+        .find((button) => button.callback_data === callbackText);
+
+      const chosenLabel = chosenButton?.text ?? callbackText;
+
+      if (callbackChatId !== undefined && callbackChatId !== null) {
+        await requestExternal(
+          `https://api.telegram.org/bot${token}/sendMessage`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            data: {
+              chat_id: callbackChatId,
+              text: `Anda memilih: ${chosenLabel}`,
+            },
+          },
+        ).catch(() => undefined);
+      }
 
       /**
        * Hapus tombol inline dari pesan asal setelah ditekan agar tidak bisa

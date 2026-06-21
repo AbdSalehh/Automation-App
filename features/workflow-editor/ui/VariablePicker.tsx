@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { BracesIcon, ChevronRightIcon, SearchIcon } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
-import { Input } from "@/shared/ui";
+import { Input, SimpleTooltip } from "@/shared/ui";
 import { cn } from "@/shared/lib/utils";
 
 /** A group of insertable variables shown in the picker. */
@@ -58,17 +58,18 @@ export function VariablePicker({
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <button
-          type="button"
-          title="Sisipkan variabel"
-          className={cn(
-            "border-border bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-medium transition-colors",
-            className,
-          )}
-        >
-          <BracesIcon className="size-3.5" />
-          Variabel
-        </button>
+        <SimpleTooltip label="Sisipkan variabel">
+          <button
+            type="button"
+            className={cn(
+              "border-border bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-medium transition-colors",
+              className,
+            )}
+          >
+            <BracesIcon className="size-3.5" />
+            Variabel
+          </button>
+        </SimpleTooltip>
       </PopoverTrigger>
 
       <PopoverContent className="w-72 p-0" align="end">

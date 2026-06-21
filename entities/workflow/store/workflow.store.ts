@@ -37,6 +37,7 @@ interface WorkflowEditorState {
   getSheetSources: () => Array<{
     spreadsheetId: string;
     credentialId: string;
+    sheetName?: string;
     range?: string;
   }>;
   saveWorkflow: () => Promise<void>;
@@ -185,7 +186,12 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
   getSheetSources: () => {
     const sources = new Map<
       string,
-      { spreadsheetId: string; credentialId: string; range?: string }
+      {
+        spreadsheetId: string;
+        credentialId: string;
+        sheetName?: string;
+        range?: string;
+      }
     >();
 
     const allNodes = get().nodes;
@@ -241,10 +247,15 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
       const credentialId =
         node.data.credentialId || sourceNode?.data.credentialId || "";
 
+      const sheetName = node.data.config?.sheetName
+        ? String(node.data.config.sheetName).trim()
+        : undefined;
+
       if (spreadsheetId && credentialId) {
         sources.set(spreadsheetId, {
           spreadsheetId,
           credentialId,
+          sheetName,
           range: node.data.config?.range
             ? String(node.data.config.range)
             : undefined,

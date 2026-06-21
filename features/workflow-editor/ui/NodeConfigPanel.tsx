@@ -22,6 +22,7 @@ import {
   MultiSelect,
   Spinner,
   ScrollArea,
+  SimpleTooltip,
 } from "@/shared/ui";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import {
@@ -620,16 +621,23 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(sheetSources), fetchColumns]);
 
-  /** Auto-refresh columns when spreadsheetId or credentialId changes. */
+  /** Auto-refresh columns when spreadsheetId, credentialId, or sheet changes. */
   useEffect(() => {
     const spreadsheetId = String(node.data.config.spreadsheetId ?? "").trim();
     const credentialId = node.data.credentialId ?? "";
+    const sheetName = node.data.config.sheetName
+      ? String(node.data.config.sheetName).trim()
+      : undefined;
 
     if (spreadsheetId && credentialId) {
-      fetchColumns({ spreadsheetId, credentialId });
+      fetchColumns({ spreadsheetId, credentialId, sheetName });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [node.data.config.spreadsheetId, node.data.credentialId]);
+  }, [
+    node.data.config.spreadsheetId,
+    node.data.credentialId,
+    node.data.config.sheetName,
+  ]);
 
   const updateConfigValue = (configKey: string, configValue: unknown) =>
     updateNodeData(node.id, {
@@ -863,19 +871,20 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                       }
                     />
 
-                    <Button
-                      variant="outline"
-                      size="icon-sm"
-                      type="button"
-                      title="Preview data spreadsheet"
-                      disabled={
-                        !node.data.config.spreadsheetId ||
-                        !node.data.credentialId
-                      }
-                      onClick={handlePreviewData}
-                    >
-                      <TableIcon className="size-4" />
-                    </Button>
+                    <SimpleTooltip label="Preview data spreadsheet">
+                      <Button
+                        variant="outline"
+                        size="icon-sm"
+                        type="button"
+                        disabled={
+                          !node.data.config.spreadsheetId ||
+                          !node.data.credentialId
+                        }
+                        onClick={handlePreviewData}
+                      >
+                        <TableIcon className="size-4" />
+                      </Button>
+                    </SimpleTooltip>
                   </div>
                 </div>
 
@@ -1209,15 +1218,16 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                     </Select>
 
                     {sheetSources.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={handleRefreshColumns}
-                        className="text-primary shrink-0 text-sm hover:underline disabled:opacity-50"
-                        disabled={isLoadingColumns}
-                        title="Muat ulang kolom dari spreadsheet"
-                      >
-                        ↻
-                      </button>
+                      <SimpleTooltip label="Muat ulang kolom dari spreadsheet">
+                        <button
+                          type="button"
+                          onClick={handleRefreshColumns}
+                          className="text-primary shrink-0 text-sm hover:underline disabled:opacity-50"
+                          disabled={isLoadingColumns}
+                        >
+                          ↻
+                        </button>
+                      </SimpleTooltip>
                     )}
                   </div>
                 ) : configField.multiline ? (
@@ -1246,19 +1256,20 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                       }
                     />
 
-                    <Button
-                      variant="outline"
-                      size="icon-sm"
-                      type="button"
-                      title="Preview data spreadsheet"
-                      disabled={
-                        !node.data.config[configField.key] ||
-                        !node.data.credentialId
-                      }
-                      onClick={handlePreviewData}
-                    >
-                      <TableIcon className="size-4" />
-                    </Button>
+                    <SimpleTooltip label="Preview data spreadsheet">
+                      <Button
+                        variant="outline"
+                        size="icon-sm"
+                        type="button"
+                        disabled={
+                          !node.data.config[configField.key] ||
+                          !node.data.credentialId
+                        }
+                        onClick={handlePreviewData}
+                      >
+                        <TableIcon className="size-4" />
+                      </Button>
+                    </SimpleTooltip>
                   </div>
                 ) : (
                   <Input

@@ -53,3 +53,10 @@ export {
   AlertDialogTrigger,
 } from "./alert-dialog";
 export { ConfirmDialog } from "./ConfirmDialog";
+export {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from "./tooltip";
+export { SimpleTooltip } from "./SimpleTooltip";

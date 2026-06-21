@@ -2,7 +2,14 @@
 
 import { useMemo, useState } from "react";
 import { PlusIcon, SearchIcon } from "lucide-react";
-import { Button, Input, Icon, BrandIcon, ScrollArea } from "@/shared/ui";
+import {
+  Button,
+  Input,
+  Icon,
+  BrandIcon,
+  ScrollArea,
+  SimpleTooltip,
+} from "@/shared/ui";
 import { cn } from "@/shared/lib/utils";
 import {
   NODE_TYPES,
@@ -147,31 +154,34 @@ export function NodePalette() {
 
                 <div className="grid grid-cols-2 gap-2">
                   {visibleEntries.map((entry) => (
-                    <button
-                      key={entry.id}
-                      type="button"
-                      title={entry.description}
-                      onClick={() => addNodeByKind(entry.defaultKind)}
-                      className="border-border bg-background hover:border-primary/40 hover:bg-accent flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition-colors"
-                    >
-                      <span
-                        className={cn(
-                          "grid size-6 shrink-0 place-items-center rounded-md",
-                          entry.brand
-                            ? "ring-border bg-white ring-1"
-                            : CATEGORY_ICON_STYLES[category],
-                        )}
+                    <SimpleTooltip key={entry.id} label={entry.description}>
+                      <button
+                        type="button"
+                        onClick={() => addNodeByKind(entry.defaultKind)}
+                        className="border-border bg-background hover:border-primary/40 hover:bg-accent flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition-colors"
                       >
-                        {entry.brand ? (
-                          <BrandIcon name={entry.brand} className="size-3.5" />
-                        ) : (
-                          <Icon name={entry.icon} className="size-3.5" />
-                        )}
-                      </span>
-                      <span className="text-foreground truncate text-xs font-medium">
-                        {entry.label}
-                      </span>
-                    </button>
+                        <span
+                          className={cn(
+                            "grid size-6 shrink-0 place-items-center rounded-md",
+                            entry.brand
+                              ? "ring-border bg-white ring-1"
+                              : CATEGORY_ICON_STYLES[category],
+                          )}
+                        >
+                          {entry.brand ? (
+                            <BrandIcon
+                              name={entry.brand}
+                              className="size-3.5"
+                            />
+                          ) : (
+                            <Icon name={entry.icon} className="size-3.5" />
+                          )}
+                        </span>
+                        <span className="text-foreground truncate text-xs font-medium">
+                          {entry.label}
+                        </span>
+                      </button>
+                    </SimpleTooltip>
                   ))}
                 </div>
               </div>

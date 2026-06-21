@@ -12,7 +12,7 @@ import {
   SettingsIcon,
 } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
-import { Button, Spinner } from "@/shared/ui";
+import { Button, Spinner, SimpleTooltip } from "@/shared/ui";
 import { useWorkflowStore } from "@/entities/workflow";
 import { exportWorkflow } from "@/widgets/workflow-list";
 
@@ -138,17 +138,18 @@ function ControlButton({
   children,
 }: ControlButtonProps) {
   return (
-    <button
-      type="button"
-      title={label}
-      aria-label={label}
-      onClick={onClick}
-      className={cn(
-        "text-muted-foreground hover:bg-muted hover:text-foreground grid size-8 place-items-center rounded-lg transition-colors",
-        isActive && "bg-primary/10 text-primary",
-      )}
-    >
-      {children}
-    </button>
+    <SimpleTooltip label={label}>
+      <button
+        type="button"
+        aria-label={label}
+        onClick={onClick}
+        className={cn(
+          "text-muted-foreground hover:bg-muted hover:text-foreground grid size-8 place-items-center rounded-lg transition-colors",
+          isActive && "bg-primary/10 text-primary",
+        )}
+      >
+        {children}
+      </button>
+    </SimpleTooltip>
   );
 }

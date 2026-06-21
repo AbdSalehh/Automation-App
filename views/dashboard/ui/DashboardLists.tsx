@@ -8,7 +8,7 @@ import {
   GlobeIcon,
   SheetIcon,
 } from "lucide-react";
-import { Badge, BrandIcon } from "@/shared/ui";
+import { Badge, BrandIcon, type BrandIconName } from "@/shared/ui";
 import { ROUTES } from "@/shared/config/constants";
 import { cn } from "@/shared/lib/utils";
 import { formatDateTime } from "@/shared/lib/formatDate";
@@ -135,32 +135,65 @@ export function DashboardRecentExecutions({
   );
 }
 
-/** Kartu "Encrypted Credentials" pada dashboard (data dummy representatif). */
-export function DashboardCredentials() {
-  const credentials = [
-    { name: "Google Service Account", brand: "google-sheets" as const },
-    { name: "WhatsApp Business", brand: "whatsapp" as const },
-    { name: "Gmail SMTP", brand: "gmail" as const },
-    { name: "Telegram Bot", brand: "telegram" as const },
-  ];
+interface DashboardCredentialItem {
+  id: string;
+  type: string;
+  name: string;
+}
+
+interface DashboardCredentialsProps {
+  credentials: DashboardCredentialItem[];
+}
+
+/**
+ * Memetakan tipe kredensial ke ikon brand yang tersedia di `shared/ui`. Tipe
+ * yang tidak punya ikon khusus jatuh ke ikon webhook generik.
+ */
+const CREDENTIAL_TYPE_ICON: Record<string, BrandIconName> = {
+  whatsapp: "whatsapp",
+  whatsapp_oauth: "whatsapp",
+  telegram: "telegram",
+  telegram_personal: "telegram",
+  agent_chat: "telegram",
+  gemini: "gemini",
+  ai: "openai-chatgpt",
+  gmail: "gmail",
+  google_oauth: "google-sheets",
+  google_service_account: "google-sheets",
+  google_calendar: "google-calendar",
+  http: "webhook",
+};
+
+/** Kartu "Encrypted Credentials" pada dashboard (data nyata). */
+export function DashboardCredentials({
+  credentials,
+}: DashboardCredentialsProps) {
+  const recent = credentials.slice(0, 5);
 
   return (
     <CardShell title="Encrypted Credentials" href={ROUTES.credentials}>
-      {credentials.map((credential) => (
-        <div
-          key={credential.name}
-          className="flex items-center gap-3 rounded-lg px-2 py-2"
-        >
-          <BrandIcon name={credential.brand} className="size-5 shrink-0" />
-          <span className="text-foreground flex-1 truncate text-sm font-medium">
-            {credential.name}
-          </span>
-          <span className="text-muted-foreground font-mono text-xs tracking-widest">
-            ••••••••
-          </span>
-          <Badge variant="success">AES-256-GCM</Badge>
-        </div>
-      ))}
+      {recent.length === 0 ? (
+        <EmptyRow label="Belum ada kredensial." />
+      ) : (
+        recent.map((credential) => (
+          <div
+            key={credential.id}
+            className="flex items-center gap-3 rounded-lg px-2 py-2"
+          >
+            <BrandIcon
+              name={CREDENTIAL_TYPE_ICON[credential.type] ?? "webhook"}
+              className="size-5 shrink-0"
+            />
+            <span className="text-foreground flex-1 truncate text-sm font-medium">
+              {credential.name}
+            </span>
+            <span className="text-muted-foreground font-mono text-xs tracking-widest">
+              ••••••••
+            </span>
+            <Badge variant="success">AES-256-GCM</Badge>
+          </div>
+        ))
+      )}
     </CardShell>
   );
 }

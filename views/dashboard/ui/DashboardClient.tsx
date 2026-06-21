@@ -5,6 +5,8 @@ import { motion } from "motion/react";
 import { staggerContainer, staggerItem } from "@/shared/lib/motion-presets";
 import { useWorkflowListStore } from "@/entities/workflow";
 import { useMetricsStore } from "@/entities/metrics";
+import { useCredentialStore } from "@/entities/credential";
+import { ImportWorkflowButton } from "@/features/manage-workflows";
 import {
   DashboardGreeting,
   DashboardCacheCard,
@@ -29,18 +31,23 @@ interface DashboardClientProps {
 export function DashboardClient({ name }: DashboardClientProps) {
   const { workflows, fetchWorkflows } = useWorkflowListStore();
   const { dashboard, fetchDashboardMetrics } = useMetricsStore();
+  const { credentials, fetchCredentials } = useCredentialStore();
 
   useEffect(() => {
     fetchWorkflows();
     fetchDashboardMetrics();
-  }, [fetchWorkflows, fetchDashboardMetrics]);
+    fetchCredentials();
+  }, [fetchWorkflows, fetchDashboardMetrics, fetchCredentials]);
 
   const executionTrend =
     dashboard?.dailyTrend.map((point) => point.total) ?? [];
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8">
-      <DashboardGreeting name={name} />
+      <div className="flex items-start justify-between gap-4">
+        <DashboardGreeting name={name} />
+        <ImportWorkflowButton />
+      </div>
 
       <DashboardOverviewPanel />
 
@@ -67,7 +74,7 @@ export function DashboardClient({ name }: DashboardClientProps) {
           />
         </motion.div>
         <motion.div variants={staggerItem} className="flex flex-col gap-5">
-          <DashboardCredentials />
+          <DashboardCredentials credentials={credentials} />
           <DashboardCacheCard />
         </motion.div>
       </motion.div>

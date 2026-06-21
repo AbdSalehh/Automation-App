@@ -106,14 +106,100 @@ export const googleSheetsCreateHandler: NodeHandler = async ({
     throw new Error("Google Sheets: spreadsheetId tidak diterima dari API");
   }
 
+  const newSpreadsheetId = body.spreadsheetId;
+
+  /**
+   * Seed isi awal: baris header (config.headers) lalu baris data dummy
+   * (config.seedRows). `headers` boleh berupa array atau string dipisah koma.
+   * `seedRows` boleh array sel mentah atau objek yang dipetakan ke urutan
+   * header. Tanpa header, langkah ini dilewati.
+   */
+  const headers = normalizeHeaders(config.headers);
+
+  if (headers.length > 0) {
+    const seedRows = normalizeSeedRows(config.seedRows, headers, firstItem);
+
+    const seedValues = [headers, ...seedRows];
+
+    const seedResponse = await requestExternal(
+      `https://sheets.googleapis.com/v4/spreadsheets/${newSpreadsheetId}/values/${encodeURIComponent(`${sheetName}!A1`)}:append?valueInputOption=USER_ENTERED`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        data: { values: seedValues },
+      },
+    );
+
+    if (!seedResponse.ok) {
+      throw new Error("Google Sheets: gagal mengisi data awal spreadsheet");
+    }
+  }
+
   return {
-    spreadsheetId: body.spreadsheetId,
+    spreadsheetId: newSpreadsheetId,
     spreadsheetUrl:
       body.spreadsheetUrl ??
-      `https://docs.google.com/spreadsheets/d/${body.spreadsheetId}`,
+      `https://docs.google.com/spreadsheets/d/${newSpreadsheetId}`,
     sheetName,
   };
 };
+
+/**
+ * Menormalkan daftar header dari config menjadi array string. Menerima array
+ * atau string dipisah koma.
+ */
+function normalizeHeaders(rawHeaders: unknown): string[] {
+  if (Array.isArray(rawHeaders)) {
+    return rawHeaders.map((header) => String(header).trim()).filter(Boolean);
+  }
+
+  if (typeof rawHeaders === "string") {
+    return rawHeaders
+      .split(",")
+      .map((header) => header.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+/**
+ * Menormalkan baris data dummy menjadi array array sel. Tiap baris boleh berupa
+ * array sel mentah, atau objek yang dipetakan ke urutan `headers`. Nilai
+ * mendukung template `{{...}}` terhadap item input pertama.
+ */
+function normalizeSeedRows(
+  rawSeedRows: unknown,
+  headers: string[],
+  templateItem: Item,
+): string[][] {
+  if (!Array.isArray(rawSeedRows)) {
+    return [];
+  }
+
+  return rawSeedRows.map((row) => {
+    if (Array.isArray(row)) {
+      return row.map((cell) =>
+        stringifyCell(resolveTemplate(String(cell ?? ""), templateItem)),
+      );
+    }
+
+    if (row && typeof row === "object") {
+      const rowObject = row as Record<string, unknown>;
+
+      return headers.map((header) =>
+        stringifyCell(
+          resolveTemplate(String(rowObject[header] ?? ""), templateItem),
+        ),
+      );
+    }
+
+    return [stringifyCell(row)];
+  });
+}
 
 /** Google Sheets Append — menambah baris ke spreadsheet. */
 export const googleSheetsAppendHandler: NodeHandler = async ({

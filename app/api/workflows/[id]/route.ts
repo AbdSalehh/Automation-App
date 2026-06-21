@@ -79,6 +79,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
       nodes?: FlowNode[];
       edges?: FlowEdge[];
       isPublished?: boolean;
+      bumpVersion?: boolean;
     };
 
     const updateData: Record<string, unknown> = {};
@@ -99,8 +100,12 @@ export async function PUT(request: Request, { params }: RouteParams) {
       updateData.isPublished = body.isPublished;
     }
 
-    // Bump version whenever the graph changes.
-    if (updateData.nodes || updateData.edges) {
+    /**
+     * Versi hanya naik saat pengguna menekan Simpan secara eksplisit
+     * (bumpVersion === true) dan graf berubah. Auto-save saat Run tidak
+     * menaikkan versi.
+     */
+    if (body.bumpVersion && (updateData.nodes || updateData.edges)) {
       updateData.version = existingWorkflow.version + 1;
     }
 

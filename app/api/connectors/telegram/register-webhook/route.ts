@@ -65,7 +65,10 @@ export async function POST(request: Request) {
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        data: { url: webhookUrl, allowed_updates: ["message"] },
+        data: {
+          url: webhookUrl,
+          allowed_updates: ["message", "callback_query"],
+        },
       },
     );
 

@@ -7,6 +7,7 @@ import {
 } from "./agentPendingStore";
 import { runWorkflow } from "@/shared/server/engine";
 import { buildWorkflowFromPrompt } from "@/shared/server/workflowBuilder";
+import { materializeSpreadsheet } from "./materializeSpreadsheet";
 import type { AiChain } from "@/shared/server/ai/types";
 import type { FlowNode } from "@/entities/workflow/model/workflow.model";
 import {
@@ -150,6 +151,19 @@ async function buildAndReply(
     existingContext,
   );
 
+  /**
+   * Bila workflow memakai spreadsheet baru, buat spreadsheet sungguhan (beserta
+   * header + data dummy) sekarang lalu tanam spreadsheetId asli ke node terkait.
+   * Gagal-aman: bila kredensial Google belum ada, nodes tetap seperti semula.
+   */
+  const materialized = await materializeSpreadsheet(
+    built.nodes,
+    ownerId,
+    existingWorkflowId ?? "agent-build",
+  );
+
+  built.nodes = materialized.nodes;
+
   const nodeSummary = built.nodes
     .map((node) => `• ${escapeHtml(node.data.label)}`)
     .join("\n");
@@ -213,6 +227,12 @@ async function buildAndReply(
     message += `\n\n⚠️ Beberapa node masih perlu kredensial:\n${missingSummary}\n\nLengkapi di aplikasi (menu <u>Credentials</u>), lalu publikasikan workflow.`;
   } else {
     message += `\n\n🔌 Semua kredensial sudah terpasang otomatis. Buka aplikasi untuk meninjau & mempublikasikan.`;
+  }
+
+  if (materialized.spreadsheetUrl) {
+    message += `\n\n📊 Spreadsheet baru sudah dibuat: ${escapeHtml(
+      materialized.spreadsheetUrl,
+    )}`;
   }
 
   await reply(message);

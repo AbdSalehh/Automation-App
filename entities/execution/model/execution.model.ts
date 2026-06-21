@@ -4,8 +4,12 @@ export type LogLevel = "info" | "warn" | "error";
 export interface NodeLog {
   id: string;
   nodeId: string;
+  /** Nama node yang ramah dibaca, di-resolve dari definisi workflow. */
+  nodeLabel?: string;
   status: "success" | "failed" | "skipped";
   output: unknown;
+  /** Pesan error spesifik bila node gagal. */
+  errorMessage?: string | null;
   timestamp: string;
 }
 

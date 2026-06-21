@@ -26,6 +26,8 @@ interface WorkflowEditorState {
   loadWorkflow: (workflowId: string) => Promise<void>;
   setName: (name: string) => void;
   setNodes: (nodes: FlowNode[]) => void;
+  /** Memperbarui nodes tanpa menandai dirty (mis. perubahan seleksi/dimensi). */
+  setNodesSilent: (nodes: FlowNode[]) => void;
   setEdges: (edges: FlowEdge[]) => void;
   addNodeByKind: (nodeKind: NodeKind) => void;
   updateNodeData: (nodeId: string, data: Partial<FlowNode["data"]>) => void;
@@ -82,6 +84,7 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
 
   setName: (name) => set({ name, isDirty: true }),
   setNodes: (nodes) => set({ nodes, isDirty: true }),
+  setNodesSilent: (nodes) => set({ nodes }),
   setEdges: (edges) => set({ edges, isDirty: true }),
 
   addNodeByKind: (nodeKind) => {
@@ -201,6 +204,7 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
         nodes,
         edges,
         isPublished,
+        bumpVersion: true,
       });
 
       set(applyWorkflow(updatedWorkflow));
@@ -212,7 +216,7 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
   },
 
   executeWorkflow: async () => {
-    const { workflowId, isDirty, saveWorkflow } = get();
+    const { workflowId, isDirty, name, nodes, edges, isPublished } = get();
 
     if (!workflowId) {
       return;
@@ -221,8 +225,20 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
     set({ isExecuting: true, errorMessage: null });
 
     try {
+      /**
+       * Auto-save sebelum run agar eksekusi memakai definisi terbaru, TANPA
+       * menaikkan versi (versi hanya naik saat Simpan eksplisit).
+       */
       if (isDirty) {
-        await saveWorkflow();
+        const updatedWorkflow = await workflowService.update(workflowId, {
+          name,
+          nodes,
+          edges,
+          isPublished,
+          bumpVersion: false,
+        });
+
+        set(applyWorkflow(updatedWorkflow));
       }
 
       const { executionId } = await workflowService.execute(workflowId);

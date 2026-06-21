@@ -7,8 +7,13 @@ import {
   BracesIcon,
   ZoomInIcon,
   ZoomOutIcon,
+  SaveIcon,
+  DownloadIcon,
 } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
+import { Button, Spinner } from "@/shared/ui";
+import { useWorkflowStore } from "@/entities/workflow";
+import { exportWorkflow } from "@/widgets/workflow-list";
 
 interface CanvasControlsProps {
   isMiniMapVisible: boolean;
@@ -17,9 +22,9 @@ interface CanvasControlsProps {
 }
 
 /**
- * Custom React Flow controls matching the editor design: a rounded tool group
- * at the bottom-left (minimap toggle, fit-view, JSON) and a zoom pill at the
- * bottom-right.
+ * Kontrol kanvas kustom mengikuti desain editor: grup alat di kiri bawah
+ * (toggle minimap, fit-view, lihat JSON, ekspor) dan grup kanan bawah berisi
+ * tombol Simpan + kendali zoom. Versi workflow hanya naik saat Simpan ditekan.
  */
 export function CanvasControls({
   isMiniMapVisible,
@@ -30,6 +35,13 @@ export function CanvasControls({
 
   const zoomLevel = useStore((state) => state.transform[2]);
   const zoomPercent = Math.round(zoomLevel * 100);
+
+  const { name, nodes, edges, isDirty, isSaving, saveWorkflow } =
+    useWorkflowStore();
+
+  const handleExport = () => {
+    exportWorkflow({ name, nodes, edges });
+  };
 
   return (
     <>
@@ -53,32 +65,48 @@ export function CanvasControls({
           <ControlButton label="Lihat JSON" onClick={onShowJson}>
             <BracesIcon className="size-4" />
           </ControlButton>
+
+          <ControlButton label="Ekspor workflow" onClick={handleExport}>
+            <DownloadIcon className="size-4" />
+          </ControlButton>
         </div>
       </Panel>
 
       <Panel position="bottom-right">
-        <div className="border-border bg-card/90 flex items-center gap-0.5 rounded-xl border p-1 shadow-lg backdrop-blur">
-          <ControlButton
-            label="Perkecil"
-            onClick={() => zoomOut({ duration: 200 })}
+        <div className="flex items-center gap-2">
+          <Button
+            variant={isDirty ? "default" : "outline"}
+            size="sm"
+            onClick={saveWorkflow}
+            disabled={isSaving || !isDirty}
           >
-            <ZoomOutIcon className="size-4" />
-          </ControlButton>
+            {isSaving ? <Spinner /> : <SaveIcon className="size-4" />}
+            {isSaving ? "Menyimpan…" : isDirty ? "Simpan" : "Tersimpan"}
+          </Button>
 
-          <button
-            type="button"
-            onClick={() => fitView({ duration: 300 })}
-            className="text-foreground hover:bg-muted min-w-12 rounded-lg px-2 py-1.5 text-xs font-semibold tabular-nums transition-colors"
-          >
-            {zoomPercent}%
-          </button>
+          <div className="border-border bg-card/90 flex items-center gap-0.5 rounded-xl border p-1 shadow-lg backdrop-blur">
+            <ControlButton
+              label="Perkecil"
+              onClick={() => zoomOut({ duration: 200 })}
+            >
+              <ZoomOutIcon className="size-4" />
+            </ControlButton>
 
-          <ControlButton
-            label="Perbesar"
-            onClick={() => zoomIn({ duration: 200 })}
-          >
-            <ZoomInIcon className="size-4" />
-          </ControlButton>
+            <button
+              type="button"
+              onClick={() => fitView({ duration: 300 })}
+              className="text-foreground hover:bg-muted min-w-12 rounded-lg px-2 py-1.5 text-xs font-semibold tabular-nums transition-colors"
+            >
+              {zoomPercent}%
+            </button>
+
+            <ControlButton
+              label="Perbesar"
+              onClick={() => zoomIn({ duration: 200 })}
+            >
+              <ZoomInIcon className="size-4" />
+            </ControlButton>
+          </div>
         </div>
       </Panel>
     </>

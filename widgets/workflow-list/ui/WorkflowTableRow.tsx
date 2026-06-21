@@ -10,13 +10,15 @@ import {
   XCircleIcon,
   MoreVerticalIcon,
   Trash2Icon,
+  DownloadIcon,
 } from "lucide-react";
-import { Badge, Sparkline } from "@/shared/ui";
+import { Badge, Sparkline, toast } from "@/shared/ui";
 import { ROUTES } from "@/shared/config/constants";
 import { cn } from "@/shared/lib/utils";
 import { staggerItem } from "@/shared/lib/motion-presets";
-import type { WorkflowSummary } from "@/entities/workflow";
+import { workflowService, type WorkflowSummary } from "@/entities/workflow";
 import { deriveWorkflowMetrics } from "../lib/workflowMetrics";
+import { exportWorkflow } from "../lib/workflowTransfer";
 
 interface WorkflowTableRowProps {
   workflow: WorkflowSummary;
@@ -46,6 +48,24 @@ export function WorkflowTableRow({
   const TriggerIcon = TRIGGER_ICONS[metrics.triggerType] ?? ClockIcon;
   const statusBadge = STATUS_BADGE[metrics.status];
   const isActive = metrics.status === "active";
+
+  /**
+   * Ekspor mengambil definisi lengkap (nodes/edges) lebih dulu karena ringkasan
+   * baris tidak memuatnya, lalu mengunduhnya sebagai berkas JSON.
+   */
+  const handleExport = async () => {
+    try {
+      const detail = await workflowService.getById(workflow.id);
+
+      exportWorkflow({
+        name: detail.name,
+        nodes: detail.nodes,
+        edges: detail.edges,
+      });
+    } catch {
+      toast.error("Gagal mengekspor workflow");
+    }
+  };
 
   return (
     <motion.tr
@@ -155,6 +175,14 @@ export function WorkflowTableRow({
 
       <td className="px-4 py-3">
         <div className="flex items-center justify-end gap-1">
+          <button
+            type="button"
+            onClick={handleExport}
+            className="text-muted-foreground hover:bg-accent hover:text-foreground grid size-8 place-items-center rounded-md"
+            aria-label="Ekspor workflow"
+          >
+            <DownloadIcon className="size-4" />
+          </button>
           <button
             type="button"
             onClick={() => onRemove(workflow.id)}

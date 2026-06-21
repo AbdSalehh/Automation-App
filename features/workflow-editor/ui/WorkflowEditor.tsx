@@ -33,8 +33,15 @@ import { FlowInfoPanel } from "./FlowInfoPanel";
 import { useRunAnimation } from "../model/useRunAnimation";
 
 export function WorkflowEditor() {
-  const { nodes, edges, setNodes, setEdges, workflowId, isExecuting } =
-    useWorkflowStore();
+  const {
+    nodes,
+    edges,
+    setNodes,
+    setNodesSilent,
+    setEdges,
+    workflowId,
+    isExecuting,
+  } = useWorkflowStore();
 
   const {
     realtimeExecutionId,
@@ -196,9 +203,25 @@ export function WorkflowEditor() {
         changes,
         nodes as unknown as Node[],
       );
+
+      /**
+       * ReactFlow memicu perubahan `select`/`dimensions` saat node diklik atau
+       * diukur, bukan suntingan nyata. Perubahan seperti ini tidak boleh
+       * menandai workflow "belum disimpan". Hanya perubahan lain (geser posisi,
+       * tambah, hapus) yang menandai dirty.
+       */
+      const isNonDirtyChange = changes.every(
+        (change) => change.type === "select" || change.type === "dimensions",
+      );
+
+      if (isNonDirtyChange) {
+        setNodesSilent(updatedNodes as unknown as FlowNode[]);
+        return;
+      }
+
       setNodes(updatedNodes as unknown as FlowNode[]);
     },
-    [nodes, setNodes],
+    [nodes, setNodes, setNodesSilent],
   );
 
   const handleEdgesChange = useCallback(

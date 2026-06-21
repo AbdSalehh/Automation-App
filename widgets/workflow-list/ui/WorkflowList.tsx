@@ -7,7 +7,10 @@ import { LayoutGridIcon, ListIcon } from "lucide-react";
 import { staggerContainer } from "@/shared/lib/motion-presets";
 import { cn } from "@/shared/lib/utils";
 import { useWorkflowListStore } from "@/entities/workflow";
-import { CreateWorkflowButton } from "@/features/manage-workflows";
+import {
+  CreateWorkflowButton,
+  ImportWorkflowButton,
+} from "@/features/manage-workflows";
 import { WorkflowStatsCards } from "./WorkflowStatsCards";
 import { WorkflowFilterBar, type WorkflowFilters } from "./WorkflowFilterBar";
 import { WorkflowTableRow } from "./WorkflowTableRow";
@@ -118,6 +121,7 @@ export function WorkflowList() {
         </div>
 
         <div className="flex items-center gap-2">
+          <ImportWorkflowButton openAfterImport />
           <CreateWorkflowButton />
           <div className="border-border hidden items-center rounded-lg border p-0.5 sm:flex">
             <span className="bg-accent text-foreground grid size-8 place-items-center rounded-md">

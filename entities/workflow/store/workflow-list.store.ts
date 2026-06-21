@@ -2,7 +2,18 @@ import { create } from "zustand";
 import type * as Ably from "ably";
 import { acquireAblyClient, releaseAblyClient } from "@/shared/lib/ablyClient";
 import { workflowService } from "../service/workflow.service";
-import type { WorkflowSummary } from "../model/workflow.model";
+import type {
+  WorkflowSummary,
+  FlowNode,
+  FlowEdge,
+} from "../model/workflow.model";
+
+/** Data workflow yang diimpor dari berkas JSON (tanpa id/owner/versi). */
+export interface WorkflowImportInput {
+  name: string;
+  nodes: FlowNode[];
+  edges: FlowEdge[];
+}
 
 /**
  * Payload event `workflow-update` yang dipublish server saat workflow
@@ -21,6 +32,7 @@ interface WorkflowListState {
   workflows: WorkflowSummary[];
   isLoading: boolean;
   isCreating: boolean;
+  isImporting: boolean;
   errorMessage: string | null;
 
   /** Channel langganan `workflow-update` lewat koneksi Ably bersama. */
@@ -28,6 +40,7 @@ interface WorkflowListState {
 
   fetchWorkflows: () => Promise<void>;
   createWorkflow: (name: string) => Promise<string | null>;
+  importWorkflow: (transfer: WorkflowImportInput) => Promise<string | null>;
   removeWorkflow: (workflowId: string) => Promise<void>;
   subscribeRealtime: (sessionId: string) => void;
   unsubscribeRealtime: () => void;
@@ -37,6 +50,7 @@ export const useWorkflowListStore = create<WorkflowListState>((set, get) => ({
   workflows: [],
   isLoading: false,
   isCreating: false,
+  isImporting: false,
   errorMessage: null,
   channel: null,
 
@@ -83,6 +97,37 @@ export const useWorkflowListStore = create<WorkflowListState>((set, get) => ({
       return null;
     } finally {
       set({ isCreating: false });
+    }
+  },
+
+  /**
+   * Mengimpor workflow dari berkas JSON: membuat workflow baru lalu menulis
+   * nodes/edges hasil impor, kemudian menyegarkan daftar. Mengembalikan id
+   * workflow baru bila berhasil.
+   */
+  importWorkflow: async (transfer) => {
+    set({ isImporting: true, errorMessage: null });
+
+    try {
+      const createdWorkflow = await workflowService.create({
+        name: transfer.name,
+      });
+
+      await workflowService.update(createdWorkflow.id, {
+        nodes: transfer.nodes,
+        edges: transfer.edges,
+        bumpVersion: true,
+      });
+
+      await get().fetchWorkflows();
+
+      return createdWorkflow.id;
+    } catch {
+      set({ errorMessage: "Gagal mengimpor workflow." });
+
+      return null;
+    } finally {
+      set({ isImporting: false });
     }
   },
 

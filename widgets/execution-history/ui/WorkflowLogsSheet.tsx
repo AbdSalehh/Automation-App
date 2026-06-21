@@ -130,26 +130,42 @@ export function WorkflowLogsSheet({
                             Node Logs
                           </p>
 
-                          <ul className="space-y-1.5 font-mono text-xs">
+                          <ul className="space-y-2 text-xs">
                             {detail.nodeLogs.map((nodeLog) => (
                               <li
                                 key={nodeLog.id}
-                                className="flex items-center gap-2"
+                                className="border-border bg-card rounded-md border p-2"
                               >
-                                <Badge
-                                  variant={
-                                    nodeLog.status === "success"
-                                      ? "success"
-                                      : nodeLog.status === "failed"
-                                        ? "destructive"
-                                        : "info"
-                                  }
-                                >
-                                  {nodeLog.status}
-                                </Badge>
-                                <span className="text-muted-foreground truncate">
-                                  {nodeLog.nodeId}
-                                </span>
+                                <div className="flex items-center gap-2">
+                                  <Badge
+                                    variant={
+                                      nodeLog.status === "success"
+                                        ? "success"
+                                        : nodeLog.status === "failed"
+                                          ? "destructive"
+                                          : "info"
+                                    }
+                                  >
+                                    {nodeLog.status}
+                                  </Badge>
+                                  <span className="text-foreground truncate font-medium">
+                                    {nodeLog.nodeLabel ?? nodeLog.nodeId}
+                                  </span>
+                                </div>
+
+                                {nodeLog.status === "failed" &&
+                                  nodeLog.errorMessage && (
+                                    <p className="text-destructive mt-1.5 font-mono wrap-break-word">
+                                      {nodeLog.errorMessage}
+                                    </p>
+                                  )}
+
+                                {nodeLog.status === "success" &&
+                                  nodeLog.output != null && (
+                                    <pre className="text-muted-foreground bg-muted/60 mt-1.5 max-h-32 overflow-auto rounded p-1.5 font-mono wrap-break-word whitespace-pre-wrap">
+                                      {JSON.stringify(nodeLog.output, null, 2)}
+                                    </pre>
+                                  )}
                               </li>
                             ))}
                           </ul>

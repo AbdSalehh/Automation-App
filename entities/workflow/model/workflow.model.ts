@@ -52,4 +52,6 @@ export interface UpdateWorkflowPayload {
   nodes?: FlowNode[];
   edges?: FlowEdge[];
   isPublished?: boolean;
+  /** Naikkan versi hanya saat Simpan eksplisit, bukan auto-save saat Run. */
+  bumpVersion?: boolean;
 }

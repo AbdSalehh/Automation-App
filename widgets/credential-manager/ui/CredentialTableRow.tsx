@@ -4,6 +4,7 @@ import {
   CheckCircle2Icon,
   AlertTriangleIcon,
   KeyRoundIcon,
+  Sparkles,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { Badge, BrandIcon } from "@/shared/ui";
@@ -32,6 +33,8 @@ export function CredentialTableRow({ credential }: CredentialTableRowProps) {
           <span className="border-border grid size-9 shrink-0 place-items-center rounded-lg border bg-white">
             {metrics.brand ? (
               <BrandIcon name={metrics.brand} className="size-5" />
+            ) : metrics.typeLabel.toLowerCase() === "ai" ? (
+              <Sparkles className="size-4 text-orange-600" />
             ) : (
               <KeyRoundIcon className="size-4 text-orange-600" />
             )}
@@ -58,6 +61,8 @@ export function CredentialTableRow({ credential }: CredentialTableRowProps) {
         <div className="flex items-center gap-2">
           {metrics.brand ? (
             <BrandIcon name={metrics.brand} className="size-4" />
+          ) : metrics.typeLabel.toLowerCase() === "ai" ? (
+            <Sparkles className="text-muted-foreground size-4" />
           ) : (
             <KeyRoundIcon className="text-muted-foreground size-4" />
           )}

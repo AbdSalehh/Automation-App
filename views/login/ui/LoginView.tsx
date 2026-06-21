@@ -1,7 +1,8 @@
 import Image from "next/image";
-import { NetworkIcon, ShieldCheckIcon } from "lucide-react";
-import { APP_NAME } from "@/shared/config/constants";
+import { NetworkIcon, ShieldCheckIcon, Sparkles } from "lucide-react";
+import { APP_NAME, ROUTES } from "@/shared/config/constants";
 import { LoginConsentGate } from "@/features/user-auth";
+import Link from "next/link";
 
 const FEATURE_CARDS = [
   {
@@ -37,20 +38,15 @@ const FEATURE_ICONS = [
  */
 export function LoginView() {
   return (
-    <div className="flex min-h-screen bg-white">
+    <div className="mx-auto flex h-dvh w-full max-w-7xl overflow-hidden bg-white">
       {/* Kolom kiri: banner promosi */}
-      <div className="relative hidden flex-col justify-between overflow-hidden bg-linear-to-br from-orange-50 via-white to-orange-50/40 p-10 lg:flex lg:flex-1 xl:p-14">
-        <div className="z-10 flex items-center gap-2 text-xl font-extrabold tracking-tight">
-          <NetworkIcon className="size-7 text-orange-500" />
-          <span className="text-foreground">{APP_NAME}</span>
-        </div>
-
+      <div className="relative hidden w-[60%]! flex-col justify-between overflow-hidden bg-linear-to-br from-orange-50 via-white to-orange-50/40 p-10 lg:flex lg:flex-1 xl:p-14">
         <div className="z-10 flex max-w-xl flex-col items-start">
           <span className="mb-5 inline-flex items-center gap-1.5 rounded-full bg-orange-100 px-3 py-1.5 text-xs font-bold tracking-wide text-orange-600">
-            ✦ Automate. Simplify. Scale.
+            <Sparkles className="size-4" /> Automate. Simplify. Scale.
           </span>
 
-          <h1 className="text-foreground text-4xl leading-[1.15] font-extrabold tracking-tight xl:text-5xl">
+          <h1 className="text-foreground text-4xl leading-[1.15] font-bold tracking-tight xl:text-5xl">
             Otomatisasi workflow lebih{" "}
             <span className="text-orange-500">mudah</span> &{" "}
             <span className="text-orange-500">cerdas</span>
@@ -60,34 +56,35 @@ export function LoginView() {
             {APP_NAME} membantu Anda membuat, menjalankan, dan mengelola
             workflow otomatis dengan efisien.
           </p>
-
-          <div className="relative my-8 flex w-full justify-center">
-            <Image
-              src="/login-illustration.webp"
-              alt="Ilustrasi otomatisasi workflow"
-              width={520}
-              height={400}
-              priority
-              className="h-auto w-full max-w-lg object-contain"
-            />
-          </div>
+        </div>
+        <div className="absolute top-0 left-0 z-0 flex h-full w-full justify-center">
+          <Image
+            src="/login-illustration.webp"
+            alt="Ilustrasi otomatisasi workflow"
+            width={520}
+            height={400}
+            priority
+            className="h-full! w-full! scale-120 object-contain"
+          />
         </div>
 
-        <div className="z-10 grid w-full max-w-xl grid-cols-3 gap-4">
+        <div className="z-10 grid w-full grid-cols-3 gap-4">
           {FEATURE_CARDS.map((feature, index) => (
             <div
               key={feature.title}
               className="border-border/60 flex flex-col gap-2 rounded-xl border bg-white/80 p-4 shadow-sm backdrop-blur"
             >
-              <div
-                className={`flex size-8 items-center justify-center rounded-lg ${feature.iconColor}`}
-              >
-                {FEATURE_ICONS[index]}
-              </div>
-              <div>
-                <h4 className="text-foreground text-xs font-bold">
+              <div className="flex items-center gap-3">
+                <div
+                  className={`flex size-6 items-center justify-center rounded-lg ${feature.iconColor}`}
+                >
+                  {FEATURE_ICONS[index]}
+                </div>
+                <h4 className="text-foreground text-xs font-semibold">
                   {feature.title}
                 </h4>
+              </div>
+              <div>
                 <p className="text-muted-foreground mt-0.5 text-[10px] leading-tight">
                   {feature.description}
                 </p>
@@ -98,11 +95,11 @@ export function LoginView() {
       </div>
 
       {/* Kolom kanan: kartu login */}
-      <div className="flex flex-1 flex-col items-center justify-center bg-white p-6 sm:p-12">
+      <div className="flex w-[40%]! flex-col items-center justify-center bg-white py-6 sm:py-12">
         <div className="flex w-full max-w-md flex-col">
-          <div className="border-border bg-card flex w-full flex-col gap-7 rounded-3xl border p-8 shadow-xl sm:p-10">
+          <div className="border-border bg-card flex w-full flex-col gap-7 rounded-xl border p-8 shadow-xl sm:p-10">
             <div className="flex flex-col gap-2">
-              <h2 className="text-foreground text-3xl font-extrabold tracking-tight">
+              <h2 className="text-foreground text-2xl font-extrabold tracking-tight">
                 Selamat datang kembali! 👋
               </h2>
               <p className="text-muted-foreground text-sm">
@@ -111,16 +108,18 @@ export function LoginView() {
             </div>
 
             <LoginConsentGate />
-
-            <div className="text-muted-foreground border-border flex items-center justify-center gap-2 border-t pt-5">
-              <ShieldCheckIcon className="size-4 text-emerald-500" />
-              <span className="text-xs">Aman & terenkripsi end-to-end</span>
-            </div>
           </div>
 
           <div className="mt-8 flex w-full justify-center">
             <span className="text-muted-foreground text-center text-xs">
-              © 2026 {APP_NAME}. Semua hak dilindungi.
+              © 2026{" "}
+              <Link
+                href={ROUTES.home}
+                className="font-semibold text-orange-500 hover:text-orange-600 hover:underline"
+              >
+                {APP_NAME}
+              </Link>
+              . Semua hak dilindungi.
             </span>
           </div>
         </div>

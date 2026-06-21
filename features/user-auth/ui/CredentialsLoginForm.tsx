@@ -90,7 +90,7 @@ export function CredentialsLoginForm({
             onChange={(event) => setEmail(event.target.value)}
             autoComplete="email"
             required
-            className="h-12 rounded-xl pl-10"
+            className="h-12 rounded-lg pl-10"
           />
         </div>
       </div>
@@ -110,7 +110,7 @@ export function CredentialsLoginForm({
             onChange={(event) => setPassword(event.target.value)}
             autoComplete="current-password"
             required
-            className="h-12 rounded-xl pr-10 pl-10"
+            className="h-12 rounded-lg pr-10 pl-10"
           />
           <button
             type="button"
@@ -145,10 +145,9 @@ export function CredentialsLoginForm({
       <Button
         type="submit"
         disabled={isLoading || disabled}
-        className="h-12 w-full rounded-xl bg-orange-500 text-base font-bold shadow-sm hover:bg-orange-600"
+        className="h-12 w-full rounded-lg bg-orange-500 text-base font-bold shadow-sm hover:bg-orange-600"
       >
         {isLoading ? "Masuk..." : "Masuk ke Akun"}
-        {!isLoading && <ArrowRightIcon className="size-5" />}
       </Button>
     </form>
   );

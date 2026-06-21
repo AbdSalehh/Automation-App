@@ -78,7 +78,7 @@ export function LegalPage({
                 Legal
               </span>
 
-              <h1 className="text-foreground text-4xl font-extrabold tracking-tight md:text-5xl">
+              <h1 className="text-foreground text-4xl font-bold tracking-tight md:text-5xl">
                 {title}
               </h1>
 
@@ -92,14 +92,14 @@ export function LegalPage({
               </div>
             </div>
 
-            <div className="flex flex-1 justify-center md:justify-end">
+            <div className="absolute -top-10 right-0 flex flex-1 justify-center md:justify-end">
               <Image
                 src={illustration}
                 alt={`Ilustrasi ${title}`}
                 width={460}
                 height={320}
                 priority
-                className="h-auto w-full max-w-md object-contain"
+                className="h-auto w-full max-w-xl! object-contain"
               />
             </div>
           </div>
@@ -153,7 +153,7 @@ export function LegalPage({
                                 <span className="text-xs font-bold text-orange-500">
                                   {numStr}
                                 </span>
-                                <h3 className="text-foreground text-base font-bold">
+                                <h3 className="text-foreground text-base font-semibold!">
                                   {section.heading}
                                 </h3>
                               </div>
@@ -195,7 +195,7 @@ export function LegalPage({
                         <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-orange-50 text-xs font-bold text-orange-500">
                           {numStr}
                         </span>
-                        <h3 className="text-foreground text-base font-bold">
+                        <h3 className="text-foreground text-base font-semibold!">
                           {section.heading}
                         </h3>
                       </div>
@@ -213,13 +213,6 @@ export function LegalPage({
                     </div>
                   );
                 })}
-
-                <div className="flex justify-center py-6">
-                  <button className="border-border hover:bg-muted flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition-colors">
-                    <ChevronDownIcon className="size-4" />
-                    Tampilkan semua ketentuan
-                  </button>
-                </div>
               </div>
             )}
           </div>
@@ -234,12 +227,14 @@ export function LegalPage({
             <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-5">
               {summaryCards.map((card, index) => (
                 <div key={index} className="flex flex-col items-start gap-3">
-                  <div
-                    className={`flex size-12 items-center justify-center rounded-xl ${card.iconClassName ?? "bg-orange-50 text-orange-600"}`}
-                  >
-                    {card.icon}
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={`flex size-8 items-center justify-center rounded-xl ${card.iconClassName ?? "bg-orange-50 text-orange-600"}`}
+                    >
+                      {card.icon}
+                    </div>
+                    <span className="text-sm font-bold">{card.title}</span>
                   </div>
-                  <span className="text-sm font-bold">{card.title}</span>
                   <span className="text-muted-foreground text-xs leading-relaxed">
                     {card.text}
                   </span>

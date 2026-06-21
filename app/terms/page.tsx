@@ -108,52 +108,37 @@ export default function TermsPage() {
       summarySubtitle="Berikut adalah poin penting yang perlu Anda ketahui."
       summaryCards={[
         {
-          icon: <UserIcon className="size-6" />,
-          iconClassName: "bg-blue-50 text-blue-600",
+          icon: <UserIcon className="size-4" />,
+          iconClassName: "bg-orange-50 text-orange-600",
           title: "Akun Anda",
           text: "Anda bertanggung jawab atas keamanan akun dan aktivitas yang terjadi.",
         },
         {
-          icon: <ShieldCheckIcon className="size-6" />,
-          iconClassName: "bg-emerald-50 text-emerald-600",
+          icon: <ShieldCheckIcon className="size-4" />,
+          iconClassName: "bg-orange-50 text-orange-600",
           title: "Penggunaan Wajar",
           text: "Gunakan layanan secara legal dan tidak melanggar hak pihak lain.",
         },
         {
-          icon: <GiftIcon className="size-6" />,
+          icon: <GiftIcon className="size-4" />,
           iconClassName: "bg-orange-50 text-orange-600",
           title: "Gratis",
           text: "Layanan ini disediakan tanpa biaya apa pun.",
         },
         {
-          icon: <LockIcon className="size-6" />,
-          iconClassName: "bg-purple-50 text-purple-600",
+          icon: <LockIcon className="size-4" />,
+          iconClassName: "bg-orange-50 text-orange-600",
           title: "Keamanan Data",
           text: "Kami menjaga keamanan data Anda sesuai kebijakan privasi.",
         },
         {
-          icon: <PencilIcon className="size-6" />,
-          iconClassName: "bg-rose-50 text-rose-500",
+          icon: <PencilIcon className="size-4" />,
+          iconClassName: "bg-orange-50 text-orange-500",
           title: "Perubahan",
           text: "Kami dapat mengubah ketentuan kapan saja dengan pemberitahuan.",
         },
       ]}
-      callToAction={
-        <div className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-orange-100 bg-orange-50/60 p-4 sm:flex-row sm:items-center sm:p-5">
-          <div className="flex items-center gap-3">
-            <div className="flex size-6 shrink-0 items-center justify-center rounded bg-orange-500 text-white">
-              <CheckIcon className="size-4" strokeWidth={3} />
-            </div>
-            <span className="text-sm font-medium text-slate-700">
-              Saya telah membaca, memahami, dan menyetujui Terms of Service{" "}
-              {APP_NAME}.
-            </span>
-          </div>
-          <Button className="w-full shrink-0 bg-orange-500 text-white hover:bg-orange-600 sm:w-auto">
-            Saya Setuju
-          </Button>
-        </div>
-      }
+      callToAction={null}
     />
   );
 }

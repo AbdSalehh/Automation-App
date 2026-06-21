@@ -78,7 +78,7 @@ export function LandingHero() {
 
       <div className="relative mx-auto grid w-full max-w-6xl items-center gap-12 px-4 py-20 lg:grid-cols-2">
         <div className="flex flex-col">
-          <h1 className="text-4xl leading-tight font-extrabold tracking-tight text-slate-900 md:text-4xl">
+          <h1 className="text-4xl leading-tight font-bold tracking-tight text-slate-900 md:text-4xl">
             Automasi Workflow Anda,
             <br />
             Visual • Mudah • <span className="text-orange-500">Powerful</span>

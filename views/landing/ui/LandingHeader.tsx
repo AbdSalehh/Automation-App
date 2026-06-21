@@ -45,19 +45,9 @@ export function LandingHeader({
             </Link>
           ) : (
             <>
-              <Link href={ROUTES.login} id="header-login-button">
-                <Button
-                  variant="ghost"
-                  className="text-slate-700 hover:bg-orange-50 hover:text-orange-600"
-                >
-                  Login
-                </Button>
-              </Link>
-
               <Link href={ROUTES.login} id="header-google-login-button">
                 <Button className="gap-2 bg-orange-500 text-white shadow-sm hover:bg-orange-600">
-                  <GoogleGlyph />
-                  Login dengan Google
+                  Login
                 </Button>
               </Link>
             </>

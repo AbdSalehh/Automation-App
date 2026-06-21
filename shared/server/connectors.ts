@@ -1,5 +1,7 @@
 import type { CredentialType } from "@/shared/config/constants";
 import { requestExternal } from "@/shared/server/httpClient";
+import { callProvider } from "@/shared/server/ai/providers";
+import type { AiProvider } from "@/shared/server/ai/types";
 
 /**
  * Connector layer. Each connector implements a common shape so the engine can
@@ -141,6 +143,43 @@ export const CONNECTORS: Record<string, Connector> = {
       }
 
       return { ok: true, message: "Koneksi Gemini berhasil" };
+    },
+  },
+
+  ai: {
+    type: "ai",
+    test: async (credential) => {
+      const provider = credential.provider?.trim();
+      const apiKey = credential.apiKey?.trim();
+      const model = credential.model?.trim();
+
+      if (!provider || !apiKey || !model) {
+        return {
+          ok: false,
+          message: "Penyedia AI, API key, dan model wajib diisi",
+        };
+      }
+
+      try {
+        await callProvider({
+          config: { provider: provider as AiProvider, apiKey, model },
+          prompt: "ping",
+          temperature: 0,
+        });
+
+        return {
+          ok: true,
+          message: `Koneksi ${provider} (${model}) berhasil`,
+        };
+      } catch (error) {
+        return {
+          ok: false,
+          message:
+            error instanceof Error
+              ? error.message
+              : "Gagal memverifikasi kredensial AI",
+        };
+      }
     },
   },
 

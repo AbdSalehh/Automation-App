@@ -23,7 +23,7 @@ export function UsersView() {
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8">
-      <header className="border-border relative flex flex-col gap-4 overflow-hidden rounded-2xl border bg-gradient-to-r from-orange-50 via-amber-50/40 to-transparent p-6 sm:flex-row sm:items-center sm:justify-between">
+      <header className="border-border relative flex flex-col gap-4 overflow-hidden rounded-2xl border bg-linear-to-r from-orange-50 via-amber-50/40 to-transparent p-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-1">
           <h1 className="text-foreground text-2xl font-bold tracking-tight">
             Manajemen Users

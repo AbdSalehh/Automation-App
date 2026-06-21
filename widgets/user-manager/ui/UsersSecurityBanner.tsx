@@ -38,9 +38,9 @@ const HIGHLIGHTS: SecurityHighlight[] = [
  */
 export function UsersSecurityBanner() {
   return (
-    <div className="border-border flex flex-col gap-5 rounded-xl border bg-gradient-to-r from-orange-50/60 to-transparent p-5 lg:flex-row lg:items-center lg:justify-between">
+    <div className="border-border flex flex-col gap-5 rounded-xl border bg-linear-to-r from-orange-50/60 to-transparent p-5 lg:flex-row lg:items-center lg:justify-between">
       <div className="flex items-center gap-4">
-        <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-sm">
+        <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-orange-500 to-amber-500 text-white shadow-sm">
           <ShieldCheckIcon className="size-6" />
         </div>
         <div className="flex flex-col">

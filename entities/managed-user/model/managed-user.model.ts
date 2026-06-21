@@ -11,4 +11,12 @@ export interface ManagedUser {
   approvalStatus: ApprovalStatus;
   onboardingCompleted: boolean;
   createdAt: string;
+  lastSeenAt: string | null;
+}
+
+export interface CreateUserPayload {
+  name: string;
+  email: string;
+  password: string;
+  role: "user" | "admin";
 }

@@ -1,7 +1,10 @@
 import { apiClient } from "@/shared/api/apiClient";
 import { API_ROUTES } from "@/shared/config/constants";
 import type { ApiResponse, PaginatedApiResponse } from "@/shared/api/http";
-import type { ManagedUser } from "../model/managed-user.model";
+import type {
+  ManagedUser,
+  CreateUserPayload,
+} from "../model/managed-user.model";
 
 /**
  * Service untuk pengelolaan user oleh admin. Mengikuti aturan double-unwrap
@@ -12,6 +15,15 @@ export const managedUserService = {
     const { data: response } = await apiClient.get<
       PaginatedApiResponse<ManagedUser>
     >(API_ROUTES.users);
+
+    return response.data;
+  },
+
+  create: async (payload: CreateUserPayload): Promise<ManagedUser> => {
+    const { data: response } = await apiClient.post<ApiResponse<ManagedUser>>(
+      API_ROUTES.users,
+      payload,
+    );
 
     return response.data;
   },
@@ -50,6 +62,18 @@ export const managedUserService = {
     const { data: response } = await apiClient.patch<ApiResponse<ManagedUser>>(
       API_ROUTES.user(userId),
       { action: "unlock" },
+    );
+
+    return response.data;
+  },
+
+  setActive: async (
+    userId: string,
+    isActive: boolean,
+  ): Promise<ManagedUser> => {
+    const { data: response } = await apiClient.patch<ApiResponse<ManagedUser>>(
+      API_ROUTES.user(userId),
+      { action: isActive ? "activate" : "deactivate" },
     );
 
     return response.data;

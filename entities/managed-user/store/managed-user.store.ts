@@ -1,6 +1,9 @@
 import { create } from "zustand";
 import { managedUserService } from "../service/managed-user.service";
-import type { ManagedUser } from "../model/managed-user.model";
+import type {
+  ManagedUser,
+  CreateUserPayload,
+} from "../model/managed-user.model";
 
 interface ManagedUserState {
   users: ManagedUser[];
@@ -8,10 +11,12 @@ interface ManagedUserState {
   isSubmitting: boolean;
   errorMessage: string | null;
   fetchUsers: () => Promise<void>;
+  createUser: (payload: CreateUserPayload) => Promise<boolean>;
   resetPassword: (userId: string, password: string) => Promise<boolean>;
   approveUser: (userId: string) => Promise<boolean>;
   rejectUser: (userId: string) => Promise<boolean>;
   unlockUser: (userId: string) => Promise<boolean>;
+  setUserActive: (userId: string, isActive: boolean) => Promise<boolean>;
   removeUser: (userId: string) => Promise<boolean>;
 }
 
@@ -31,6 +36,21 @@ export const useManagedUserStore = create<ManagedUserState>((set, get) => ({
       set({ errorMessage: "Gagal memuat daftar pengguna." });
     } finally {
       set({ isLoading: false });
+    }
+  },
+
+  createUser: async (payload) => {
+    set({ isSubmitting: true, errorMessage: null });
+
+    try {
+      const createdUser = await managedUserService.create(payload);
+      set({ users: [createdUser, ...get().users] });
+      return true;
+    } catch {
+      set({ errorMessage: "Gagal membuat pengguna baru." });
+      return false;
+    } finally {
+      set({ isSubmitting: false });
     }
   },
 
@@ -105,6 +125,31 @@ export const useManagedUserStore = create<ManagedUserState>((set, get) => ({
       return true;
     } catch {
       set({ errorMessage: "Gagal membuka kunci pengguna." });
+      return false;
+    } finally {
+      set({ isSubmitting: false });
+    }
+  },
+
+  setUserActive: async (userId, isActive) => {
+    set({ isSubmitting: true, errorMessage: null });
+
+    try {
+      const updatedUser = await managedUserService.setActive(userId, isActive);
+
+      set({
+        users: get().users.map((user) =>
+          user.id === userId ? updatedUser : user,
+        ),
+      });
+
+      return true;
+    } catch {
+      set({
+        errorMessage: isActive
+          ? "Gagal mengaktifkan pengguna."
+          : "Gagal menonaktifkan pengguna.",
+      });
       return false;
     } finally {
       set({ isSubmitting: false });

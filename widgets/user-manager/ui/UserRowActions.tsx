@@ -10,6 +10,8 @@ import {
   CheckCircle2Icon,
   XCircleIcon,
   LockOpenIcon,
+  UserXIcon,
+  UserCheckIcon,
 } from "lucide-react";
 import { Button, Input } from "@/shared/ui";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
@@ -54,11 +56,13 @@ export function UserRowActions({ user }: UserRowActionsProps) {
     approveUser,
     rejectUser,
     unlockUser,
+    setUserActive,
     removeUser,
   } = useManagedUserStore();
 
   const [isResetOpen, setIsResetOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isDeactivateOpen, setIsDeactivateOpen] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -112,6 +116,27 @@ export function UserRowActions({ user }: UserRowActionsProps) {
       toast.success(`Kunci ${user.email} dibuka.`);
     } else {
       toast.error("Gagal membuka kunci pengguna.");
+    }
+  };
+
+  const handleDeactivate = async () => {
+    const success = await setUserActive(user.id, false);
+
+    if (success) {
+      toast.success(`Pengguna ${user.email} dinonaktifkan.`);
+      setIsDeactivateOpen(false);
+    } else {
+      toast.error("Gagal menonaktifkan pengguna.");
+    }
+  };
+
+  const handleActivate = async () => {
+    const success = await setUserActive(user.id, true);
+
+    if (success) {
+      toast.success(`Pengguna ${user.email} diaktifkan.`);
+    } else {
+      toast.error("Gagal mengaktifkan pengguna.");
     }
   };
 
@@ -179,6 +204,27 @@ export function UserRowActions({ user }: UserRowActionsProps) {
             Reset Password
           </button>
 
+          {user.isActive ? (
+            <button
+              type="button"
+              onClick={() => setIsDeactivateOpen(true)}
+              className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-amber-600 transition-colors hover:bg-amber-50"
+            >
+              <UserXIcon className="size-4" />
+              Nonaktifkan
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleActivate}
+              disabled={isSubmitting}
+              className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-emerald-600 transition-colors hover:bg-emerald-50 disabled:opacity-50"
+            >
+              <UserCheckIcon className="size-4" />
+              Aktifkan
+            </button>
+          )}
+
           <button
             type="button"
             onClick={() => setIsDeleteOpen(true)}
@@ -243,6 +289,31 @@ export function UserRowActions({ user }: UserRowActionsProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Konfirmasi nonaktifkan */}
+      <AlertDialog open={isDeactivateOpen} onOpenChange={setIsDeactivateOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Nonaktifkan Pengguna?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Akun{" "}
+              <span className="text-foreground font-medium">{user.email}</span>{" "}
+              tidak akan bisa masuk dan sesi yang sedang berjalan akan keluar
+              otomatis. Anda dapat mengaktifkannya kembali kapan saja.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={handleDeactivate}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Memproses..." : "Nonaktifkan"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Konfirmasi hapus */}
       <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>

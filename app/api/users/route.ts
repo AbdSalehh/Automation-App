@@ -47,6 +47,7 @@ export async function GET(request: NextRequest) {
           approvalStatus: true,
           onboardingCompleted: true,
           createdAt: true,
+          lastSeenAt: true,
         },
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * limit,
@@ -107,6 +108,7 @@ export async function POST(request: NextRequest) {
         approvalStatus: true,
         onboardingCompleted: true,
         createdAt: true,
+        lastSeenAt: true,
       },
     });
 

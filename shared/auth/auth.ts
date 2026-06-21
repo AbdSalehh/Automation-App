@@ -190,7 +190,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       const existingUser = await prisma.user.findUnique({
         where: { email },
-        select: { approvalStatus: true },
+        select: { approvalStatus: true, isActive: true },
       });
 
       /**
@@ -215,6 +215,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return "/login?error=PendingApproval";
       }
 
+      /** Akun yang dinonaktifkan admin tidak boleh masuk. */
+      if (!existingUser.isActive) {
+        return "/login?error=AccountDeactivated";
+      }
+
       return true;
     },
 
@@ -225,12 +230,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const fullUser = user as {
           role?: string;
           onboardingCompleted?: boolean;
+          isActive?: boolean;
         };
 
         (session.user as { role?: string }).role = fullUser.role ?? "user";
         (
           session.user as { onboardingCompleted?: boolean }
         ).onboardingCompleted = fullUser.onboardingCompleted ?? false;
+        (session.user as { isActive?: boolean }).isActive =
+          fullUser.isActive ?? true;
       }
 
       return session;

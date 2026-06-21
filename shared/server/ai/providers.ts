@@ -12,6 +12,13 @@ import type { AiProvider, AiProviderConfig } from "./types";
  * Server-only module.
  */
 
+/**
+ * Batas waktu khusus pemanggilan AI. Lebih panjang dari default `externalHttpClient`
+ * (15 detik) karena membangun workflow meminta model menghasilkan JSON cukup
+ * besar, yang pada tier gratis sering melebihi 15 detik.
+ */
+const AI_REQUEST_TIMEOUT_MS = 60000;
+
 /** Argumen internal untuk satu pemanggilan penyedia. */
 interface CompleteArgs {
   config: AiProviderConfig;
@@ -49,6 +56,7 @@ async function completeGemini({
       method: "POST",
       headers: { "Content-Type": "application/json" },
       data: requestBody,
+      timeout: AI_REQUEST_TIMEOUT_MS,
     },
   );
 
@@ -95,6 +103,7 @@ async function completeChatCompletions(
       ...extraHeaders,
     },
     data: requestBody,
+    timeout: AI_REQUEST_TIMEOUT_MS,
   });
 
   if (!response.ok) {

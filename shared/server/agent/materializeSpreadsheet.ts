@@ -15,7 +15,7 @@ import type { FlowNode } from "@/entities/workflow/model/workflow.model";
  * Server-only module.
  */
 
-/** Penanda placeholder spreadsheetId yang dihasilkan builder. */
+/** Penanda placeholder spreadsheetId lama yang dihasilkan builder. */
 const SPREADSHEET_PLACEHOLDER = "{{spreadsheetId}}";
 
 interface MaterializeResult {
@@ -24,13 +24,26 @@ interface MaterializeResult {
 }
 
 /**
- * Mengganti placeholder spreadsheetId pada satu node dengan ID asli. Node yang
- * tidak memakai placeholder dibiarkan apa adanya.
+ * Mengganti referensi spreadsheetId pada satu node dengan ID asli. Mengenali dua
+ * pola: placeholder lama `{{spreadsheetId}}` dan referensi antar-node berbasis
+ * ref node create (mis. `{{n2.spreadsheetId}}`). Node yang tidak memakai salah
+ * satu pola dibiarkan apa adanya.
  */
-function applySpreadsheetId(node: FlowNode, spreadsheetId: string): FlowNode {
+function applySpreadsheetId(
+  node: FlowNode,
+  spreadsheetId: string,
+  createNodeRef: string | undefined,
+): FlowNode {
   const currentValue = String(node.data.config?.spreadsheetId ?? "").trim();
 
-  if (currentValue !== SPREADSHEET_PLACEHOLDER) {
+  const refReference = createNodeRef
+    ? `{{${createNodeRef}.spreadsheetId}}`
+    : null;
+
+  const isPlaceholder = currentValue === SPREADSHEET_PLACEHOLDER;
+  const isRefReference = refReference !== null && currentValue === refReference;
+
+  if (!isPlaceholder && !isRefReference) {
     return node;
   }
 
@@ -105,7 +118,7 @@ export async function materializeSpreadsheet(
       };
     }
 
-    return applySpreadsheetId(node, spreadsheetId);
+    return applySpreadsheetId(node, spreadsheetId, createNode.data.ref);
   });
 
   return {

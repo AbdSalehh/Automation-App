@@ -42,6 +42,9 @@ model User {
 
     createdAt DateTime @default(now())
 
+    /// Aktivitas terakhir pengguna (di-update saat sesi aktif, throttled).
+    lastSeenAt DateTime?
+
     // NextAuth relations
     accounts Account[]
     sessions Session[]

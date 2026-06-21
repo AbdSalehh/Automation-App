@@ -28,7 +28,14 @@ const USER_SELECT = {
 } as const;
 
 const patchSchema = z.object({
-  action: z.enum(["reset-password", "approve", "reject", "unlock"]),
+  action: z.enum([
+    "reset-password",
+    "approve",
+    "reject",
+    "unlock",
+    "deactivate",
+    "activate",
+  ]),
   password: z.string().min(8, "Password minimal 8 karakter").optional(),
 });
 
@@ -106,6 +113,43 @@ export async function PATCH(
       });
 
       return ok(updatedUser, "Pengguna berhasil ditolak");
+    }
+
+    if (action === "deactivate") {
+      if (id === sessionUser.id) {
+        return badRequest("Anda tidak dapat menonaktifkan akun sendiri");
+      }
+
+      const updatedUser = await prisma.user.update({
+        where: { id },
+        data: { isActive: false },
+        select: USER_SELECT,
+      });
+
+      /**
+       * Hapus seluruh sesi pengguna agar yang sedang login langsung ter-logout
+       * pada navigasi berikutnya (strategi sesi berbasis database).
+       */
+      await prisma.session.deleteMany({ where: { userId: id } });
+
+      await createNotification({
+        userId: id,
+        type: "system",
+        title: "Akun Anda dinonaktifkan",
+        body: "Hubungi admin bila menurut Anda ini keliru.",
+      });
+
+      return ok(updatedUser, "Pengguna berhasil dinonaktifkan");
+    }
+
+    if (action === "activate") {
+      const updatedUser = await prisma.user.update({
+        where: { id },
+        data: { isActive: true },
+        select: USER_SELECT,
+      });
+
+      return ok(updatedUser, "Pengguna berhasil diaktifkan");
     }
 
     /** action === "unlock" */

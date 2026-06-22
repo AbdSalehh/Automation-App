@@ -6,7 +6,6 @@ import { staggerContainer, staggerItem } from "@/shared/lib/motion-presets";
 import { useWorkflowListStore } from "@/entities/workflow";
 import { useMetricsStore } from "@/entities/metrics";
 import { useCredentialStore } from "@/entities/credential";
-import { ImportWorkflowButton } from "@/features/manage-workflows";
 import {
   DashboardGreeting,
   DashboardCacheCard,
@@ -46,7 +45,6 @@ export function DashboardClient({ name }: DashboardClientProps) {
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8">
       <div className="flex items-start justify-between gap-4">
         <DashboardGreeting name={name} />
-        <ImportWorkflowButton />
       </div>
 
       <DashboardOverviewPanel />

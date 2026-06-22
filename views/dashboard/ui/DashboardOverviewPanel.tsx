@@ -4,6 +4,7 @@ import Link from "next/link";
 import { PlusIcon, UploadIcon, ClockIcon, GitBranchIcon } from "lucide-react";
 import { Button, BrandIcon } from "@/shared/ui";
 import { ROUTES } from "@/shared/config/constants";
+import { ImportWorkflowButton } from "@/features/manage-workflows";
 
 /** Satu node statis pada ilustrasi overview. */
 function OverviewNode({
@@ -60,10 +61,7 @@ export function DashboardOverviewPanel() {
               New Workflow
             </Button>
           </Link>
-          <Button variant="outline" className="gap-2">
-            <UploadIcon className="size-4" />
-            Import Workflow
-          </Button>
+          <ImportWorkflowButton />
         </div>
       </div>
 

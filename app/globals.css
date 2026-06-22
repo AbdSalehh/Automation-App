@@ -130,3 +130,62 @@
     color: var(--foreground);
   }
 }
+
+/**
+ * Animasi demo landing: kursor virtual yang bergerak lalu "menekan" tombol,
+ * efek ripple klik, dan float lembut untuk kartu mengambang di sekitar kanvas.
+ */
+@keyframes cursor-tap {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  45% {
+    transform: translate(0, 0) scale(1);
+  }
+  55% {
+    transform: translate(2px, 2px) scale(0.82);
+  }
+  70% {
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+@keyframes cursor-ripple {
+  0%,
+  44%,
+  100% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  56% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  80% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+
+@keyframes soft-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-cursor-tap {
+  animation: cursor-tap 2.4s ease-in-out infinite;
+}
+
+.animate-cursor-ripple {
+  animation: cursor-ripple 2.4s ease-in-out infinite;
+}
+
+.animate-soft-float {
+  animation: soft-float 5s ease-in-out infinite;
+}

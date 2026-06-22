@@ -71,8 +71,33 @@ const BRANCH_OUTPUT_HANDLES: Record<string, string> = {
 
 const CONDITION_KINDS = new Set(["condition", "filter"]);
 
+/** Label ramah Bahasa Indonesia untuk key config yang umum di node card. */
+const CONFIG_KEY_LABELS: Record<string, string> = {
+  spreadsheetId: "Spreadsheet",
+  sheetName: "Sheet",
+  range: "Range",
+  target: "Nomor Tujuan",
+  targetField: "Kolom Nomor",
+  message: "Pesan",
+  provider: "Provider",
+  matchColumn: "Kolom Pencocokan",
+  matchValue: "Nilai Cocok",
+  updateColumn: "Kolom Diupdate",
+  updateValue: "Nilai Baru",
+  url: "URL",
+  method: "Method",
+  to: "Penerima",
+  subject: "Subjek",
+  chatId: "Chat ID",
+  text: "Pesan",
+  prompt: "Prompt",
+  model: "Model",
+  table: "Tabel",
+  cron: "Cron",
+};
+
 function formatConfigKey(key: string): string {
-  return key.replace(/([A-Z])/g, " $1").trim();
+  return CONFIG_KEY_LABELS[key] ?? key.replace(/([A-Z])/g, " $1").trim();
 }
 
 /**
@@ -240,6 +265,47 @@ function NodeBody({ nodeData }: { nodeData: WorkflowNodeData }) {
     );
   }
 
+  /** WhatsApp Send: tonjolkan kolom/nomor tujuan dan ringkasan pesan. */
+  if (nodeData.kind === "whatsapp_send") {
+    const targetColumn = String(config.targetField ?? "").trim();
+    const manualTarget = String(config.target ?? "").trim();
+    const message = String(config.message ?? "").trim();
+    const provider = String(config.provider ?? "baileys");
+
+    return (
+      <SectionShell title="Configurations">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-start justify-between gap-2">
+            <span className="text-muted-foreground shrink-0 text-[11px]">
+              Tujuan
+            </span>
+            <span className="text-foreground line-clamp-1 text-right text-[11px] font-medium">
+              {targetColumn ? `Kolom: ${targetColumn}` : manualTarget || "—"}
+            </span>
+          </div>
+
+          <div className="flex items-start justify-between gap-2">
+            <span className="text-muted-foreground shrink-0 text-[11px]">
+              Pesan
+            </span>
+            <span className="text-foreground line-clamp-2 text-right text-[11px] font-medium wrap-break-word">
+              {message || "—"}
+            </span>
+          </div>
+
+          <div className="flex items-start justify-between gap-2">
+            <span className="text-muted-foreground shrink-0 text-[11px]">
+              Provider
+            </span>
+            <span className="text-foreground text-right text-[11px] font-medium capitalize">
+              {provider}
+            </span>
+          </div>
+        </div>
+      </SectionShell>
+    );
+  }
+
   /** Default: generic key/value configuration preview. */
   const entries = Object.entries(config)
     .filter(
@@ -249,7 +315,7 @@ function NodeBody({ nodeData }: { nodeData: WorkflowNodeData }) {
         value !== null &&
         value !== undefined,
     )
-    .slice(0, 3);
+    .slice(0, 5);
 
   return (
     <SectionShell title="Configurations">

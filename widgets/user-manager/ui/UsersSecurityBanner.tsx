@@ -1,9 +1,5 @@
-import {
-  ShieldCheckIcon,
-  LockIcon,
-  UsersIcon,
-  ScrollTextIcon,
-} from "lucide-react";
+import { LockIcon, UsersIcon, ScrollTextIcon } from "lucide-react";
+import Image from "next/image";
 
 interface SecurityHighlight {
   key: string;
@@ -38,12 +34,19 @@ const HIGHLIGHTS: SecurityHighlight[] = [
  */
 export function UsersSecurityBanner() {
   return (
-    <div className="border-border flex flex-col gap-5 rounded-xl border bg-linear-to-r from-orange-50/60 to-transparent p-5 lg:flex-row lg:items-center lg:justify-between">
-      <div className="flex items-center gap-4">
-        <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-orange-500 to-amber-500 text-white shadow-sm">
-          <ShieldCheckIcon className="size-6" />
+    <div className="border-border/50 bg-card/50 fill-mode-backwards relative flex flex-col gap-5 overflow-hidden rounded-xl border p-5 backdrop-blur lg:flex-row lg:items-center lg:justify-between">
+      <div className="from-primary/6 absolute inset-0 bg-linear-to-br to-transparent" />
+      <div className="relative flex items-center gap-4">
+        <div className="absolute size-35">
+          <Image
+            alt=""
+            width={500}
+            height={500}
+            className="h-full! w-full! object-cover"
+            src="/shield.webp"
+          />
         </div>
-        <div className="flex flex-col">
+        <div className="relative left-40 flex flex-col">
           <h3 className="text-foreground text-sm font-bold">
             Keamanan data Anda adalah prioritas kami
           </h3>

@@ -20,6 +20,7 @@ import { v4 as uuidv4 } from "uuid";
 import {
   useWorkflowStore,
   useSheetPreviewStore,
+  useEditorUiStore,
   type FlowNode,
 } from "@/entities/workflow";
 import { Modal, toast } from "@/shared/ui";
@@ -62,10 +63,14 @@ export function WorkflowEditor() {
   /** Jumlah balasan yang sudah ditoast, agar hanya balasan baru yang muncul. */
   const toastedReplyCountRef = useRef(0);
 
+  /** Penanda agar baseline jumlah balasan hanya diset sekali saat mount. */
+  const hasBaselinedRepliesRef = useRef(false);
+
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [isMiniMapVisible, setIsMiniMapVisible] = useState(true);
   const [isJsonOpen, setIsJsonOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  const { isSettingsOpen, setSettingsOpen, openSettings } = useEditorUiStore();
 
   const { setting, fetchSetting } = useUserSettingStore();
 
@@ -150,6 +155,17 @@ export function WorkflowEditor() {
    * balasan yang belum pernah ditoast (di luar baseline awal) yang ditampilkan.
    */
   useEffect(() => {
+    /**
+     * Saat editor pertama kali dibuka, balasan yang sudah ada di store (dari
+     * kunjungan sebelumnya) bukan balasan baru — jadi jadikan baseline agar
+     * tidak ditoast ulang. Hanya balasan yang datang setelah ini yang muncul.
+     */
+    if (!hasBaselinedRepliesRef.current) {
+      hasBaselinedRepliesRef.current = true;
+      toastedReplyCountRef.current = replies.length;
+      return;
+    }
+
     if (replies.length <= toastedReplyCountRef.current) {
       toastedReplyCountRef.current = replies.length;
       return;
@@ -325,7 +341,7 @@ export function WorkflowEditor() {
             showControls={setting.showControls}
             onToggleMiniMap={() => setIsMiniMapVisible((visible) => !visible)}
             onShowJson={() => setIsJsonOpen(true)}
-            onOpenSettings={() => setIsSettingsOpen(true)}
+            onOpenSettings={openSettings}
           />
           {isMiniMapVisible && <MiniMap pannable zoomable />}
         </ReactFlow>
@@ -343,7 +359,7 @@ export function WorkflowEditor() {
 
       <EditorSettingsSheet
         open={isSettingsOpen}
-        onOpenChange={setIsSettingsOpen}
+        onOpenChange={setSettingsOpen}
       />
 
       {selectedNode ? (

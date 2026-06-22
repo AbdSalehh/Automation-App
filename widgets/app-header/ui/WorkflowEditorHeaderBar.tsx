@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { Button, Badge, Spinner, toast } from "@/shared/ui";
 import { ROUTES } from "@/shared/config/constants";
-import { useWorkflowStore } from "@/entities/workflow";
+import { useWorkflowStore, useEditorUiStore } from "@/entities/workflow";
 import { useWhatsappSessionStore } from "@/entities/whatsapp-session";
 import { WorkflowLogsSheet } from "@/widgets/execution-history";
 
@@ -38,6 +38,8 @@ export function WorkflowEditorHeaderBar() {
   } = useWorkflowStore();
 
   const { checkIsSessionActive } = useWhatsappSessionStore();
+
+  const { openSettings } = useEditorUiStore();
 
   const [isLogsOpen, setIsLogsOpen] = useState(false);
 
@@ -132,7 +134,12 @@ export function WorkflowEditorHeaderBar() {
           <InfoIcon />
         </Button>
 
-        <Button variant="ghost" size="icon-sm" aria-label="Settings">
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label="Settings"
+          onClick={openSettings}
+        >
           <SettingsIcon />
         </Button>
       </div>

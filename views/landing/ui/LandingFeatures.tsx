@@ -132,8 +132,9 @@ export function LandingFeatures() {
         {FEATURES.map((feature) => (
           <div
             key={feature.title}
-            className="group inset-2 flex flex-col rounded-2xl bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:border-orange-300 hover:shadow-lg hover:shadow-orange-100"
+            className="group border-border/50 fill-mode-backwards bg-card/50 relative inset-2 flex flex-col overflow-hidden rounded-2xl p-6 backdrop-blur transition-all hover:-translate-y-1"
           >
+            <div className="from-primary/6 absolute inset-0 bg-linear-to-br to-transparent" />
             <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-orange-500 text-white">
               <feature.icon className="size-5" />
             </span>

@@ -20,3 +20,21 @@ export interface CreateUserPayload {
   password: string;
   role: "user" | "admin";
 }
+
+export type RoleFilter = "all" | "user" | "admin";
+
+export type StatusFilter =
+  | "all"
+  | "active"
+  | "inactive"
+  | "pending"
+  | "rejected"
+  | "locked";
+
+export interface ListUsersParams {
+  page: number;
+  limit: number;
+  search: string;
+  role: RoleFilter;
+  status: StatusFilter;
+}

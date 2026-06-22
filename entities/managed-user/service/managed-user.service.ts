@@ -1,9 +1,14 @@
 import { apiClient } from "@/shared/api/apiClient";
 import { API_ROUTES } from "@/shared/config/constants";
-import type { ApiResponse, PaginatedApiResponse } from "@/shared/api/http";
+import type {
+  ApiResponse,
+  PaginatedApiResponse,
+  PaginationMeta,
+} from "@/shared/api/http";
 import type {
   ManagedUser,
   CreateUserPayload,
+  ListUsersParams,
 } from "../model/managed-user.model";
 
 /**
@@ -11,12 +16,22 @@ import type {
  * envelope: `data: response` lalu `response.data` untuk nilai sebenarnya.
  */
 export const managedUserService = {
-  list: async (): Promise<ManagedUser[]> => {
+  list: async (
+    params: ListUsersParams,
+  ): Promise<{ users: ManagedUser[]; metadata: PaginationMeta }> => {
     const { data: response } = await apiClient.get<
       PaginatedApiResponse<ManagedUser>
-    >(API_ROUTES.users);
+    >(API_ROUTES.users, {
+      params: {
+        page: params.page,
+        limit: params.limit,
+        search: params.search || undefined,
+        role: params.role !== "all" ? params.role : undefined,
+        status: params.status !== "all" ? params.status : undefined,
+      },
+    });
 
-    return response.data;
+    return { users: response.data, metadata: response.metadata };
   },
 
   create: async (payload: CreateUserPayload): Promise<ManagedUser> => {

@@ -65,8 +65,9 @@ export function WorkflowStatsCards({
         <motion.div
           key={card.label}
           variants={staggerItem}
-          className="border-border bg-card rounded-2xl border p-5"
+          className="border-border/50 bg-card/50 fill-mode-backwards relative overflow-hidden rounded-2xl border p-5 backdrop-blur"
         >
+          <div className="from-primary/6 absolute inset-0 bg-linear-to-br to-transparent" />
           <div className="flex items-start justify-between">
             <div className="flex flex-col gap-1">
               <span className="text-muted-foreground text-sm">

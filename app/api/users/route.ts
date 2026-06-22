@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { requireUser } from "@/shared/auth";
 import { prisma } from "@/shared/lib/prisma";
 import bcrypt from "bcryptjs";
+import { Prisma } from "../../../prisma/lib/generated/prisma";
 import { z } from "zod";
 import {
   handleRoute,
@@ -30,12 +31,55 @@ export async function GET(request: NextRequest) {
       return forbidden();
     }
 
-    const { page, limit } = parsePagination(new URL(request.url).searchParams, {
-      limit: 50,
-    });
+    const searchParams = new URL(request.url).searchParams;
+
+    const { page, limit } = parsePagination(searchParams, { limit: 10 });
+
+    const search = (searchParams.get("search") ?? "").trim();
+    const roleFilter = searchParams.get("role") ?? "all";
+    const statusFilter = searchParams.get("status") ?? "all";
+
+    const whereClause: Prisma.UserWhereInput = {};
+
+    if (search.length > 0) {
+      whereClause.OR = [
+        { name: { contains: search, mode: "insensitive" } },
+        { email: { contains: search, mode: "insensitive" } },
+      ];
+    }
+
+    if (roleFilter === "user" || roleFilter === "admin") {
+      whereClause.role = roleFilter;
+    }
+
+    /**
+     * Memetakan filter status UI ke kondisi Prisma yang sesuai. "active" berarti
+     * sudah disetujui dan aktif; "inactive" berarti dinonaktifkan, dst.
+     */
+    switch (statusFilter) {
+      case "active":
+        whereClause.approvalStatus = "approved";
+        whereClause.isActive = true;
+        break;
+      case "inactive":
+        whereClause.isActive = false;
+        break;
+      case "pending":
+        whereClause.approvalStatus = "pending";
+        break;
+      case "rejected":
+        whereClause.approvalStatus = "rejected";
+        break;
+      case "locked":
+        whereClause.isLocked = true;
+        break;
+      default:
+        break;
+    }
 
     const [users, totalItems] = await Promise.all([
       prisma.user.findMany({
+        where: whereClause,
         select: {
           id: true,
           name: true,
@@ -53,7 +97,7 @@ export async function GET(request: NextRequest) {
         skip: (page - 1) * limit,
         take: limit,
       }),
-      prisma.user.count(),
+      prisma.user.count({ where: whereClause }),
     ]);
 
     return okPaginated(users, totalItems, { page, limit });

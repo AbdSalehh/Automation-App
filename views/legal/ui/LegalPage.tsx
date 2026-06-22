@@ -8,6 +8,7 @@ import {
   MailIcon,
 } from "lucide-react";
 import { APP_NAME, ROUTES } from "@/shared/config/constants";
+import { cn } from "@/shared/lib/utils";
 import { AppHeader } from "@/widgets/app-header";
 import {
   Accordion,
@@ -247,7 +248,7 @@ export function LegalPage({
         </div>
       </main>
 
-      <LegalFooter />
+      <LegalFooter type={type} />
     </div>
   );
 }
@@ -255,7 +256,7 @@ export function LegalPage({
 /**
  * Footer besar untuk halaman legal dengan peta situs produk dan tautan legal.
  */
-function LegalFooter() {
+function LegalFooter({ type }: { type: "privacy" | "terms" }) {
   const columns = [
     {
       title: "Produk",
@@ -328,13 +329,23 @@ function LegalFooter() {
             <div className="flex flex-col gap-3 text-sm text-slate-500">
               <Link
                 href={ROUTES.terms}
-                className="text-orange-500 transition-colors hover:text-orange-600"
+                className={cn(
+                  "transition-colors",
+                  type === "terms"
+                    ? "text-orange-500 hover:text-orange-600"
+                    : "hover:text-slate-900",
+                )}
               >
                 Terms of Service
               </Link>
               <Link
                 href={ROUTES.privacy}
-                className="text-orange-500 transition-colors hover:text-orange-600"
+                className={cn(
+                  "transition-colors",
+                  type === "privacy"
+                    ? "text-orange-500 hover:text-orange-600"
+                    : "hover:text-slate-900",
+                )}
               >
                 Privacy Policy
               </Link>

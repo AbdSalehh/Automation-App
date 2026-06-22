@@ -34,6 +34,7 @@ export {
 export { workflowService } from "./service/workflow.service";
 export { useWorkflowStore } from "./store/workflow.store";
 export { useWorkflowListStore } from "./store/workflow-list.store";
+export { useEditorUiStore } from "./store/editor-ui.store";
 export { useSheetColumnsStore } from "./store/sheet-columns.store";
 export { sheetColumnsService } from "./service/sheet-columns.service";
 export { useSheetPreviewStore } from "./store/sheet-preview.store";

@@ -21,13 +21,6 @@ export function DashboardGreeting({ name }: DashboardGreetingProps) {
           Here&apos;s what&apos;s happening with your automation today.
         </p>
       </div>
-
-      <Link href={ROUTES.workflows}>
-        <Button className="gap-2 bg-orange-500 text-white hover:bg-orange-600">
-          <PlusIcon className="size-4" />
-          New Workflow
-        </Button>
-      </Link>
     </div>
   );
 }

@@ -9,6 +9,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
 import type { ManagedUser } from "@/entities/managed-user";
+import { motion } from "motion/react";
+import { staggerItem } from "@/shared/lib/motion-presets";
 
 interface UserStatsCardsProps {
   users: ManagedUser[];
@@ -143,10 +145,12 @@ export function UserStatsCards({ users }: UserStatsCardsProps) {
         const CardIcon = card.icon;
 
         return (
-          <div
-            key={card.key}
-            className="border-border bg-card flex items-center justify-between gap-3 rounded-xl border p-4 shadow-sm transition-shadow hover:shadow-md"
+          <motion.div
+            key={card.label}
+            variants={staggerItem}
+            className="border-border/50 bg-card/50 fill-mode-backwards relative flex items-center justify-between gap-3 overflow-hidden rounded-2xl border p-5 backdrop-blur"
           >
+            <div className="from-primary/6 absolute inset-0 bg-linear-to-br to-transparent" />
             <div className="flex items-start gap-3">
               <div
                 className={cn(
@@ -173,7 +177,7 @@ export function UserStatsCards({ users }: UserStatsCardsProps) {
               percentage={card.percentage}
               className={card.ringClassName}
             />
-          </div>
+          </motion.div>
         );
       })}
     </div>

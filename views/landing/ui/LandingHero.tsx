@@ -1,7 +1,12 @@
 import Link from "next/link";
-import { ArrowRightIcon, PlayIcon, CheckCircle2Icon } from "lucide-react";
+import {
+  ArrowRightIcon,
+  PlayIcon,
+  CheckCircle2Icon,
+  MousePointer2Icon,
+} from "lucide-react";
 import { APP_NAME, ROUTES } from "@/shared/config/constants";
-import { Button } from "@/shared/ui";
+import { Button, BrandIcon } from "@/shared/ui";
 import { LandingFlowCanvas } from "./LandingFlowCanvas";
 
 /** Node & edge untuk kanvas hero, meniru workflow pada gambar referensi. */
@@ -143,25 +148,54 @@ export function LandingHero() {
 /** Kartu preview hero: kanvas ReactFlow asli beranimasi di dalam mock browser. */
 function HeroPreviewCard() {
   return (
-    <div className="relative rounded-2xl border border-slate-200 bg-white p-3 shadow-xl shadow-slate-300/30">
-      <div className="flex items-center gap-2 border-b border-slate-100 px-2 pb-3">
-        <span className="size-2.5 rounded-full bg-red-400" />
-        <span className="size-2.5 rounded-full bg-amber-400" />
-        <span className="size-2.5 rounded-full bg-emerald-400" />
-        <span className="ml-2 flex items-center gap-1.5 text-xs font-medium text-slate-500">
-          My Workflow
-          <CheckCircle2Icon className="size-3.5 text-emerald-500" />
-        </span>
-        <span className="ml-auto rounded-md bg-orange-500 px-2 py-1 text-[10px] font-semibold text-white">
-          Jalankan
-        </span>
+    <div className="relative perspective-[1800px]">
+      <div className="relative transform-[rotateY(-14deg)_rotateX(6deg)] rounded-2xl border border-slate-200 bg-white p-3 shadow-2xl shadow-slate-400/30 transition-transform duration-700 ease-out transform-3d hover:transform-[rotateY(0deg)_rotateX(0deg)]">
+        <div className="flex items-center gap-2 border-b border-slate-100 px-2 pb-3">
+          <span className="size-2.5 rounded-full bg-red-400" />
+          <span className="size-2.5 rounded-full bg-amber-400" />
+          <span className="size-2.5 rounded-full bg-emerald-400" />
+          <span className="ml-2 flex items-center gap-1.5 text-xs font-medium text-slate-500">
+            My Workflow
+            <CheckCircle2Icon className="size-3.5 text-emerald-500" />
+          </span>
+
+          <div className="relative ml-auto">
+            <span className="block rounded-md bg-orange-500 px-2 py-1 text-[10px] font-semibold text-white shadow-sm shadow-orange-500/40">
+              Jalankan
+            </span>
+
+            <div className="animate-cursor-tap absolute -right-1 -bottom-3">
+              <span className="animate-cursor-ripple absolute -top-1 -left-1 size-6 rounded-full bg-orange-400/40" />
+              <MousePointer2Icon className="relative size-4 fill-slate-700 text-slate-700" />
+            </div>
+          </div>
+        </div>
+
+        <LandingFlowCanvas
+          seeds={HERO_NODE_SEEDS}
+          edges={HERO_EDGES}
+          className="h-[320px] w-full"
+        />
       </div>
 
-      <LandingFlowCanvas
-        seeds={HERO_NODE_SEEDS}
-        edges={HERO_EDGES}
-        className="h-[320px] w-full"
-      />
+      {/* Kartu mengambang: tumpukan teknologi */}
+      <div className="animate-soft-float absolute -top-5 -left-6 hidden rounded-xl border border-white/60 bg-white/70 px-3 py-2 shadow-lg shadow-slate-300/40 backdrop-blur-md sm:block">
+        <p className="text-[10px] font-medium text-slate-400">Built with</p>
+        <div className="mt-1 flex items-center gap-2">
+          <BrandIcon name="google-sheets" className="size-4" />
+          <BrandIcon name="whatsapp" className="size-4" />
+          <BrandIcon name="telegram" className="size-4" />
+        </div>
+      </div>
+
+      {/* Kartu mengambang: status uptime */}
+      <div className="animate-soft-float absolute -right-5 -bottom-5 hidden rounded-xl border border-white/60 bg-white/70 px-3 py-2 shadow-lg shadow-slate-300/40 backdrop-blur-md [animation-delay:1.2s] sm:block">
+        <div className="flex items-center gap-2">
+          <span className="size-2 rounded-full bg-emerald-500" />
+          <span className="text-xs font-semibold text-slate-700">99.9%</span>
+        </div>
+        <p className="text-[10px] font-medium text-slate-400">Uptime</p>
+      </div>
     </div>
   );
 }

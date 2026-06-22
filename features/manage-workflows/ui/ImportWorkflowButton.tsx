@@ -81,7 +81,7 @@ export function ImportWorkflowButton({
         onClick={() => fileInputRef.current?.click()}
       >
         {isImporting ? <Spinner /> : <UploadIcon />}
-        Impor
+        Import Workflow
       </Button>
     </>
   );

@@ -28,7 +28,7 @@ const STEPS = [
   },
 ];
 
-/** Mini-ilustrasi "Add Node" untuk langkah 1. */
+/** Mini-ilustrasi "Add Node" dengan kursor beranimasi menekan tombol. */
 function AddNodeWidget() {
   return (
     <div className="relative rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -36,7 +36,11 @@ function AddNodeWidget() {
         <PlusIcon className="size-4" />
         Add Node
       </div>
-      <MousePointer2Icon className="absolute right-6 bottom-3 size-5 fill-slate-700 text-slate-700" />
+
+      <div className="animate-cursor-tap absolute right-6 bottom-3">
+        <span className="animate-cursor-ripple absolute -top-1 -left-1 size-7 rounded-full bg-orange-400/40" />
+        <MousePointer2Icon className="relative size-5 fill-slate-700 text-slate-700" />
+      </div>
     </div>
   );
 }

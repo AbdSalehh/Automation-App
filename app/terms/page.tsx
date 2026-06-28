@@ -20,122 +20,122 @@ export default function TermsPage() {
     <LegalPage
       type="terms"
       title="Terms of Service"
-      intro={`Syarat dan ketentuan penggunaan layanan ${APP_NAME}. ${APP_NAME} adalah layanan gratis.`}
-      lastUpdated="20 Juni 2026"
+      intro={`Terms and conditions for using the ${APP_NAME} service. ${APP_NAME} is a free service.`}
+      lastUpdated="June 20, 2026"
       cardTitle="Terms of Service"
-      cardDescription={`Syarat dan ketentuan penggunaan layanan ${APP_NAME}. Mohon baca dengan saksama sebelum menggunakan layanan kami.`}
+      cardDescription={`Terms and conditions for using the ${APP_NAME} service. Please read them carefully before using our service.`}
       sections={[
         {
-          heading: "Pendahuluan",
+          heading: "Introduction",
           body: [
-            `Selamat datang di ${APP_NAME}. Dengan mengakses atau menggunakan layanan kami, Anda setuju untuk terikat oleh Syarat dan Ketentuan ini. Jika Anda tidak setuju dengan bagian mana pun dari ketentuan ini, harap jangan menggunakan layanan kami.`,
-            `${APP_NAME} adalah platform otomasi workflow berbasis cloud yang memungkinkan Anda membuat, menjalankan, dan mengelola alur kerja secara visual.`,
-            `${APP_NAME} disediakan secara gratis. Kami tidak memungut biaya apa pun untuk penggunaan layanan ini.`,
+            `Welcome to ${APP_NAME}. By accessing or using our service, you agree to be bound by these Terms of Service. If you do not agree with any part of these terms, please do not use our service.`,
+            `${APP_NAME} is a cloud-based workflow automation platform that lets you visually build, run, and manage workflows.`,
+            `${APP_NAME} is provided free of charge. We do not charge any fees for using this service.`,
           ],
         },
         {
-          heading: "Definisi",
+          heading: "Definitions",
           body: [
-            `"Layanan" mengacu pada platform ${APP_NAME}, termasuk situs web, antarmuka editor workflow, mesin eksekusi, dan seluruh fitur terkait.`,
-            `"Pengguna" adalah individu atau entitas yang membuat akun dan menggunakan Layanan. "Konten Pengguna" adalah seluruh data, konfigurasi workflow, kredensial, dan informasi yang Anda masukkan ke dalam Layanan.`,
+            `"Service" refers to the ${APP_NAME} platform, including the website, the workflow editor interface, the execution engine, and all related features.`,
+            `"User" is an individual or entity that creates an account and uses the Service. "User Content" is all data, workflow configurations, credentials, and information that you enter into the Service.`,
           ],
         },
         {
-          heading: "Akun Pengguna",
+          heading: "User Account",
           body: [
-            `Untuk menggunakan layanan ${APP_NAME}, Anda harus membuat akun. Anda bertanggung jawab untuk menjaga kerahasiaan informasi akun Anda dan semua aktivitas yang terjadi di bawah akun Anda.`,
-            "Anda setuju untuk segera memberi tahu kami jika terjadi penggunaan yang tidak sah atas akun Anda. Akun yang didaftarkan melalui Google mungkin memerlukan persetujuan administrator sebelum dapat digunakan.",
+            `To use the ${APP_NAME} service, you must create an account. You are responsible for keeping your account information confidential and for all activity that occurs under your account.`,
+            "You agree to notify us immediately of any unauthorized use of your account. Accounts registered through Google may require administrator approval before they can be used.",
           ],
         },
         {
-          heading: `Layanan ${APP_NAME}`,
+          heading: `The ${APP_NAME} Service`,
           body: [
-            `${APP_NAME} menyediakan alat untuk membuat workflow, integrasi dengan layanan pihak ketiga, eksekusi otomatis, penyimpanan konfigurasi, dan fitur lainnya tanpa biaya.`,
-            "Kami berhak untuk mengubah, menangguhkan, atau menghentikan sebagian atau seluruh layanan kapan saja. Karena layanan ini gratis, kami tidak menjamin ketersediaan tanpa gangguan dan dapat menerapkan batas penggunaan yang wajar untuk menjaga kestabilan sistem.",
+            `${APP_NAME} provides tools to build workflows, integrate with third-party services, run automations, store configurations, and other features at no cost.`,
+            "We reserve the right to modify, suspend, or discontinue part or all of the service at any time. Because this service is free, we do not guarantee uninterrupted availability and may apply reasonable usage limits to maintain system stability.",
           ],
         },
         {
-          heading: "Konten Pengguna",
+          heading: "User Content",
           body: [
-            "Anda tetap memiliki seluruh hak atas Konten Pengguna yang Anda masukkan. Anda memberikan kami lisensi terbatas untuk memproses dan menyimpan konten tersebut semata-mata untuk menjalankan Layanan bagi Anda.",
-            "Anda bertanggung jawab penuh atas legalitas dan keakuratan Konten Pengguna serta atas tindakan yang dijalankan otomasi Anda terhadap layanan pihak ketiga.",
+            "You retain all rights to the User Content you enter. You grant us a limited license to process and store that content solely to operate the Service for you.",
+            "You are fully responsible for the legality and accuracy of your User Content, as well as for the actions your automations perform against third-party services.",
           ],
         },
         {
-          heading: "Integrasi Pihak Ketiga",
+          heading: "Third-Party Integrations",
           body: [
-            `${APP_NAME} dapat terhubung dengan layanan pihak ketiga (mis. Telegram, WhatsApp, Google, dan penyedia AI) menggunakan kredensial yang Anda berikan.`,
-            "Penggunaan layanan pihak ketiga tunduk pada syarat dan kebijakan masing-masing penyedia. Kami tidak bertanggung jawab atas perubahan, pembatasan, atau gangguan pada layanan pihak ketiga tersebut.",
+            `${APP_NAME} can connect with third-party services (e.g. Telegram, WhatsApp, Google, and AI providers) using the credentials you provide.`,
+            "Use of third-party services is subject to the terms and policies of each provider. We are not responsible for changes, restrictions, or disruptions to those third-party services.",
           ],
         },
         {
-          heading: "Penggunaan yang Dilarang",
+          heading: "Prohibited Use",
           body: [
-            `Anda setuju untuk tidak menggunakan ${APP_NAME} untuk tujuan ilegal, menipu, merugikan pihak lain, atau melanggar hak pihak ketiga.`,
-            "Dilarang menggunakan layanan untuk mengirim spam, malware, melakukan scraping yang melanggar ketentuan, atau aktivitas yang dapat mengganggu, membebani berlebihan, atau merusak sistem kami maupun pengguna lain.",
+            `You agree not to use ${APP_NAME} for illegal or fraudulent purposes, to harm others, or to infringe the rights of third parties.`,
+            "You may not use the service to send spam or malware, perform scraping that violates terms, or carry out activities that may disrupt, overload, or damage our systems or other users.",
           ],
         },
         {
-          heading: "Kepemilikan & Hak Kekayaan Intelektual",
+          heading: "Ownership & Intellectual Property Rights",
           body: [
-            `Semua konten, merek dagang, logo, dan teknologi yang terdapat dalam ${APP_NAME} adalah milik kami atau pemberi lisensi kami dan dilindungi oleh hukum hak cipta dan kekayaan intelektual.`,
-            "Anda diberikan lisensi terbatas, non-eksklusif, dan dapat dicabut untuk menggunakan layanan kami sesuai dengan Syarat dan Ketentuan ini.",
+            `All content, trademarks, logos, and technology contained within ${APP_NAME} are owned by us or our licensors and are protected by copyright and intellectual property laws.`,
+            "You are granted a limited, non-exclusive, and revocable license to use our service in accordance with these Terms of Service.",
           ],
         },
         {
-          heading: "Batasan Tanggung Jawab",
+          heading: "Limitation of Liability",
           body: [
-            `Layanan disediakan "sebagaimana adanya" tanpa jaminan dalam bentuk apa pun. Karena ${APP_NAME} gratis, sejauh diizinkan oleh hukum, kami tidak bertanggung jawab atas kerugian langsung maupun tidak langsung yang timbul dari penggunaan atau ketidakmampuan menggunakan layanan.`,
-            "Anda menggunakan otomasi yang Anda buat atas risiko Anda sendiri, termasuk dampaknya terhadap data dan akun pihak ketiga yang Anda hubungkan.",
+            `The service is provided "as is" without warranties of any kind. Because ${APP_NAME} is free, to the extent permitted by law, we are not liable for any direct or indirect damages arising from the use of or inability to use the service.`,
+            "You use the automations you create at your own risk, including their impact on the data and third-party accounts you connect.",
           ],
         },
         {
-          heading: "Penghentian",
+          heading: "Termination",
           body: [
-            "Kami dapat menangguhkan atau menghentikan akses Anda jika Anda melanggar Syarat dan Ketentuan ini atau menyalahgunakan layanan.",
-            "Anda dapat berhenti menggunakan layanan dan menghapus akun Anda kapan saja melalui halaman pengaturan.",
+            "We may suspend or terminate your access if you violate these Terms of Service or misuse the service.",
+            "You may stop using the service and delete your account at any time through the settings page.",
           ],
         },
         {
-          heading: "Perubahan Ketentuan & Hukum yang Berlaku",
+          heading: "Changes to the Terms & Governing Law",
           body: [
-            "Kami dapat memperbarui Syarat dan Ketentuan ini sewaktu-waktu. Perubahan material akan diberitahukan melalui halaman ini. Penggunaan berkelanjutan setelah perubahan berarti Anda menyetujui ketentuan yang diperbarui.",
-            "Syarat dan Ketentuan ini diatur oleh hukum yang berlaku di Republik Indonesia.",
+            "We may update these Terms of Service from time to time. Material changes will be announced on this page. Continued use after changes means you accept the updated terms.",
+            "These Terms of Service are governed by the laws in force in the Republic of Indonesia.",
           ],
         },
       ]}
-      summaryTitle="Ringkasan Ketentuan Utama"
-      summarySubtitle="Berikut adalah poin penting yang perlu Anda ketahui."
+      summaryTitle="Summary of Key Terms"
+      summarySubtitle="Here are the important points you should know."
       summaryCards={[
         {
           icon: <UserIcon className="size-4" />,
           iconClassName: "bg-orange-50 text-orange-600",
-          title: "Akun Anda",
-          text: "Anda bertanggung jawab atas keamanan akun dan aktivitas yang terjadi.",
+          title: "Your Account",
+          text: "You are responsible for the security of your account and any activity that occurs.",
         },
         {
           icon: <ShieldCheckIcon className="size-4" />,
           iconClassName: "bg-orange-50 text-orange-600",
-          title: "Penggunaan Wajar",
-          text: "Gunakan layanan secara legal dan tidak melanggar hak pihak lain.",
+          title: "Fair Use",
+          text: "Use the service legally and do not infringe the rights of others.",
         },
         {
           icon: <GiftIcon className="size-4" />,
           iconClassName: "bg-orange-50 text-orange-600",
-          title: "Gratis",
-          text: "Layanan ini disediakan tanpa biaya apa pun.",
+          title: "Free",
+          text: "This service is provided at no cost.",
         },
         {
           icon: <LockIcon className="size-4" />,
           iconClassName: "bg-orange-50 text-orange-600",
-          title: "Keamanan Data",
-          text: "Kami menjaga keamanan data Anda sesuai kebijakan privasi.",
+          title: "Data Security",
+          text: "We protect the security of your data in accordance with the privacy policy.",
         },
         {
           icon: <PencilIcon className="size-4" />,
           iconClassName: "bg-orange-50 text-orange-500",
-          title: "Perubahan",
-          text: "Kami dapat mengubah ketentuan kapan saja dengan pemberitahuan.",
+          title: "Changes",
+          text: "We may change the terms at any time with notice.",
         },
       ]}
       callToAction={null}

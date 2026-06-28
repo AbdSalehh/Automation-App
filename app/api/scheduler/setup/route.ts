@@ -28,7 +28,7 @@ function assertSecret(request: Request): string | null {
     url.searchParams.get("secret") ??
     (request.headers.get("authorization") ?? "").replace("Bearer ", "");
 
-  return provided === cronSecret ? null : "CRON secret tidak valid";
+  return provided === cronSecret ? null : "Invalid CRON secret";
 }
 
 /** Builds the absolute destination URL that QStash should call each tick. */
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     }
 
     if (!process.env.APP_URL) {
-      return badRequest("APP_URL belum diset — wajib untuk membuat schedule");
+      return badRequest("APP_URL is not set — required to create a schedule");
     }
 
     const client = getQStashClient();
@@ -84,7 +84,7 @@ export async function POST(request: Request) {
         cron: SCHEDULE_CRON,
         removedStale: staleSchedules.length,
       },
-      "Schedule QStash berhasil dibuat",
+      "QStash schedule created successfully",
     );
   });
 }
@@ -100,7 +100,7 @@ export async function GET(request: Request) {
     const client = getQStashClient();
     const schedules = await client.schedules.list();
 
-    return ok({ schedules, count: schedules.length }, "Daftar schedule QStash");
+    return ok({ schedules, count: schedules.length }, "QStash schedule list");
   });
 }
 
@@ -116,12 +116,12 @@ export async function DELETE(request: Request) {
     const scheduleId = url.searchParams.get("scheduleId");
 
     if (!scheduleId) {
-      return badRequest("Parameter scheduleId wajib diisi");
+      return badRequest("The scheduleId parameter is required");
     }
 
     const client = getQStashClient();
     await client.schedules.delete(scheduleId);
 
-    return ok({ scheduleId }, "Schedule QStash berhasil dihapus");
+    return ok({ scheduleId }, "QStash schedule deleted successfully");
   });
 }

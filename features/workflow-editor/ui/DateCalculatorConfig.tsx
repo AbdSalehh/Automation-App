@@ -32,11 +32,11 @@ interface DateCalculatorConfigProps {
 }
 
 const OFFSET_UNITS: { key: keyof DateOffsets; label: string }[] = [
-  { key: "minutes", label: "Menit" },
-  { key: "hours", label: "Jam" },
-  { key: "days", label: "Hari" },
-  { key: "months", label: "Bulan" },
-  { key: "years", label: "Tahun" },
+  { key: "minutes", label: "Minutes" },
+  { key: "hours", label: "Hours" },
+  { key: "days", label: "Days" },
+  { key: "months", label: "Months" },
+  { key: "years", label: "Years" },
 ];
 
 export function DateCalculatorConfig({
@@ -73,10 +73,10 @@ export function DateCalculatorConfig({
       <div className="border-border bg-muted/20 flex items-center justify-between rounded-md border px-3 py-2">
         <div className="flex flex-col">
           <Label className="text-foreground text-xs font-medium">
-            Tanggal Absolut
+            Absolute Date
           </Label>
           <span className="text-muted-foreground text-[11px]">
-            Pakai tanggal tetap dari kalender
+            Use a fixed date from the calendar
           </span>
         </div>
 
@@ -91,7 +91,7 @@ export function DateCalculatorConfig({
       {isAbsolute ? (
         <div>
           <Label className="text-muted-foreground mb-1 block text-xs font-medium">
-            Pilih Tanggal
+            Select Date
           </Label>
 
           <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
@@ -105,12 +105,12 @@ export function DateCalculatorConfig({
               >
                 <CalendarIcon className="size-4" />
                 {selectedDate
-                  ? selectedDate.toLocaleDateString("id-ID", {
+                  ? selectedDate.toLocaleDateString("en-US", {
                       day: "numeric",
                       month: "long",
                       year: "numeric",
                     })
-                  : "Pilih tanggal"}
+                  : "Select date"}
               </Button>
             </PopoverTrigger>
 
@@ -134,7 +134,7 @@ export function DateCalculatorConfig({
           {/* Base column */}
           <div>
             <Label className="text-muted-foreground mb-1 block text-xs font-medium">
-              Kolom Tanggal Acuan
+              Base Date Column
             </Label>
 
             <Select
@@ -144,11 +144,11 @@ export function DateCalculatorConfig({
               }
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="— pilih kolom (default: sekarang) —" />
+                <SelectValue placeholder="— select column (default: now) —" />
               </SelectTrigger>
 
               <SelectContent>
-                <SelectItem value="_none">Sekarang (now)</SelectItem>
+                <SelectItem value="_none">Now</SelectItem>
 
                 {availableColumns.map((column) => (
                   <SelectItem key={column} value={column}>
@@ -162,7 +162,7 @@ export function DateCalculatorConfig({
           {/* Operation */}
           <div>
             <Label className="text-muted-foreground mb-1 block text-xs font-medium">
-              Operasi
+              Operation
             </Label>
 
             <Select
@@ -174,8 +174,8 @@ export function DateCalculatorConfig({
               </SelectTrigger>
 
               <SelectContent>
-                <SelectItem value="subtract">Kurangi (sebelum)</SelectItem>
-                <SelectItem value="add">Tambah (sesudah)</SelectItem>
+                <SelectItem value="subtract">Subtract (before)</SelectItem>
+                <SelectItem value="add">Add (after)</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -183,7 +183,7 @@ export function DateCalculatorConfig({
           {/* Offset units */}
           <div>
             <Label className="text-muted-foreground mb-1.5 block text-xs font-medium">
-              Selisih Waktu
+              Time Offset
             </Label>
 
             <div className="grid grid-cols-2 gap-2">
@@ -212,7 +212,7 @@ export function DateCalculatorConfig({
       {/* Shared time-of-day override */}
       <div>
         <Label className="text-muted-foreground mb-1 block text-xs font-medium">
-          Jam Eksekusi (opsional)
+          Execution Time (optional)
         </Label>
 
         <Input
@@ -224,7 +224,8 @@ export function DateCalculatorConfig({
         />
 
         <p className="text-muted-foreground mt-1 text-xs">
-          Setel jam tertentu pada tanggal hasil. Kosongkan untuk pakai jam asli.
+          Set a specific time on the resulting date. Leave blank to keep the
+          original time.
         </p>
       </div>
     </div>

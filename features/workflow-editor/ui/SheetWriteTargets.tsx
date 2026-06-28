@@ -54,12 +54,12 @@ export function SheetWriteTargets({
   return (
     <div className="flex flex-col gap-2">
       <label className="text-muted-foreground block text-xs font-medium">
-        Kolom yang Ditulis
+        Columns to Write
       </label>
 
       {targets.length === 0 && (
         <p className="text-muted-foreground text-xs">
-          Belum ada kolom. Tambahkan kolom yang ingin di-update.
+          No columns yet. Add the columns you want to update.
         </p>
       )}
 
@@ -78,13 +78,13 @@ export function SheetWriteTargets({
               }
             >
               <SelectTrigger size="sm" className="flex-1">
-                <SelectValue placeholder="— pilih kolom —" />
+                <SelectValue placeholder="— select column —" />
               </SelectTrigger>
 
               <SelectContent>
                 {availableColumns.length === 0 ? (
                   <SelectItem value="_none" disabled>
-                    Belum ada kolom
+                    No columns yet
                   </SelectItem>
                 ) : (
                   availableColumns.map((column) => (
@@ -100,7 +100,7 @@ export function SheetWriteTargets({
               type="button"
               onClick={() => removeTarget(targetIndex)}
               className="text-muted-foreground hover:text-destructive shrink-0"
-              aria-label="Hapus kolom"
+              aria-label="Delete column"
             >
               <Trash2Icon className="size-4" />
             </button>
@@ -108,7 +108,7 @@ export function SheetWriteTargets({
 
           <Input
             className="h-8 text-xs"
-            placeholder="Nilai baru, mis. {{message}} ({{__replyAt}})"
+            placeholder="New value, e.g. {{message}} ({{__replyAt}})"
             value={target.value}
             onChange={(changeEvent) =>
               updateTarget(targetIndex, { value: changeEvent.target.value })
@@ -126,7 +126,7 @@ export function SheetWriteTargets({
                 })
               }
             />
-            Tambahkan setelah data lama (pakai koma)
+            Append after existing data (comma-separated)
           </label>
         </div>
       ))}
@@ -139,13 +139,13 @@ export function SheetWriteTargets({
         onClick={addTarget}
       >
         <PlusIcon className="size-4" />
-        Tambah Kolom
+        Add Column
       </Button>
 
       <p className="text-muted-foreground text-xs">
-        Mendukung {"{{kolom}}"}, hasil WA ({"{{__waMessageId}}"},{" "}
-        {"{{__waTarget}}"}, {"{{__waSentAt}}"}) dan waktu balasan{" "}
-        {"{{__replyAt}}"}.
+        Supports {"{{column}}"}, WA results ({"{{__waMessageId}}"},{" "}
+        {"{{__waTarget}}"}, {"{{__waSentAt}}"}) and reply time {"{{__replyAt}}"}
+        .
       </p>
     </div>
   );

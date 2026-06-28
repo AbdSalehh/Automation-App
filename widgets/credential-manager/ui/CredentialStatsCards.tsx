@@ -23,7 +23,7 @@ export function CredentialStatsCards({
     {
       label: "Total Credentials",
       value: total,
-      hint: "Semua kredensial tersimpan",
+      hint: "All stored credentials",
       hintClass: "text-muted-foreground",
       icon: LockIcon,
       iconClass: "bg-orange-100 text-orange-600",
@@ -31,15 +31,15 @@ export function CredentialStatsCards({
     {
       label: "Encrypted",
       value: encrypted,
-      hint: "100% terenkripsi (AES-256-GCM)",
+      hint: "100% encrypted (AES-256-GCM)",
       hintClass: "text-emerald-600",
       icon: ShieldCheckIcon,
       iconClass: "bg-emerald-100 text-emerald-600",
     },
     {
-      label: "Terhubung",
+      label: "Connected",
       value: connected,
-      hint: "Koneksi aktif dan valid",
+      hint: "Active and valid connections",
       hintClass: "text-muted-foreground",
       icon: ZapIcon,
       iconClass: "bg-orange-100 text-orange-600",
@@ -47,7 +47,7 @@ export function CredentialStatsCards({
     {
       label: "Expired",
       value: expired,
-      hint: "Perlu diperbarui",
+      hint: "Needs renewal",
       hintClass: "text-muted-foreground",
       icon: KeyRoundIcon,
       iconClass: "bg-amber-100 text-amber-600",

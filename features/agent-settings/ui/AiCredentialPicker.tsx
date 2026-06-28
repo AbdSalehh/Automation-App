@@ -45,7 +45,7 @@ export function AiCredentialPicker({
 
   const nameById = (credentialId: string) =>
     aiCredentials.find((credential) => credential.id === credentialId)?.name ??
-    "Kredensial dihapus";
+    "Credential deleted";
 
   const addCredential = (credentialId: string) => {
     if (selectedIds.includes(credentialId)) {
@@ -82,12 +82,11 @@ export function AiCredentialPicker({
   if (aiCredentials.length === 0) {
     return (
       <p className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-700">
-        Belum ada kredensial AI. Tambahkan tipe &quot;AI Provider&quot; di
-        halaman{" "}
+        No AI credentials yet. Add an &quot;AI Provider&quot; type on the{" "}
         <Link href="/credentials" className="font-semibold underline">
           Credentials
         </Link>{" "}
-        terlebih dahulu.
+        page first.
       </p>
     );
   }
@@ -115,7 +114,7 @@ export function AiCredentialPicker({
                 size="icon-sm"
                 disabled={index === 0}
                 onClick={() => moveCredential(credentialId, "up")}
-                aria-label="Naikkan prioritas"
+                aria-label="Increase priority"
               >
                 <ArrowUpIcon className="size-3.5" />
               </Button>
@@ -126,7 +125,7 @@ export function AiCredentialPicker({
                 size="icon-sm"
                 disabled={index === selectedIds.length - 1}
                 onClick={() => moveCredential(credentialId, "down")}
-                aria-label="Turunkan prioritas"
+                aria-label="Decrease priority"
               >
                 <ArrowDownIcon className="size-3.5" />
               </Button>
@@ -136,7 +135,7 @@ export function AiCredentialPicker({
                 variant="ghost"
                 size="icon-sm"
                 onClick={() => removeCredential(credentialId)}
-                aria-label="Hapus kredensial"
+                aria-label="Delete credential"
               >
                 <XIcon className="size-3.5" />
               </Button>
@@ -148,7 +147,7 @@ export function AiCredentialPicker({
       {availableToAdd.length > 0 && (
         <Select value="" onValueChange={addCredential}>
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="+ Tambah kredensial AI" />
+            <SelectValue placeholder="+ Add AI credential" />
           </SelectTrigger>
 
           <SelectContent>

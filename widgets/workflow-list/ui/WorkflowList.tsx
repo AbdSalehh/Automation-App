@@ -116,7 +116,7 @@ export function WorkflowList() {
         <div>
           <h1 className="text-foreground text-2xl font-bold">Workflows</h1>
           <p className="text-muted-foreground text-sm">
-            Kelola, jalankan, dan monitor semua workflow automasi Anda.
+            Manage, run, and monitor all your automation workflows.
           </p>
         </div>
 
@@ -162,7 +162,7 @@ export function WorkflowList() {
         </div>
       ) : filteredWorkflows.length === 0 ? (
         <div className="border-border text-muted-foreground rounded-xl border border-dashed py-16 text-center">
-          Tidak ada workflow yang cocok dengan filter.
+          No workflows match the filter.
         </div>
       ) : (
         <div className="border-border bg-card overflow-hidden rounded-2xl border">

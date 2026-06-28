@@ -33,10 +33,10 @@ export async function SettingsView() {
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8">
         <header className="flex flex-col gap-1">
           <h1 className="text-foreground text-2xl font-bold tracking-tight">
-            Pengaturan Akun
+            Account Settings
           </h1>
           <p className="text-muted-foreground text-sm">
-            Kelola informasi akun, keamanan, dan integrasi Anda.
+            Manage your account information, security, and integrations.
           </p>
         </header>
 
@@ -53,7 +53,7 @@ export async function SettingsView() {
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2">
                 <span className="text-lg font-bold">
-                  {account?.name || "Pengguna"}
+                  {account?.name || "User"}
                 </span>
                 <Badge
                   variant={isAdmin ? "warning" : "neutral"}
@@ -67,7 +67,7 @@ export async function SettingsView() {
                 {account?.email}
               </span>
               <Badge variant="success" className="mt-1">
-                Akun Aktif
+                Account Active
               </Badge>
             </div>
           </div>
@@ -75,7 +75,7 @@ export async function SettingsView() {
           <div className="flex flex-wrap items-start gap-8">
             <div className="flex flex-col gap-1">
               <span className="text-muted-foreground text-xs font-semibold">
-                Metode Login
+                Login Method
               </span>
               <div className="mt-1 flex items-center gap-2">
                 <span className="grid size-6 place-items-center rounded-full bg-slate-100 text-xs font-bold text-slate-600">
@@ -89,7 +89,7 @@ export async function SettingsView() {
 
             <div className="flex flex-col gap-1">
               <span className="text-muted-foreground text-xs font-semibold">
-                Terakhir Aktif
+                Last Active
               </span>
               <div className="mt-1 flex items-center gap-1.5">
                 <span className="size-2 rounded-full bg-emerald-500" />
@@ -97,7 +97,7 @@ export async function SettingsView() {
                   Online
                 </span>
               </div>
-              <span className="text-muted-foreground text-xs">Sekarang</span>
+              <span className="text-muted-foreground text-xs">Now</span>
             </div>
           </div>
         </section>

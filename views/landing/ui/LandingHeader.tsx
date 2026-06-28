@@ -3,10 +3,10 @@ import { ROUTES } from "@/shared/config/constants";
 import { Button, BrandLogo } from "@/shared/ui";
 
 const NAV_LINKS = [
-  { label: "Fitur", href: "#fitur" },
-  { label: "Integrasi", href: "#integrasi" },
-  { label: "Cara Kerja", href: "#cara-kerja" },
-  { label: "Dokumentasi", href: ROUTES.terms },
+  { label: "Features", href: "#fitur" },
+  { label: "Integrations", href: "#integrasi" },
+  { label: "How It Works", href: "#cara-kerja" },
+  { label: "Documentation", href: ROUTES.terms },
 ];
 
 /**
@@ -40,7 +40,7 @@ export function LandingHeader({
           {isAuthenticated ? (
             <Link href={ROUTES.workflows} id="header-dashboard-button">
               <Button className="bg-orange-500 text-white shadow-sm hover:bg-orange-600">
-                Buka Dashboard
+                Open Dashboard
               </Button>
             </Link>
           ) : (

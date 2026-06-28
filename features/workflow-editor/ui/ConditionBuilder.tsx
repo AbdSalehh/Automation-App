@@ -67,7 +67,7 @@ export function ConditionBuilder({
   return (
     <div className="border-border bg-muted/30 flex flex-col gap-3 rounded-md border p-3">
       <div className="text-muted-foreground flex items-center gap-2 text-xs">
-        <span>Cocokkan</span>
+        <span>Match</span>
 
         <Select
           value={value.match}
@@ -80,17 +80,17 @@ export function ConditionBuilder({
           </SelectTrigger>
 
           <SelectContent>
-            <SelectItem value="all">SEMUA (AND)</SelectItem>
-            <SelectItem value="any">SALAH SATU (OR)</SelectItem>
+            <SelectItem value="all">ALL (AND)</SelectItem>
+            <SelectItem value="any">ANY (OR)</SelectItem>
           </SelectContent>
         </Select>
 
-        <span>kondisi berikut:</span>
+        <span>of the following conditions:</span>
       </div>
 
       {rules.length === 0 && (
         <p className="text-muted-foreground text-xs">
-          Belum ada kondisi. Tambahkan minimal satu.
+          No conditions yet. Add at least one.
         </p>
       )}
 
@@ -104,7 +104,7 @@ export function ConditionBuilder({
           >
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground text-xs font-medium">
-                Kolom
+                Column
               </span>
 
               <Select
@@ -116,13 +116,13 @@ export function ConditionBuilder({
                 }
               >
                 <SelectTrigger size="sm" className="flex-1">
-                  <SelectValue placeholder="— pilih kolom —" />
+                  <SelectValue placeholder="— select column —" />
                 </SelectTrigger>
 
                 <SelectContent>
                   {availableColumns.length === 0 ? (
                     <SelectItem value="_none" disabled>
-                      Belum ada kolom
+                      No columns yet
                     </SelectItem>
                   ) : (
                     availableColumns.map((column) => (
@@ -138,7 +138,7 @@ export function ConditionBuilder({
                 type="button"
                 onClick={() => removeRule(ruleIndex)}
                 className="text-muted-foreground hover:text-destructive shrink-0"
-                aria-label="Hapus kondisi"
+                aria-label="Delete condition"
               >
                 <Trash2Icon className="size-4" />
               </button>
@@ -180,7 +180,7 @@ export function ConditionBuilder({
                     <Input
                       className={cn("h-8 text-xs")}
                       list={columnValues.length > 0 ? datalistId : undefined}
-                      placeholder="nilai pembanding (mis. Belum Dibayar)"
+                      placeholder="comparison value (e.g. Unpaid)"
                       value={rule.value ?? ""}
                       onChange={(changeEvent) =>
                         updateRule(ruleIndex, {
@@ -211,7 +211,7 @@ export function ConditionBuilder({
         onClick={addRule}
       >
         <PlusIcon className="size-4" />
-        Tambah Kondisi
+        Add Condition
       </Button>
     </div>
   );

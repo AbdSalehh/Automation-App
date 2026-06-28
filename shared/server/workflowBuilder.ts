@@ -253,7 +253,7 @@ export async function buildWorkflowFromPrompt(
   });
 
   if (!rawText) {
-    throw new Error("Builder: penyedia AI tidak menghasilkan output");
+    throw new Error("Builder: the AI provider produced no output");
   }
 
   let parsed: RawBuilderResult;
@@ -261,13 +261,13 @@ export async function buildWorkflowFromPrompt(
   try {
     parsed = extractJson(rawText);
   } catch {
-    throw new Error("Builder: output Gemini bukan JSON yang valid");
+    throw new Error("Builder: Gemini output is not valid JSON");
   }
 
-  const built = normalizeBuilderResult(parsed, "Otomasi Baru");
+  const built = normalizeBuilderResult(parsed, "New Automation");
 
   if (built.nodes.length === 0) {
-    throw new Error("Builder: tidak ada node valid yang dihasilkan");
+    throw new Error("Builder: no valid nodes were produced");
   }
 
   built.missingCredentials = await assignCredentials(built.nodes, ownerId);

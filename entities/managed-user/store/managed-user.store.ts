@@ -70,7 +70,7 @@ export const useManagedUserStore = create<ManagedUserState>((set, get) => ({
 
       set({ users, metadata });
     } catch {
-      set({ errorMessage: "Gagal memuat daftar pengguna." });
+      set({ errorMessage: "Failed to load the user list." });
     } finally {
       set({ isLoading: false });
     }
@@ -119,7 +119,7 @@ export const useManagedUserStore = create<ManagedUserState>((set, get) => ({
       set({ users: [createdUser, ...get().users] });
       return true;
     } catch {
-      set({ errorMessage: "Gagal membuat pengguna baru." });
+      set({ errorMessage: "Failed to create the new user." });
       return false;
     } finally {
       set({ isSubmitting: false });
@@ -133,7 +133,7 @@ export const useManagedUserStore = create<ManagedUserState>((set, get) => ({
       await managedUserService.resetPassword(userId, password);
       return true;
     } catch {
-      set({ errorMessage: "Gagal mereset password pengguna." });
+      set({ errorMessage: "Failed to reset the user's password." });
       return false;
     } finally {
       set({ isSubmitting: false });
@@ -154,7 +154,7 @@ export const useManagedUserStore = create<ManagedUserState>((set, get) => ({
 
       return true;
     } catch {
-      set({ errorMessage: "Gagal menyetujui pengguna." });
+      set({ errorMessage: "Failed to approve the user." });
       return false;
     } finally {
       set({ isSubmitting: false });
@@ -175,7 +175,7 @@ export const useManagedUserStore = create<ManagedUserState>((set, get) => ({
 
       return true;
     } catch {
-      set({ errorMessage: "Gagal menolak pengguna." });
+      set({ errorMessage: "Failed to reject the user." });
       return false;
     } finally {
       set({ isSubmitting: false });
@@ -196,7 +196,7 @@ export const useManagedUserStore = create<ManagedUserState>((set, get) => ({
 
       return true;
     } catch {
-      set({ errorMessage: "Gagal membuka kunci pengguna." });
+      set({ errorMessage: "Failed to unlock the user." });
       return false;
     } finally {
       set({ isSubmitting: false });
@@ -219,8 +219,8 @@ export const useManagedUserStore = create<ManagedUserState>((set, get) => ({
     } catch {
       set({
         errorMessage: isActive
-          ? "Gagal mengaktifkan pengguna."
-          : "Gagal menonaktifkan pengguna.",
+          ? "Failed to activate the user."
+          : "Failed to deactivate the user.",
       });
       return false;
     } finally {
@@ -236,7 +236,7 @@ export const useManagedUserStore = create<ManagedUserState>((set, get) => ({
       set({ users: get().users.filter((user) => user.id !== userId) });
       return true;
     } catch {
-      set({ errorMessage: "Gagal menghapus pengguna." });
+      set({ errorMessage: "Failed to delete the user." });
       return false;
     } finally {
       set({ isSubmitting: false });

@@ -46,7 +46,7 @@ export function ExecutionResultPanel({
       <div className="border-border flex items-center justify-between border-b px-4 py-2">
         <div className="flex items-center gap-2">
           <span className="text-foreground text-sm font-semibold">
-            Hasil Eksekusi
+            Execution Result
           </span>
 
           {detail && (
@@ -59,7 +59,7 @@ export function ExecutionResultPanel({
         <button
           onClick={onClose}
           className="text-muted-foreground hover:text-foreground"
-          aria-label="Tutup panel hasil"
+          aria-label="Close result panel"
         >
           <XIcon className="size-4" />
         </button>
@@ -68,10 +68,10 @@ export function ExecutionResultPanel({
       <div className="flex-1 overflow-y-auto px-4 py-2 font-mono text-xs">
         {isLoadingDetail ? (
           <span className="text-muted-foreground flex items-center gap-2">
-            <Spinner /> Memuat log…
+            <Spinner /> Loading logs…
           </span>
         ) : !detail ? (
-          <p className="text-destructive">Gagal memuat hasil.</p>
+          <p className="text-destructive">Failed to load result.</p>
         ) : (
           <ul className="space-y-1">
             {detail.logs.map((logEntry) => (

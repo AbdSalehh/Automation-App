@@ -57,7 +57,9 @@ export const useAccountStore = create<AccountState>((set) => ({
 
       return true;
     } catch (error) {
-      set({ errorMessage: toErrorMessage(error, "Gagal memperbarui profil.") });
+      set({
+        errorMessage: toErrorMessage(error, "Failed to update the profile."),
+      });
 
       return false;
     } finally {
@@ -75,7 +77,9 @@ export const useAccountStore = create<AccountState>((set) => ({
 
       return true;
     } catch (error) {
-      set({ errorMessage: toErrorMessage(error, "Gagal mengubah password.") });
+      set({
+        errorMessage: toErrorMessage(error, "Failed to change the password."),
+      });
 
       return false;
     } finally {

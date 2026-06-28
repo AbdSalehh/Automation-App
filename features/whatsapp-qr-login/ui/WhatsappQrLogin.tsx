@@ -47,7 +47,7 @@ export const WhatsappQrLogin = () => {
     <div className="border-border bg-card flex flex-col items-center gap-4 rounded-xl border p-6">
       <div className="flex flex-col items-center gap-1">
         <h2 className="text-foreground text-lg font-semibold">
-          Hubungkan WhatsApp (Baileys)
+          Connect WhatsApp (Baileys)
         </h2>
 
         <p className="text-muted-foreground text-xs">
@@ -57,7 +57,7 @@ export const WhatsappQrLogin = () => {
 
       {isReady && (
         <p className="text-sm font-medium text-green-600">
-          WhatsApp sudah tersambung
+          WhatsApp is connected
         </p>
       )}
 
@@ -70,7 +70,7 @@ export const WhatsappQrLogin = () => {
         >
           <Image
             src={qrDataUrl}
-            alt="QR code WhatsApp"
+            alt="WhatsApp QR code"
             width={264}
             height={264}
             unoptimized
@@ -82,14 +82,14 @@ export const WhatsappQrLogin = () => {
         <div className="border-border bg-muted/30 flex h-[264px] w-[264px] flex-col items-center justify-center gap-3 rounded-xl border">
           <Spinner className="text-muted-foreground h-8 w-8" />
           <p className="text-muted-foreground text-xs">
-            {isPolling ? "Memuat status sesi..." : "Menyiapkan QR code..."}
+            {isPolling ? "Loading session status..." : "Preparing QR code..."}
           </p>
         </div>
       )}
 
       <p className="text-muted-foreground max-w-xs text-center text-xs">
-        Buka WhatsApp di ponsel, masuk ke Perangkat Tertaut, lalu pindai kode di
-        atas.
+        Open WhatsApp on your phone, go to Linked Devices, then scan the code
+        above.
       </p>
     </div>
   );

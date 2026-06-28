@@ -26,11 +26,11 @@ export async function POST(request: Request, { params }: RouteParams) {
     const workflow = await prisma.workflow.findUnique({ where: { id } });
 
     if (!workflow) {
-      return notFound("Workflow tidak ditemukan");
+      return notFound("Workflow not found");
     }
 
     if (!workflow.isPublished) {
-      return notFound("Workflow belum dipublish");
+      return notFound("Workflow is not published");
     }
 
     let payload: unknown = null;
@@ -43,7 +43,7 @@ export async function POST(request: Request, { params }: RouteParams) {
 
     const executionId = await runWorkflow(id, payload);
 
-    return ok({ executionId }, "Webhook diterima, workflow dijalankan");
+    return ok({ executionId }, "Webhook received, workflow executed");
   });
 }
 
@@ -55,7 +55,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
     const workflow = await prisma.workflow.findUnique({ where: { id } });
 
     if (!workflow) {
-      return notFound("Workflow tidak ditemukan");
+      return notFound("Workflow not found");
     }
 
     return ok(

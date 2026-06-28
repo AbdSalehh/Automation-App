@@ -64,7 +64,7 @@ export const useSheetColumnsStore = create<SheetColumnsState>((set, get) => ({
         },
       }));
     } catch {
-      set({ errorMessage: "Gagal mengambil kolom dari spreadsheet." });
+      set({ errorMessage: "Failed to fetch columns from the spreadsheet." });
     } finally {
       set({ isLoading: false });
     }

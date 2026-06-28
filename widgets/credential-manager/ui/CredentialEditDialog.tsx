@@ -50,7 +50,7 @@ export function CredentialEditDialog({
     });
 
     if (wasUpdated) {
-      toast.success("Kredensial berhasil diperbarui.");
+      toast.success("Credential successfully updated.");
       setFieldValues({});
       onClose();
     }
@@ -65,7 +65,7 @@ export function CredentialEditDialog({
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
           <label className="text-foreground mb-1 block text-sm font-medium">
-            Nama Kredensial
+            Credential Name
           </label>
 
           <Input
@@ -73,7 +73,7 @@ export function CredentialEditDialog({
             onChange={(changeEvent) =>
               setCredentialName(changeEvent.target.value)
             }
-            placeholder="mis. Google Workspace Saya"
+            placeholder="e.g. My Google Workspace"
             required
           />
         </div>
@@ -89,7 +89,7 @@ export function CredentialEditDialog({
               value={fieldValues[credentialField.key] ?? ""}
               placeholder={
                 credentialField.secret
-                  ? "Biarkan kosong untuk mempertahankan nilai lama"
+                  ? "Leave blank to keep the existing value"
                   : credentialField.placeholder
               }
               onChange={(changeEvent) =>
@@ -101,12 +101,12 @@ export function CredentialEditDialog({
 
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onClose}>
-            Batal
+            Cancel
           </Button>
 
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting && <Spinner />}
-            Simpan Perubahan
+            Save Changes
           </Button>
         </div>
       </form>

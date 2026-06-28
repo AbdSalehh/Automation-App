@@ -47,11 +47,11 @@ export function ImportWorkflowButton({
       const createdWorkflowId = await importWorkflow(transfer);
 
       if (!createdWorkflowId) {
-        toast.error("Gagal mengimpor workflow");
+        toast.error("Failed to import workflow");
         return;
       }
 
-      toast.success("Workflow berhasil diimpor", {
+      toast.success("Workflow imported successfully", {
         description: transfer.name,
       });
 
@@ -59,7 +59,7 @@ export function ImportWorkflowButton({
         router.push(ROUTES.workflow(createdWorkflowId));
       }
     } catch (error) {
-      toast.error("Berkas workflow tidak valid", {
+      toast.error("Invalid workflow file", {
         description: error instanceof Error ? error.message : undefined,
       });
     }

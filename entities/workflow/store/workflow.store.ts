@@ -97,7 +97,7 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
       const workflow = await workflowService.getById(workflowId);
       set(applyWorkflow(workflow));
     } catch {
-      set({ errorMessage: "Gagal memuat workflow." });
+      set({ errorMessage: "Failed to load workflow." });
     } finally {
       set({ isLoading: false });
     }
@@ -286,7 +286,7 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
 
       set(applyWorkflow(updatedWorkflow));
     } catch {
-      set({ errorMessage: "Gagal menyimpan workflow." });
+      set({ errorMessage: "Failed to save the workflow." });
     } finally {
       set({ isSaving: false });
     }
@@ -321,7 +321,7 @@ export const useWorkflowStore = create<WorkflowEditorState>((set, get) => ({
       const { executionId } = await workflowService.execute(workflowId);
       set({ lastExecutionId: executionId });
     } catch {
-      set({ errorMessage: "Gagal menjalankan workflow." });
+      set({ errorMessage: "Failed to run the workflow." });
     } finally {
       set({ isExecuting: false });
     }

@@ -22,9 +22,9 @@ export async function PATCH(
     });
 
     if (result.count === 0) {
-      return notFound("Notifikasi tidak ditemukan");
+      return notFound("Notification not found");
     }
 
-    return ok(null, "Notifikasi ditandai sudah dibaca");
+    return ok(null, "Notification marked as read");
   });
 }

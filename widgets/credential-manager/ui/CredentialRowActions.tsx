@@ -97,10 +97,10 @@ export function CredentialRowActions({
 
     try {
       await removeCredential(credential.id);
-      toast.success("Kredensial berhasil dihapus.");
+      toast.success("Credential successfully deleted.");
       setIsDeleteOpen(false);
     } catch {
-      toast.error("Gagal menghapus kredensial.");
+      toast.error("Failed to delete the credential.");
     } finally {
       setIsDeleting(false);
     }
@@ -117,7 +117,7 @@ export function CredentialRowActions({
         className="gap-1.5"
       >
         {isTesting ? <Spinner /> : <PlugZapIcon className="size-4" />}
-        Tes Koneksi
+        Test Connection
       </Button>
 
       <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
@@ -125,7 +125,7 @@ export function CredentialRowActions({
           <button
             type="button"
             className="text-muted-foreground hover:bg-accent hover:text-foreground grid size-8 place-items-center rounded-md"
-            aria-label={`Aksi untuk ${credential.name}`}
+            aria-label={`Actions for ${credential.name}`}
           >
             <MoreVerticalIcon className="size-4" />
           </button>
@@ -150,7 +150,7 @@ export function CredentialRowActions({
           />
           <ActionItem
             icon={<Trash2Icon className="size-4" />}
-            label="Hapus"
+            label="Delete"
             destructive
             onClick={() => {
               setIsPopoverOpen(false);
@@ -175,16 +175,16 @@ export function CredentialRowActions({
       <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Hapus kredensial ini?</AlertDialogTitle>
+            <AlertDialogTitle>Delete this credential?</AlertDialogTitle>
             <AlertDialogDescription>
-              Kredensial &quot;{credential.name}&quot; akan dihapus permanen.
-              Workflow yang memakainya bisa berhenti bekerja. Tindakan ini tidak
-              dapat dibatalkan.
+              The credential &quot;{credential.name}&quot; will be permanently
+              deleted. Workflows that use it may stop working. This action
+              cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Batal</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
               onClick={(clickEvent) => {
@@ -194,7 +194,7 @@ export function CredentialRowActions({
               disabled={isDeleting}
             >
               {isDeleting && <Spinner />}
-              Hapus
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

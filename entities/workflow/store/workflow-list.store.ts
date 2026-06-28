@@ -61,7 +61,7 @@ export const useWorkflowListStore = create<WorkflowListState>((set, get) => ({
       const workflows = await workflowService.list();
       set({ workflows });
     } catch {
-      set({ errorMessage: "Gagal memuat workflow." });
+      set({ errorMessage: "Failed to load workflows." });
     } finally {
       set({ isLoading: false });
     }
@@ -92,7 +92,7 @@ export const useWorkflowListStore = create<WorkflowListState>((set, get) => ({
 
       return createdWorkflow.id;
     } catch {
-      set({ errorMessage: "Gagal membuat workflow." });
+      set({ errorMessage: "Failed to create the workflow." });
 
       return null;
     } finally {
@@ -150,7 +150,7 @@ export const useWorkflowListStore = create<WorkflowListState>((set, get) => ({
 
       return createdWorkflow.id;
     } catch {
-      set({ errorMessage: "Gagal mengimpor workflow." });
+      set({ errorMessage: "Failed to import the workflow." });
 
       return null;
     } finally {

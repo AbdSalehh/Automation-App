@@ -46,7 +46,7 @@ export async function PATCH(request: Request) {
     );
 
     if (!currentMatches) {
-      return badRequest("Password lama tidak sesuai");
+      return badRequest("The old password is incorrect");
     }
 
     const newPasswordHash = await bcrypt.hash(newPassword, 10);

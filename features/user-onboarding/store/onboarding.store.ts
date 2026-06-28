@@ -40,7 +40,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
     const { formData } = get();
 
     if (!formData.usagePurpose) {
-      set({ error: "Pilih tujuan penggunaan terlebih dahulu." });
+      set({ error: "Please select a usage purpose first." });
       return false;
     }
 
@@ -54,7 +54,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
 
       return true;
     } catch {
-      set({ error: "Terjadi kesalahan. Silakan coba lagi." });
+      set({ error: "Something went wrong. Please try again." });
       return false;
     } finally {
       set({ isLoading: false });

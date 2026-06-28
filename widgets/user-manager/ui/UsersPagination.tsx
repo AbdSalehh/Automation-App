@@ -77,7 +77,7 @@ export function UsersPagination({
     <div className="border-border flex flex-col gap-3 border-t p-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="text-muted-foreground flex items-center gap-2 text-sm">
         <UsersIcon className="size-4" />
-        Menampilkan {rangeStart}–{rangeEnd} dari {totalItems} users
+        Showing {rangeStart}–{rangeEnd} of {totalItems} users
       </div>
 
       <div className="flex items-center gap-3">
@@ -91,7 +91,7 @@ export function UsersPagination({
           <SelectContent>
             {PAGE_SIZE_OPTIONS.map((option) => (
               <SelectItem key={option} value={String(option)}>
-                {option} per halaman
+                {option} per page
               </SelectItem>
             ))}
           </SelectContent>

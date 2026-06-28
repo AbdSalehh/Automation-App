@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     const session = await auth();
 
     if (!session?.user?.id) {
-      return unauthorized("Sesi tidak ditemukan");
+      return unauthorized("Session not found");
     }
 
     let body: RegisterWebhookBody;
@@ -31,11 +31,11 @@ export async function POST(request: Request) {
     try {
       body = (await request.json()) as RegisterWebhookBody;
     } catch {
-      return badRequest("Body bukan JSON yang valid");
+      return badRequest("Body is not valid JSON");
     }
 
     if (!body.credentialId) {
-      return badRequest("credentialId wajib diisi");
+      return badRequest("credentialId is required");
     }
 
     const credentialRecord = await prisma.credential.findFirst({
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     });
 
     if (!credentialRecord) {
-      return badRequest("Kredensial Telegram tidak ditemukan");
+      return badRequest("Telegram credential not found");
     }
 
     const decrypted = decryptJson<Record<string, string>>(

@@ -19,7 +19,7 @@ export async function httpRequestHandler({
   const requestMethod = String(config.method ?? "GET").toUpperCase();
 
   if (!requestUrl) {
-    throw new Error("HTTP Request: url kosong");
+    throw new Error("HTTP Request: empty url");
   }
 
   const isBodyless = requestMethod === "GET" || requestMethod === "HEAD";

@@ -65,7 +65,7 @@ export const useExecutionStore = create<ExecutionState>((set, get) => ({
       const executions = await executionService.list(workflowId);
       set({ executions });
     } catch {
-      set({ errorMessage: "Gagal memuat eksekusi." });
+      set({ errorMessage: "Failed to load executions." });
     } finally {
       set({ isLoading: false });
     }
@@ -78,7 +78,7 @@ export const useExecutionStore = create<ExecutionState>((set, get) => ({
       const detail = await executionService.getById(executionId);
       set({ selectedDetail: detail });
     } catch {
-      set({ errorMessage: "Gagal memuat detail eksekusi." });
+      set({ errorMessage: "Failed to load execution details." });
     } finally {
       set({ isLoadingDetail: false });
     }

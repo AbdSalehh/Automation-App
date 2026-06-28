@@ -21,7 +21,7 @@ interface SearchInputProps {
  * to page 1, preserving other params (limit, etc.).
  */
 function SearchInputInner({
-  placeholder = "Cari...",
+  placeholder = "Search...",
   className = "",
 }: SearchInputProps) {
   const router = useRouter();
@@ -77,7 +77,7 @@ function SearchInputInner({
             pushSearch("");
           }}
           className="absolute top-1/2 right-3 -translate-y-1/2 opacity-40 transition-opacity hover:opacity-70"
-          aria-label="Hapus pencarian"
+          aria-label="Clear search"
         >
           <X className="h-3.5 w-3.5" />
         </button>

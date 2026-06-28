@@ -76,10 +76,10 @@ export function WhatsappLinkCard() {
           </div>
           <div className="flex flex-col gap-0.5">
             <h3 className="text-foreground text-sm font-semibold">
-              Akun WhatsApp (Baileys)
+              WhatsApp Account (Baileys)
             </h3>
             <p className="text-muted-foreground text-xs">
-              Tautkan WhatsApp untuk memakai node WhatsApp di dalam workflow.
+              Link WhatsApp to use the WhatsApp node inside your workflows.
             </p>
           </div>
         </div>
@@ -87,10 +87,10 @@ export function WhatsappLinkCard() {
         {isReady ? (
           <Badge variant="success" className="gap-1">
             <CheckCircle2Icon className="size-3" />
-            Tersambung
+            Connected
           </Badge>
         ) : (
-          <Badge variant="neutral">Belum tertaut</Badge>
+          <Badge variant="neutral">Not linked</Badge>
         )}
       </div>
 
@@ -99,11 +99,11 @@ export function WhatsappLinkCard() {
           <SmartphoneIcon className="size-5 text-emerald-600" />
           <div className="flex flex-col">
             <span className="text-sm font-medium text-emerald-700">
-              WhatsApp sudah tertaut
+              WhatsApp is linked
             </span>
             <span className="text-muted-foreground text-xs">
-              Untuk menautkan ulang, lepas perangkat ini dari menu Perangkat
-              Tertaut di aplikasi WhatsApp ponsel Anda.
+              To re-link, remove this device from the Linked Devices menu in the
+              WhatsApp app on your phone.
             </span>
           </div>
         </div>
@@ -114,17 +114,17 @@ export function WhatsappLinkCard() {
           className="w-fit gap-2 bg-emerald-600 text-white hover:bg-emerald-700"
         >
           <MessageCircleIcon className="size-4" />
-          Tautkan WhatsApp
+          Link WhatsApp
         </Button>
       )}
 
       <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <AlertDialogContent className="sm:max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle>Tautkan WhatsApp</AlertDialogTitle>
+            <AlertDialogTitle>Link WhatsApp</AlertDialogTitle>
             <AlertDialogDescription>
-              Buka WhatsApp di ponsel, masuk ke Perangkat Tertaut, lalu pindai
-              kode di bawah ini.
+              Open WhatsApp on your phone, go to Linked Devices, then scan the
+              code below.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
@@ -133,14 +133,14 @@ export function WhatsappLinkCard() {
               <div className="flex flex-col items-center gap-3 py-8">
                 <CheckCircle2Icon className="size-16 text-emerald-500" />
                 <p className="text-sm font-medium text-emerald-600">
-                  WhatsApp berhasil tertaut!
+                  WhatsApp linked successfully!
                 </p>
               </div>
             ) : qrDataUrl ? (
               <div className="border-border rounded-xl border bg-white p-4 shadow-sm">
                 <Image
                   src={qrDataUrl}
-                  alt="QR code WhatsApp"
+                  alt="WhatsApp QR code"
                   width={264}
                   height={264}
                   unoptimized
@@ -151,8 +151,8 @@ export function WhatsappLinkCard() {
                 <Spinner className="text-muted-foreground size-8" />
                 <p className="text-muted-foreground text-xs">
                   {isPolling
-                    ? "Memuat status sesi..."
-                    : "Menyiapkan QR code..."}
+                    ? "Loading session status..."
+                    : "Preparing QR code..."}
                 </p>
               </div>
             )}
@@ -164,7 +164,7 @@ export function WhatsappLinkCard() {
           </div>
 
           <AlertDialogFooter>
-            <AlertDialogCancel>Tutup</AlertDialogCancel>
+            <AlertDialogCancel>Close</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -27,11 +27,11 @@ export async function POST(request: Request) {
     };
 
     if (!body.credentialId) {
-      return badRequest("credentialId wajib diisi");
+      return badRequest("credentialId is required");
     }
 
     if (!body.spreadsheetId) {
-      return badRequest("spreadsheetId wajib diisi");
+      return badRequest("spreadsheetId is required");
     }
 
     const credentialRecord = await prisma.credential.findFirst({
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     });
 
     if (!credentialRecord) {
-      return badRequest("Kredensial tidak ditemukan");
+      return badRequest("Credential not found");
     }
 
     const credential = decryptJson<Record<string, string>>(

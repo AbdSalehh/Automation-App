@@ -72,21 +72,21 @@ export function WorkflowLogsSheet({
         <SheetHeader className="border-border border-b">
           <SheetTitle className="flex items-center gap-2">
             <ScrollTextIcon className="size-4" />
-            Logs Workflow
+            Workflow Logs
           </SheetTitle>
           <SheetDescription>
-            Riwayat eksekusi dan log node untuk workflow ini.
+            Execution history and node logs for this workflow.
           </SheetDescription>
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto px-4 pb-4">
           {isLoading ? (
             <span className="text-muted-foreground flex items-center gap-2 text-sm">
-              <Spinner /> Memuat…
+              <Spinner /> Loading…
             </span>
           ) : executions.length === 0 ? (
             <div className="border-border text-muted-foreground rounded-xl border border-dashed py-12 text-center text-sm">
-              Belum ada eksekusi untuk workflow ini.
+              No executions for this workflow yet.
             </div>
           ) : (
             <ul className="flex flex-col gap-2">
@@ -105,7 +105,7 @@ export function WorkflowLogsSheet({
                         {formatDateTime(execution.startedAt)}
                       </span>
                       <span className="text-muted-foreground text-xs">
-                        Durasi{" "}
+                        Duration{" "}
                         {formatDuration(
                           execution.startedAt,
                           execution.finishedAt,
@@ -122,7 +122,7 @@ export function WorkflowLogsSheet({
                     <div className="border-border bg-muted/40 border-t px-3 py-2.5">
                       {isLoadingDetail || !detail ? (
                         <span className="text-muted-foreground flex items-center gap-2 text-xs">
-                          <Spinner /> Memuat log…
+                          <Spinner /> Loading logs…
                         </span>
                       ) : (
                         <div className="flex flex-col gap-2">

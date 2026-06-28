@@ -58,7 +58,7 @@ export function VariablePicker({
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <SimpleTooltip label="Sisipkan variabel">
+        <SimpleTooltip label="Insert variable">
           <button
             type="button"
             className={cn(
@@ -67,7 +67,7 @@ export function VariablePicker({
             )}
           >
             <BracesIcon className="size-3.5" />
-            Variabel
+            Variable
           </button>
         </SimpleTooltip>
       </PopoverTrigger>
@@ -79,7 +79,7 @@ export function VariablePicker({
 
             <Input
               value={searchTerm}
-              placeholder="Cari variabel…"
+              placeholder="Search variables…"
               onChange={(changeEvent) =>
                 setSearchTerm(changeEvent.target.value)
               }
@@ -91,7 +91,7 @@ export function VariablePicker({
         <div className="max-h-72 overflow-y-auto p-1">
           {filteredGroups.length === 0 && (
             <p className="text-muted-foreground px-2 py-3 text-center text-xs">
-              Tidak ada variabel cocok.
+              No matching variables.
             </p>
           )}
 

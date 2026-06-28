@@ -117,7 +117,7 @@ export const supabaseInsertHandler: NodeHandler = async ({ input, config }) => {
   const table = String(config.table ?? "").trim();
 
   if (!table) {
-    throw new Error("Supabase Insert: nama tabel wajib diisi");
+    throw new Error("Supabase Insert: table name is required");
   }
 
   const items = toItems(input);
@@ -177,7 +177,7 @@ export const supabaseQueryHandler: NodeHandler = async ({ input, config }) => {
   const table = String(config.table ?? "").trim();
 
   if (!table) {
-    throw new Error("Supabase Query: nama tabel wajib diisi");
+    throw new Error("Supabase Query: table name is required");
   }
 
   const firstItem = (toItems(input)[0] ?? {}) as Item;

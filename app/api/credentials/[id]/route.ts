@@ -30,7 +30,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     });
 
     if (!existingCredential) {
-      return notFound("Kredensial tidak ditemukan");
+      return notFound("Credential not found");
     }
 
     const body = (await request.json()) as {
@@ -41,7 +41,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     const nextName = body.name?.trim();
 
     if (body.name !== undefined && !nextName) {
-      return badRequest("Nama kredensial tidak boleh kosong");
+      return badRequest("Credential name must not be empty");
     }
 
     /**
@@ -95,7 +95,7 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
     });
 
     if (!existingCredential) {
-      return notFound("Kredensial tidak ditemukan");
+      return notFound("Credential not found");
     }
 
     await prisma.credential.delete({ where: { id } });

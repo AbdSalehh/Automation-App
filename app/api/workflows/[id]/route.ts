@@ -51,7 +51,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
     const existingWorkflow = await findOwnedWorkflow(id, user.id);
 
     if (!existingWorkflow) {
-      return notFound("Workflow tidak ditemukan");
+      return notFound("Workflow not found");
     }
 
     const detail = await cacheQuery(cacheKeys.workflowDetail(id), async () =>
@@ -71,7 +71,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
     const existingWorkflow = await findOwnedWorkflow(id, user.id);
 
     if (!existingWorkflow) {
-      return notFound("Workflow tidak ditemukan");
+      return notFound("Workflow not found");
     }
 
     const body = (await request.json()) as {
@@ -140,7 +140,7 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
     const existingWorkflow = await findOwnedWorkflow(id, user.id);
 
     if (!existingWorkflow) {
-      return notFound("Workflow tidak ditemukan");
+      return notFound("Workflow not found");
     }
 
     await prisma.workflow.delete({ where: { id } });

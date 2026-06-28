@@ -345,7 +345,7 @@ export async function runWorkflow(
   });
 
   if (!workflow) {
-    throw new Error("Workflow tidak ditemukan");
+    throw new Error("Workflow not found");
   }
 
   const nodes: FlowNode[] = JSON.parse(workflow.nodes || "[]");

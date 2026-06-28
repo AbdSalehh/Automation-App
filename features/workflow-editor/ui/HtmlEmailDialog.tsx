@@ -21,8 +21,8 @@ interface HtmlEmailDialogProps {
 
 const PLACEHOLDER_HTML = [
   '<div style="font-family: sans-serif; color: #111;">',
-  "  <h1>Halo {{nama}}</h1>",
-  "  <p>Terima kasih sudah memesan.</p>",
+  "  <h1>Hello {{name}}</h1>",
+  "  <p>Thank you for your order.</p>",
   "</div>",
 ].join("\n");
 
@@ -54,20 +54,20 @@ export function HtmlEmailDialog({ value, onChange }: HtmlEmailDialogProps) {
       <AlertDialogTrigger asChild>
         <Button variant="outline" type="button" className="w-full gap-2">
           <CodeIcon className="size-4" />
-          {value ? "Edit Template HTML" : "Buat Template HTML"}
+          {value ? "Edit HTML Template" : "Create HTML Template"}
         </Button>
       </AlertDialogTrigger>
 
       <AlertDialogContent className="sm:max-w-3xl!">
         <AlertDialogHeader>
-          <AlertDialogTitle>Template HTML Email</AlertDialogTitle>
+          <AlertDialogTitle>HTML Email Template</AlertDialogTitle>
         </AlertDialogHeader>
 
         <Tabs defaultValue="code" className="w-full">
           <TabsList className="w-full">
             <TabsTrigger value="code" className="gap-1.5">
               <CodeIcon className="size-3.5" />
-              Kode
+              Code
             </TabsTrigger>
             <TabsTrigger value="preview" className="gap-1.5">
               <EyeIcon className="size-3.5" />
@@ -84,8 +84,7 @@ export function HtmlEmailDialog({ value, onChange }: HtmlEmailDialogProps) {
             />
 
             <p className="text-muted-foreground text-xs">
-              Mendukung {"{{template}}"} untuk data dinamis seperti {"{{nama}}"}
-              .
+              Supports {"{{template}}"} for dynamic data such as {"{{name}}"}.
             </p>
           </TabsContent>
 
@@ -107,11 +106,11 @@ export function HtmlEmailDialog({ value, onChange }: HtmlEmailDialogProps) {
             type="button"
             onClick={() => setIsOpen(false)}
           >
-            Batal
+            Cancel
           </Button>
 
           <Button type="button" onClick={handleSave}>
-            Simpan Template
+            Save Template
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

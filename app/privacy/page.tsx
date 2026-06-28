@@ -20,143 +20,143 @@ import {
 import { Button } from "@/shared/ui";
 
 export const metadata: Metadata = {
-  title: `Kebijakan Privasi — ${APP_NAME}`,
+  title: `Privacy Policy — ${APP_NAME}`,
 };
 
 export default function PrivacyPage() {
   return (
     <LegalPage
       type="privacy"
-      title="Kebijakan Privasi"
-      intro="Kami berkomitmen melindungi privasi dan data Anda. Layanan ini gratis dan kami tidak pernah menjual data pribadi Anda."
-      lastUpdated="20 Juni 2026"
-      cardTitle="Kebijakan Privasi"
-      cardDescription={`Kebijakan ini menjelaskan bagaimana ${APP_NAME} mengumpulkan, menggunakan, menyimpan, dan melindungi informasi pribadi Anda saat menggunakan layanan kami.`}
+      title="Privacy Policy"
+      intro="We are committed to protecting your privacy and data. This service is free, and we never sell your personal data."
+      lastUpdated="June 20, 2026"
+      cardTitle="Privacy Policy"
+      cardDescription={`This policy explains how ${APP_NAME} collects, uses, stores, and protects your personal information when you use our service.`}
       sections={[
         {
-          heading: "Informasi yang Kami Kumpulkan",
+          heading: "Information We Collect",
           icon: <FolderIcon className="size-5" />,
           iconClassName: "bg-orange-50 text-orange-600",
           body: [
-            `Kami mengumpulkan informasi yang Anda berikan secara langsung maupun otomatis saat menggunakan layanan ${APP_NAME}.`,
-            "Termasuk di dalamnya adalah informasi akun (nama, alamat email, dan foto profil dari penyedia login seperti Google) saat mendaftar.",
-            "Kami juga menyimpan konfigurasi workflow, kredensial integrasi (terenkripsi), log eksekusi, serta data teknis seperti alamat IP, jenis peramban, dan waktu akses untuk keperluan keamanan dan diagnostik.",
+            `We collect information that you provide directly as well as automatically when you use the ${APP_NAME} service.`,
+            "This includes account information (name, email address, and profile photo from login providers such as Google) when you register.",
+            "We also store workflow configurations, integration credentials (encrypted), execution logs, and technical data such as IP address, browser type, and access time for security and diagnostic purposes.",
           ],
         },
         {
-          heading: "Penggunaan Informasi",
+          heading: "Use of Information",
           icon: <PieChartIcon className="size-5" />,
           iconClassName: "bg-rose-50 text-rose-500",
           body: [
-            "Informasi yang kami kumpulkan digunakan untuk menyediakan, mengoperasikan, meningkatkan, dan mengamankan layanan kami.",
-            "Data digunakan untuk menjalankan otomasi Anda secara andal, menampilkan riwayat eksekusi, mengirim notifikasi terkait layanan, serta mencegah penyalahgunaan.",
-            "Kami tidak menggunakan Konten Pengguna Anda untuk tujuan periklanan.",
+            "The information we collect is used to provide, operate, improve, and secure our service.",
+            "Data is used to run your automations reliably, display execution history, send service-related notifications, and prevent abuse.",
+            "We do not use your User Content for advertising purposes.",
           ],
         },
         {
-          heading: "Penyimpanan & Keamanan Data",
+          heading: "Data Storage & Security",
           icon: <ShieldIcon className="size-5" />,
           iconClassName: "bg-emerald-50 text-emerald-600",
           body: [
-            "Kami menerapkan langkah keamanan teknis dan organisasi untuk melindungi data Anda dari akses, pengubahan, atau pengungkapan yang tidak sah.",
-            "Kredensial pihak ketiga yang Anda hubungkan (mis. token bot, API key) disimpan dalam bentuk terenkripsi dan tidak pernah ditampilkan kembali secara utuh.",
-            "Meskipun kami berupaya melindungi data Anda, tidak ada metode transmisi atau penyimpanan elektronik yang sepenuhnya aman.",
+            "We apply technical and organizational security measures to protect your data from unauthorized access, alteration, or disclosure.",
+            "Third-party credentials you connect (e.g. bot tokens, API keys) are stored in encrypted form and are never displayed again in full.",
+            "Although we strive to protect your data, no method of electronic transmission or storage is completely secure.",
           ],
         },
         {
-          heading: "Retensi Data",
+          heading: "Data Retention",
           icon: <DatabaseIcon className="size-5" />,
           iconClassName: "bg-sky-50 text-sky-600",
           body: [
-            "Kami menyimpan data Anda selama akun Anda aktif atau selama diperlukan untuk menyediakan layanan.",
-            "Saat Anda menghapus workflow, kredensial, atau akun, data terkait akan dihapus dari sistem aktif kami, kecuali sebagian perlu disimpan untuk memenuhi kewajiban hukum.",
+            "We retain your data for as long as your account is active or as needed to provide the service.",
+            "When you delete a workflow, credential, or account, the related data will be removed from our active systems, except where some must be retained to comply with legal obligations.",
           ],
         },
         {
-          heading: "Pembagian Informasi",
+          heading: "Sharing of Information",
           icon: <UsersIcon className="size-5" />,
           iconClassName: "bg-blue-50 text-blue-600",
           body: [
-            "Kami tidak menjual data pribadi Anda kepada pihak mana pun.",
-            "Informasi hanya dibagikan secara terbatas kepada layanan pihak ketiga yang Anda hubungkan untuk keperluan eksekusi node, atau bila diwajibkan oleh hukum.",
+            "We do not sell your personal data to anyone.",
+            "Information is shared only on a limited basis with the third-party services you connect for the purpose of node execution, or when required by law.",
           ],
         },
         {
-          heading: "Layanan Pihak Ketiga",
+          heading: "Third-Party Services",
           icon: <ExternalLinkIcon className="size-5" />,
           iconClassName: "bg-indigo-50 text-indigo-600",
           body: [
-            `${APP_NAME} berintegrasi dengan layanan pihak ketiga seperti Google, Telegram, WhatsApp, dan penyedia AI. Saat Anda menjalankan otomasi, data yang relevan dikirim ke layanan tersebut sesuai konfigurasi Anda.`,
-            "Pemrosesan data oleh penyedia pihak ketiga tunduk pada kebijakan privasi masing-masing. Kami menyarankan Anda meninjau kebijakan mereka.",
+            `${APP_NAME} integrates with third-party services such as Google, Telegram, WhatsApp, and AI providers. When you run an automation, the relevant data is sent to those services according to your configuration.`,
+            "Data processing by third-party providers is subject to their respective privacy policies. We recommend that you review their policies.",
           ],
         },
         {
-          heading: "Cookies & Teknologi Pelacakan",
+          heading: "Cookies & Tracking Technologies",
           icon: <CookieIcon className="size-5" />,
           iconClassName: "bg-amber-50 text-amber-600",
           body: [
-            "Kami menggunakan cookies dan teknologi serupa untuk mengautentikasi sesi Anda, mengingat preferensi, serta meningkatkan pengalaman penggunaan.",
-            "Anda dapat mengatur peramban untuk menolak cookies, namun beberapa fitur mungkin tidak berfungsi dengan baik.",
+            "We use cookies and similar technologies to authenticate your session, remember preferences, and improve the usage experience.",
+            "You can configure your browser to reject cookies, but some features may not work properly.",
           ],
         },
         {
-          heading: "Hak Anda",
+          heading: "Your Rights",
           icon: <UserCogIcon className="size-5" />,
           iconClassName: "bg-orange-50 text-orange-600",
           body: [
-            "Anda memiliki hak untuk mengakses, memperbarui, mengekspor, atau menghapus data pribadi Anda melalui halaman pengaturan.",
-            "Anda juga dapat mencabut akses integrasi pihak ketiga kapan saja dengan menghapus kredensial terkait.",
+            "You have the right to access, update, export, or delete your personal data through the settings page.",
+            "You may also revoke third-party integration access at any time by deleting the related credentials.",
           ],
         },
         {
-          heading: "Privasi Anak",
+          heading: "Children's Privacy",
           icon: <UserCheckIcon className="size-5" />,
           iconClassName: "bg-teal-50 text-teal-600",
           body: [
-            `${APP_NAME} tidak ditujukan untuk anak di bawah usia 13 tahun, dan kami tidak dengan sengaja mengumpulkan data pribadi dari anak-anak.`,
+            `${APP_NAME} is not intended for children under the age of 13, and we do not knowingly collect personal data from children.`,
           ],
         },
         {
-          heading: "Perubahan Kebijakan",
+          heading: "Changes to the Policy",
           icon: <PencilIcon className="size-5" />,
           iconClassName: "bg-purple-50 text-purple-600",
           body: [
-            "Kami dapat memperbarui kebijakan privasi ini sewaktu-waktu. Perubahan material akan diumumkan di halaman ini beserta tanggal pembaruannya.",
+            "We may update this privacy policy from time to time. Material changes will be announced on this page along with the date of the update.",
           ],
         },
       ]}
-      summaryTitle="Ringkasan Komitmen Kami"
-      summarySubtitle="Privasi dan keamanan data Anda adalah prioritas utama kami."
+      summaryTitle="Summary of Our Commitments"
+      summarySubtitle="Your privacy and data security are our top priorities."
       summaryCards={[
         {
           icon: <LockIcon className="size-6" />,
           iconClassName: "bg-emerald-50 text-emerald-600",
-          title: "Lindungi Data Anda",
-          text: "Keamanan berlapis untuk melindungi data Anda.",
+          title: "Protect Your Data",
+          text: "Layered security to protect your data.",
         },
         {
           icon: <ShieldCheckIcon className="size-6" />,
           iconClassName: "bg-blue-50 text-blue-600",
-          title: "Transparan",
-          text: "Kami terbuka tentang cara kami menggunakan data.",
+          title: "Transparent",
+          text: "We are open about how we use data.",
         },
         {
           icon: <UserCheckIcon className="size-6" />,
           iconClassName: "bg-purple-50 text-purple-600",
-          title: "Kontrol Penuh",
-          text: "Anda memiliki kontrol atas data Anda.",
+          title: "Full Control",
+          text: "You have control over your data.",
         },
         {
           icon: <DatabaseIcon className="size-6" />,
           iconClassName: "bg-orange-50 text-orange-600",
-          title: "Tidak Menjual Data",
-          text: "Kami tidak menjual informasi pribadi Anda.",
+          title: "No Data Selling",
+          text: "We do not sell your personal information.",
         },
         {
           icon: <GlobeIcon className="size-6" />,
           iconClassName: "bg-sky-50 text-sky-600",
-          title: "Kepatuhan",
-          text: "Kami mematuhi standar privasi global.",
+          title: "Compliance",
+          text: "We comply with global privacy standards.",
         },
       ]}
       callToAction={
@@ -166,10 +166,10 @@ export default function PrivacyPage() {
               <HeadphonesIcon className="size-6" />
             </div>
             <div className="flex flex-col gap-1">
-              <h3 className="text-lg font-bold">Pertanyaan tentang Privasi?</h3>
+              <h3 className="text-lg font-bold">Questions About Privacy?</h3>
               <p className="text-muted-foreground text-sm">
-                Jika Anda memiliki pertanyaan tentang kebijakan privasi kami,
-                jangan ragu untuk menghubungi kami.
+                If you have questions about our privacy policy, do not hesitate
+                to contact us.
               </p>
             </div>
           </div>
@@ -177,7 +177,7 @@ export default function PrivacyPage() {
             variant="outline"
             className="shrink-0 gap-2 border-orange-500 text-orange-600 hover:bg-orange-100 hover:text-orange-700"
           >
-            Hubungi Kami
+            Contact Us
             <ExternalLinkIcon className="size-4" />
           </Button>
         </div>

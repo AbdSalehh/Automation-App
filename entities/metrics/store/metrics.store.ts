@@ -34,7 +34,7 @@ export const useMetricsStore = create<MetricsState>((set) => ({
       const dashboard = await metricsService.dashboard();
       set({ dashboard });
     } catch {
-      set({ errorMessage: "Gagal memuat metrik dashboard." });
+      set({ errorMessage: "Failed to load dashboard metrics." });
     } finally {
       set({ isLoadingDashboard: false });
     }
@@ -53,7 +53,7 @@ export const useMetricsStore = create<MetricsState>((set) => ({
         },
       }));
     } catch {
-      set({ errorMessage: "Gagal memuat metrik workflow." });
+      set({ errorMessage: "Failed to load workflow metrics." });
     } finally {
       set({ isLoadingWorkflow: false });
     }

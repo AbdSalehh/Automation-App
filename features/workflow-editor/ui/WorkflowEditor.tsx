@@ -174,11 +174,11 @@ export function WorkflowEditor() {
     const newReplies = replies.slice(toastedReplyCountRef.current);
 
     const MEDIA_LABELS: Record<string, string> = {
-      image: "🖼️ Gambar",
+      image: "🖼️ Image",
       video: "🎬 Video",
-      audio: "🎙️ Pesan suara",
-      document: "📄 Dokumen",
-      sticker: "🌟 Stiker",
+      audio: "🎙️ Voice message",
+      document: "📄 Document",
+      sticker: "🌟 Sticker",
     };
 
     for (const reply of newReplies) {
@@ -186,9 +186,9 @@ export function WorkflowEditor() {
 
       const mediaLabel = reply.media ? MEDIA_LABELS[reply.messageType] : null;
 
-      const description = reply.message || mediaLabel || "(tanpa teks)";
+      const description = reply.message || mediaLabel || "(no text)";
 
-      toast.info(`📩 Balasan dari ${senderLabel}`, {
+      toast.info(`📩 Reply from ${senderLabel}`, {
         description,
       });
     }

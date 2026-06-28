@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     try {
       raw = (await request.json()) as BaileysWebhookPayload;
     } catch {
-      return badRequest("Body bukan JSON yang valid");
+      return badRequest("Body is not valid JSON");
     }
 
     /**
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
       try {
         source = decryptWebhookJson<BaileysWebhookPayload>(raw.payload);
       } catch {
-        return badRequest("Payload terenkripsi tidak dapat di-decrypt");
+        return badRequest("Encrypted payload could not be decrypted");
       }
     }
 
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
      */
     if (!source.sessionId || !source.sender || (!source.message && !hasMedia)) {
       return badRequest(
-        "Payload tidak lengkap: sessionId, sender, dan message/media wajib diisi",
+        "Incomplete payload: sessionId, sender, and message/media are required",
       );
     }
 
@@ -124,7 +124,7 @@ export async function POST(request: Request) {
 
     return ok(
       { triggered, count: triggered.length, resumed: resumedCount },
-      "Pesan masuk Baileys diterima",
+      "Incoming Baileys message received",
     );
   });
 }

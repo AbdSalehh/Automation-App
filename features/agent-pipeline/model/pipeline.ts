@@ -22,8 +22,8 @@ export const AGENT_PIPELINE_NODES: Node<PipelineNodeData>[] = [
     position: { x: 0, y: 160 },
     data: {
       kind: "trigger",
-      title: "Pesan Telegram",
-      subtitle: "Pesan masuk dari bot agen",
+      title: "Telegram Message",
+      subtitle: "Incoming message from the agent bot",
     },
   },
   {
@@ -33,7 +33,7 @@ export const AGENT_PIPELINE_NODES: Node<PipelineNodeData>[] = [
     data: {
       kind: "ai",
       title: "Gemini AI",
-      subtitle: "Klasifikasi maksud & balasan",
+      subtitle: "Intent classification & reply",
     },
   },
   {
@@ -42,8 +42,8 @@ export const AGENT_PIPELINE_NODES: Node<PipelineNodeData>[] = [
     position: { x: 660, y: 20 },
     data: {
       kind: "reply",
-      title: "Balas Pertanyaan",
-      subtitle: "Jika pengguna hanya bertanya",
+      title: "Answer Question",
+      subtitle: "When the user only asks a question",
     },
   },
   {
@@ -53,7 +53,7 @@ export const AGENT_PIPELINE_NODES: Node<PipelineNodeData>[] = [
     data: {
       kind: "database",
       title: "Database",
-      subtitle: "Simpan / jalankan otomasi",
+      subtitle: "Save / run automation",
     },
   },
   {
@@ -62,8 +62,8 @@ export const AGENT_PIPELINE_NODES: Node<PipelineNodeData>[] = [
     position: { x: 980, y: 280 },
     data: {
       kind: "reply",
-      title: "Konfirmasi Telegram",
-      subtitle: "Kirim hasil aksi ke pengguna",
+      title: "Telegram Confirmation",
+      subtitle: "Send the action result to the user",
     },
   },
 ];
@@ -79,14 +79,14 @@ export const AGENT_PIPELINE_EDGES: Edge[] = [
     id: "e-gemini-answer",
     source: "gemini",
     target: "reply-answer",
-    label: "bertanya",
+    label: "question",
     animated: true,
   },
   {
     id: "e-gemini-database",
     source: "gemini",
     target: "database",
-    label: "aksi",
+    label: "action",
     animated: true,
   },
   {

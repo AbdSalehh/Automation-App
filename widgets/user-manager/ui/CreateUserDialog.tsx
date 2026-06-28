@@ -58,17 +58,19 @@ export function CreateUserDialog({
 
   const handleSubmit = async () => {
     if (name.trim().length === 0) {
-      setLocalError("Nama wajib diisi.");
+      setLocalError("Name is required.");
       return;
     }
 
     if (!EMAIL_PATTERN.test(email)) {
-      setLocalError("Format email tidak valid.");
+      setLocalError("Invalid email format.");
       return;
     }
 
     if (password.length < MIN_PASSWORD_LENGTH) {
-      setLocalError(`Password minimal ${MIN_PASSWORD_LENGTH} karakter.`);
+      setLocalError(
+        `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`,
+      );
       return;
     }
 
@@ -82,11 +84,13 @@ export function CreateUserDialog({
     });
 
     if (success) {
-      toast.success(`Pengguna ${email.trim()} berhasil dibuat.`);
+      toast.success(`User ${email.trim()} was successfully created.`);
       resetForm();
       onOpenChange(false);
     } else {
-      toast.error("Gagal membuat pengguna. Pastikan email belum terdaftar.");
+      toast.error(
+        "Failed to create the user. Make sure the email is not already registered.",
+      );
     }
   };
 
@@ -94,20 +98,20 @@ export function CreateUserDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Tambah User</DialogTitle>
+          <DialogTitle>Add User</DialogTitle>
           <DialogDescription>
-            Buat akun baru dengan email dan password. Akun langsung aktif dan
-            dapat masuk.
+            Create a new account with an email and password. The account is
+            active immediately and can sign in.
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-4 py-2">
           <div className="flex flex-col gap-2">
-            <label className="text-foreground text-sm font-medium">Nama</label>
+            <label className="text-foreground text-sm font-medium">Name</label>
             <Input
               value={name}
               onChange={(changeEvent) => setName(changeEvent.target.value)}
-              placeholder="Nama lengkap"
+              placeholder="Full name"
             />
           </div>
 
@@ -132,7 +136,7 @@ export function CreateUserDialog({
                 onChange={(changeEvent) =>
                   setPassword(changeEvent.target.value)
                 }
-                placeholder="Minimal 8 karakter"
+                placeholder="At least 8 characters"
                 className="pr-10"
               />
               <button
@@ -172,10 +176,10 @@ export function CreateUserDialog({
 
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Batal</Button>
+            <Button variant="outline">Cancel</Button>
           </DialogClose>
           <Button onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? "Menyimpan..." : "Tambah User"}
+            {isSubmitting ? "Saving..." : "Add User"}
           </Button>
         </DialogFooter>
       </DialogContent>

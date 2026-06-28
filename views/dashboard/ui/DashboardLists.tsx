@@ -40,7 +40,7 @@ export function DashboardRecentWorkflows({
   return (
     <CardShell title="Recent Workflows" href={ROUTES.workflows}>
       {recent.length === 0 ? (
-        <EmptyRow label="Belum ada workflow." />
+        <EmptyRow label="No workflows yet." />
       ) : (
         recent.map((workflow) => {
           const metrics = deriveWorkflowMetrics(workflow);
@@ -85,7 +85,7 @@ export function DashboardRecentExecutions({
   return (
     <CardShell title="Recent Executions">
       {executions.length === 0 ? (
-        <EmptyRow label="Belum ada eksekusi." />
+        <EmptyRow label="No executions yet." />
       ) : (
         executions.map((execution) => {
           const isSuccess = execution.status === "success";
@@ -173,7 +173,7 @@ export function DashboardCredentials({
   return (
     <CardShell title="Encrypted Credentials" href={ROUTES.credentials}>
       {recent.length === 0 ? (
-        <EmptyRow label="Belum ada kredensial." />
+        <EmptyRow label="No credentials yet." />
       ) : (
         recent.map((credential) => (
           <div

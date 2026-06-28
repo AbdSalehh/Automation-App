@@ -71,7 +71,7 @@ export function WorkflowTableRow({
         edges: detail.edges,
       });
     } catch {
-      toast.error("Gagal mengekspor workflow");
+      toast.error("Failed to export workflow");
     }
   };
 
@@ -187,7 +187,7 @@ export function WorkflowTableRow({
             type="button"
             onClick={handleExport}
             className="text-muted-foreground hover:bg-accent hover:text-foreground grid size-8 place-items-center rounded-md"
-            aria-label="Ekspor workflow"
+            aria-label="Export workflow"
           >
             <DownloadIcon className="size-4" />
           </button>
@@ -195,7 +195,7 @@ export function WorkflowTableRow({
             type="button"
             onClick={() => setIsConfirmOpen(true)}
             className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive grid size-8 place-items-center rounded-md"
-            aria-label="Hapus workflow"
+            aria-label="Delete workflow"
           >
             <Trash2Icon className="size-4" />
           </button>
@@ -203,15 +203,15 @@ export function WorkflowTableRow({
           <ConfirmDialog
             open={isConfirmOpen}
             onOpenChange={setIsConfirmOpen}
-            title="Hapus workflow ini?"
-            description={`Workflow "${workflow.name}" akan dihapus permanen beserta riwayat eksekusinya. Tindakan ini tidak dapat dibatalkan.`}
-            confirmLabel="Hapus"
+            title="Delete this workflow?"
+            description={`The workflow "${workflow.name}" will be permanently deleted along with its execution history. This action cannot be undone.`}
+            confirmLabel="Delete"
             onConfirm={handleConfirmRemove}
           />
           <Link
             href={ROUTES.workflow(workflow.id)}
             className="text-muted-foreground hover:bg-accent hover:text-foreground grid size-8 place-items-center rounded-md"
-            aria-label="Buka editor"
+            aria-label="Open editor"
           >
             <MoreVerticalIcon className="size-4" />
           </Link>

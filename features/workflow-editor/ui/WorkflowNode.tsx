@@ -71,28 +71,28 @@ const BRANCH_OUTPUT_HANDLES: Record<string, string> = {
 
 const CONDITION_KINDS = new Set(["condition", "filter"]);
 
-/** Label ramah Bahasa Indonesia untuk key config yang umum di node card. */
+/** Friendly English labels for common config keys shown on the node card. */
 const CONFIG_KEY_LABELS: Record<string, string> = {
   spreadsheetId: "Spreadsheet",
   sheetName: "Sheet",
   range: "Range",
-  target: "Nomor Tujuan",
-  targetField: "Kolom Nomor",
-  message: "Pesan",
+  target: "Destination Number",
+  targetField: "Number Column",
+  message: "Message",
   provider: "Provider",
-  matchColumn: "Kolom Pencocokan",
-  matchValue: "Nilai Cocok",
-  updateColumn: "Kolom Diupdate",
-  updateValue: "Nilai Baru",
+  matchColumn: "Match Column",
+  matchValue: "Match Value",
+  updateColumn: "Updated Column",
+  updateValue: "New Value",
   url: "URL",
   method: "Method",
-  to: "Penerima",
-  subject: "Subjek",
+  to: "Recipient",
+  subject: "Subject",
   chatId: "Chat ID",
-  text: "Pesan",
+  text: "Message",
   prompt: "Prompt",
   model: "Model",
-  table: "Tabel",
+  table: "Table",
   cron: "Cron",
 };
 
@@ -131,18 +131,18 @@ function describeRule(rule: {
   operator?: string;
   value?: string;
 }): string {
-  const field = rule.field || "kolom";
+  const field = rule.field || "column";
   const value = rule.value ?? "";
 
   const operatorLabels: Record<string, string> = {
     equals: "=",
     not_equals: "≠",
-    contains: "mengandung",
-    not_contains: "tidak mengandung",
-    is_empty: "kosong",
-    is_not_empty: "tidak kosong",
-    starts_with: "diawali",
-    ends_with: "diakhiri",
+    contains: "contains",
+    not_contains: "does not contain",
+    is_empty: "is empty",
+    is_not_empty: "is not empty",
+    starts_with: "starts with",
+    ends_with: "ends with",
     greater_than: ">",
     less_than: "<",
   };
@@ -175,7 +175,7 @@ function NodeBody({ nodeData }: { nodeData: WorkflowNodeData }) {
             </code>
           ) : (
             <p className="text-muted-foreground text-[11px] italic">
-              Belum ada ekspresi
+              No expression yet
             </p>
           )}
         </SectionShell>
@@ -204,7 +204,7 @@ function NodeBody({ nodeData }: { nodeData: WorkflowNodeData }) {
           </div>
         ) : (
           <p className="text-muted-foreground text-[11px] italic">
-            Belum ada kondisi
+            No conditions yet
           </p>
         )}
       </SectionShell>
@@ -226,7 +226,7 @@ function NodeBody({ nodeData }: { nodeData: WorkflowNodeData }) {
             </code>
           ) : (
             <p className="text-muted-foreground text-[11px] italic">
-              Belum ada kode
+              No code yet
             </p>
           )}
         </SectionShell>
@@ -258,7 +258,7 @@ function NodeBody({ nodeData }: { nodeData: WorkflowNodeData }) {
           </div>
         ) : (
           <p className="text-muted-foreground text-[11px] italic">
-            Belum ada pemetaan
+            No mappings yet
           </p>
         )}
       </SectionShell>
@@ -277,16 +277,16 @@ function NodeBody({ nodeData }: { nodeData: WorkflowNodeData }) {
         <div className="flex flex-col gap-1">
           <div className="flex items-start justify-between gap-2">
             <span className="text-muted-foreground shrink-0 text-[11px]">
-              Tujuan
+              Destination
             </span>
             <span className="text-foreground line-clamp-1 text-right text-[11px] font-medium">
-              {targetColumn ? `Kolom: ${targetColumn}` : manualTarget || "—"}
+              {targetColumn ? `Column: ${targetColumn}` : manualTarget || "—"}
             </span>
           </div>
 
           <div className="flex items-start justify-between gap-2">
             <span className="text-muted-foreground shrink-0 text-[11px]">
-              Pesan
+              Message
             </span>
             <span className="text-foreground line-clamp-2 text-right text-[11px] font-medium wrap-break-word">
               {message || "—"}
@@ -334,7 +334,7 @@ function NodeBody({ nodeData }: { nodeData: WorkflowNodeData }) {
         </div>
       ) : (
         <p className="text-muted-foreground text-[11px] italic">
-          Belum dikonfigurasi
+          Not configured yet
         </p>
       )}
     </SectionShell>

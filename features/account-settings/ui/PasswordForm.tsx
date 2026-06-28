@@ -24,12 +24,14 @@ export function PasswordForm() {
     submitEvent.preventDefault();
 
     if (newPassword.length < MIN_PASSWORD_LENGTH) {
-      setLocalError(`Password baru minimal ${MIN_PASSWORD_LENGTH} karakter.`);
+      setLocalError(
+        `New password must be at least ${MIN_PASSWORD_LENGTH} characters.`,
+      );
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setLocalError("Konfirmasi password tidak cocok.");
+      setLocalError("Password confirmation does not match.");
       return;
     }
 
@@ -50,9 +52,11 @@ export function PasswordForm() {
       className="border-border bg-card flex flex-col gap-4 rounded-xl border p-5"
     >
       <div className="flex flex-col gap-0.5">
-        <h3 className="text-foreground text-sm font-semibold">Ubah Password</h3>
+        <h3 className="text-foreground text-sm font-semibold">
+          Change Password
+        </h3>
         <p className="text-muted-foreground text-xs">
-          Gunakan password yang kuat dan tidak dipakai di tempat lain.
+          Use a strong password that you do not reuse elsewhere.
         </p>
       </div>
 
@@ -61,7 +65,7 @@ export function PasswordForm() {
           htmlFor="currentPassword"
           className="text-foreground text-sm font-medium"
         >
-          Password Lama
+          Current Password
         </label>
         <Input
           id="currentPassword"
@@ -79,14 +83,14 @@ export function PasswordForm() {
           htmlFor="newPassword"
           className="text-foreground text-sm font-medium"
         >
-          Password Baru
+          New Password
         </label>
         <Input
           id="newPassword"
           type="password"
           value={newPassword}
           onChange={(changeEvent) => setNewPassword(changeEvent.target.value)}
-          placeholder="Minimal 8 karakter"
+          placeholder="At least 8 characters"
         />
       </div>
 
@@ -95,7 +99,7 @@ export function PasswordForm() {
           htmlFor="confirmPassword"
           className="text-foreground text-sm font-medium"
         >
-          Konfirmasi Password Baru
+          Confirm New Password
         </label>
         <Input
           id="confirmPassword"
@@ -104,7 +108,7 @@ export function PasswordForm() {
           onChange={(changeEvent) =>
             setConfirmPassword(changeEvent.target.value)
           }
-          placeholder="Ulangi password baru"
+          placeholder="Repeat the new password"
         />
       </div>
 
@@ -121,7 +125,7 @@ export function PasswordForm() {
       )}
 
       <Button type="submit" disabled={isChangingPassword} className="w-fit">
-        {isChangingPassword ? "Menyimpan..." : "Ubah Password"}
+        {isChangingPassword ? "Saving..." : "Change Password"}
       </Button>
     </form>
   );

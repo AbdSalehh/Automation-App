@@ -17,7 +17,7 @@ export const slackSendHandler: NodeHandler = async ({ input, config }) => {
   const webhookUrl = String(config.webhookUrl ?? "").trim();
 
   if (!webhookUrl) {
-    throw new Error("Slack: webhookUrl wajib diisi");
+    throw new Error("Slack: webhookUrl is required");
   }
 
   let sent = 0;
@@ -32,7 +32,7 @@ export const slackSendHandler: NodeHandler = async ({ input, config }) => {
     });
 
     if (!response.ok) {
-      throw new Error("Slack: gagal mengirim pesan");
+      throw new Error("Slack: failed to send the message");
     }
 
     sent += 1;

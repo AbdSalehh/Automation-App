@@ -29,7 +29,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       const notifications = await notificationService.list();
       set({ notifications });
     } catch {
-      set({ errorMessage: "Gagal memuat notifikasi." });
+      set({ errorMessage: "Failed to load notifications." });
     } finally {
       set({ isLoading: false });
     }

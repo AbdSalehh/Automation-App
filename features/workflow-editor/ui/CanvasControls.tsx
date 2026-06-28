@@ -67,15 +67,15 @@ export function CanvasControls({
             <MaximizeIcon className="size-4" />
           </ControlButton>
 
-          <ControlButton label="Lihat JSON" onClick={onShowJson}>
+          <ControlButton label="View JSON" onClick={onShowJson}>
             <BracesIcon className="size-4" />
           </ControlButton>
 
-          <ControlButton label="Ekspor workflow" onClick={handleExport}>
+          <ControlButton label="Export workflow" onClick={handleExport}>
             <DownloadIcon className="size-4" />
           </ControlButton>
 
-          <ControlButton label="Setelan editor" onClick={onOpenSettings}>
+          <ControlButton label="Editor settings" onClick={onOpenSettings}>
             <SettingsIcon className="size-4" />
           </ControlButton>
         </div>
@@ -90,13 +90,13 @@ export function CanvasControls({
             disabled={isSaving || !isDirty}
           >
             {isSaving ? <Spinner /> : <SaveIcon className="size-4" />}
-            {isSaving ? "Menyimpan…" : isDirty ? "Simpan" : "Tersimpan"}
+            {isSaving ? "Saving…" : isDirty ? "Save" : "Saved"}
           </Button>
 
           {showControls && (
             <div className="border-border bg-card/90 flex items-center gap-0.5 rounded-xl border p-1 shadow-lg backdrop-blur">
               <ControlButton
-                label="Perkecil"
+                label="Zoom out"
                 onClick={() => zoomOut({ duration: 200 })}
               >
                 <ZoomOutIcon className="size-4" />
@@ -111,7 +111,7 @@ export function CanvasControls({
               </button>
 
               <ControlButton
-                label="Perbesar"
+                label="Zoom in"
                 onClick={() => zoomIn({ duration: 200 })}
               >
                 <ZoomInIcon className="size-4" />

@@ -44,7 +44,7 @@ export async function GET(request: Request) {
       pageItems,
       totalItems,
       pagination,
-      "Data kredensial berhasil diambil",
+      "Credentials retrieved successfully",
     );
   });
 }
@@ -61,15 +61,15 @@ export async function POST(request: Request) {
     };
 
     if (!body.name?.trim()) {
-      return badRequest("Nama kredensial wajib diisi");
+      return badRequest("Credential name is required");
     }
 
     if (!body.type || !CREDENTIAL_TYPES.includes(body.type as never)) {
-      return badRequest("Tipe kredensial tidak valid");
+      return badRequest("Invalid credential type");
     }
 
     if (!body.data || typeof body.data !== "object") {
-      return badRequest("Data kredensial wajib diisi");
+      return badRequest("Credential data is required");
     }
 
     const credential = await prisma.credential.create({
@@ -90,7 +90,7 @@ export async function POST(request: Request) {
         name: credential.name,
         createdAt: credential.createdAt.toISOString(),
       },
-      "Kredensial berhasil disimpan",
+      "Credential saved successfully",
     );
   });
 }

@@ -4,27 +4,24 @@ import { BrandIcon } from "@/shared/ui";
 const STEPS = [
   {
     number: "1",
-    title: "Buat Workflow",
-    description:
-      "Mulai dari kanvas kosong dan tambahkan node sesuai kebutuhan.",
+    title: "Create a Workflow",
+    description: "Start from a blank canvas and add nodes as needed.",
   },
   {
     number: "2",
-    title: "Konfigurasi Node",
+    title: "Configure Nodes",
     description:
-      "Atur parameter di setiap node dengan interface yang mudah dipahami.",
+      "Set parameters for each node through an easy-to-understand interface.",
   },
   {
     number: "3",
-    title: "Jalankan & Uji",
-    description:
-      "Jalankan workflow dan pastikan semuanya berjalan sesuai ekspektasi.",
+    title: "Run & Test",
+    description: "Run the workflow and ensure everything works as expected.",
   },
   {
     number: "4",
-    title: "Aktifkan & Otomatiskan",
-    description:
-      "Aktifkan workflow dan biarkan Fluxera bekerja untuk Anda 24/7.",
+    title: "Activate & Automate",
+    description: "Activate the workflow and let Fluxera work for you 24/7.",
   },
 ];
 
@@ -132,13 +129,13 @@ export function LandingHowItWorks() {
       <div className="mx-auto w-full max-w-6xl px-4">
         <div className="mx-auto max-w-2xl text-center">
           <span className="text-xs font-bold tracking-widest text-orange-500 uppercase">
-            Cara Kerja
+            How It Works
           </span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
-            Automasi dalam 4 langkah mudah
+            Automation in 4 easy steps
           </h2>
           <p className="mt-3 text-slate-500">
-            Dari ide hingga eksekusi hanya dalam hitungan menit.
+            From idea to execution in a matter of minutes.
           </p>
         </div>
 

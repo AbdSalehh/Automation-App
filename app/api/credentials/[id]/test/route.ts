@@ -24,7 +24,7 @@ export async function POST(_request: Request, { params }: RouteParams) {
     });
 
     if (!existingCredential) {
-      return notFound("Kredensial tidak ditemukan");
+      return notFound("Credential not found");
     }
 
     const connector = CONNECTORS[existingCredential.type];

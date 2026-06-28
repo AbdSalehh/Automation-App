@@ -21,7 +21,7 @@ const EDITOR_NODE_SEEDS = [
   {
     id: "trigger",
     label: "Cron",
-    description: "Jam 09:00",
+    description: "09:00",
     category: "trigger" as const,
     icon: "Clock",
     brand: null,
@@ -30,7 +30,7 @@ const EDITOR_NODE_SEEDS = [
   {
     id: "sheet",
     label: "Sheets",
-    description: "Baca data",
+    description: "Read data",
     category: "action" as const,
     icon: "Sheet",
     brand: "google-sheets" as const,
@@ -39,7 +39,7 @@ const EDITOR_NODE_SEEDS = [
   {
     id: "wa",
     label: "WhatsApp",
-    description: "Kirim",
+    description: "Send",
     category: "action" as const,
     icon: "MessageCircle",
     brand: "whatsapp" as const,
@@ -77,37 +77,37 @@ const FEATURES: FeatureCard[] = [
   },
   {
     icon: KeyRoundIcon,
-    title: "Kredensial Terenkripsi",
+    title: "Encrypted Credentials",
     description:
-      "Simpan API key & kredensial dengan enkripsi AES-256-GCM di sisi server.",
+      "Store API keys & credentials with AES-256-GCM encryption on the server side.",
     widget: <CredentialWidget />,
   },
   {
     icon: PlugIcon,
-    title: "Berbagai Integrasi",
+    title: "Various Integrations",
     description:
-      "Terhubung dengan berbagai layanan populer untuk kebutuhan bisnis Anda.",
+      "Connect with a wide range of popular services for your business needs.",
     widget: <IntegrationsWidget />,
   },
   {
     icon: CpuIcon,
     title: "Execution Engine In-Process",
     description:
-      "Mesin eksekusi cepat untuk memproses workflow secara real-time dan andal.",
+      "A fast execution engine to process workflows in real time and reliably.",
     widget: <ExecutionStatusWidget />,
   },
   {
     icon: HistoryIcon,
-    title: "Riwayat & Audit Eksekusi",
+    title: "Execution History & Audit",
     description:
-      "Pantau setiap eksekusi workflow lengkap dengan detail log, status, dan durasi.",
+      "Monitor every workflow execution complete with log details, status, and duration.",
     widget: <RecentExecutionsWidget />,
   },
   {
     icon: DatabaseIcon,
-    title: "Cache dengan Redis",
+    title: "Caching with Redis",
     description:
-      "Optimalkan performa dengan caching cerdas untuk endpoint yang sering diakses.",
+      "Optimize performance with smart caching for frequently accessed endpoints.",
     widget: <CacheHitWidget />,
   },
 ];
@@ -118,13 +118,13 @@ export function LandingFeatures() {
     <section id="fitur" className="mx-auto w-full max-w-6xl px-4 pt-10 pb-24">
       <div className="mx-auto max-w-2xl text-center">
         <span className="text-xs font-bold tracking-widest text-orange-500 uppercase">
-          Fitur Utama
+          Key Features
         </span>
         <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
-          Semua yang Anda butuhkan untuk automasi tanpa batas
+          Everything you need for limitless automation
         </h2>
         <p className="mt-3 text-slate-500">
-          Dibangun dengan teknologi modern untuk performa dan keamanan terbaik.
+          Built with modern technology for the best performance and security.
         </p>
       </div>
 

@@ -18,7 +18,7 @@ export const googleDriveUploadHandler: NodeHandler = async ({
   );
 
   if (!credential) {
-    throw new Error("Google Drive: kredensial Google tidak ada");
+    throw new Error("Google Drive: missing Google credential");
   }
 
   const accessToken = await getGoogleAccessToken(credential);
@@ -93,7 +93,7 @@ export const googleDriveListHandler: NodeHandler = async ({
   );
 
   if (!credential) {
-    throw new Error("Google Drive: kredensial Google tidak ada");
+    throw new Error("Google Drive: missing Google credential");
   }
 
   const accessToken = await getGoogleAccessToken(credential);

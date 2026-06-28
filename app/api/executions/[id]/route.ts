@@ -19,7 +19,7 @@ export async function GET(_req: Request, { params }: RouteParams) {
         logs: { orderBy: { timestamp: "asc" } },
       },
     });
-    if (!execution) return notFound("Eksekusi tidak ditemukan");
+    if (!execution) return notFound("Execution not found");
 
     /**
      * Peta nodeId -> label dari definisi workflow agar log menampilkan nama

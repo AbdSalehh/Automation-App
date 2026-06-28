@@ -42,10 +42,10 @@ export function CredentialsLoginForm({
 
     if (errorCode === "PendingApproval") {
       setError(
-        "Akun Google Anda sedang menunggu persetujuan admin. Anda akan bisa masuk setelah disetujui.",
+        "Your Google account is awaiting admin approval. You will be able to sign in once it is approved.",
       );
     } else if (errorCode === "AccessDenied") {
-      setError("Akses ditolak. Hubungi admin untuk informasi lebih lanjut.");
+      setError("Access denied. Contact your admin for more information.");
     }
   }, []);
 
@@ -62,7 +62,7 @@ export function CredentialsLoginForm({
       });
 
       if (result?.error) {
-        setError("Email atau password tidak valid.");
+        setError("Invalid email or password.");
         return;
       }
 
@@ -105,7 +105,7 @@ export function CredentialsLoginForm({
           <Input
             id="password"
             type={isPasswordVisible ? "text" : "password"}
-            placeholder="Masukkan password Anda"
+            placeholder="Enter your password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             autoComplete="current-password"
@@ -116,9 +116,7 @@ export function CredentialsLoginForm({
             type="button"
             onClick={() => setIsPasswordVisible((previous) => !previous)}
             className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3.5 -translate-y-1/2 transition-colors"
-            aria-label={
-              isPasswordVisible ? "Sembunyikan password" : "Tampilkan password"
-            }
+            aria-label={isPasswordVisible ? "Hide password" : "Show password"}
           >
             {isPasswordVisible ? (
               <EyeOffIcon className="size-4" />
@@ -132,7 +130,7 @@ export function CredentialsLoginForm({
           type="button"
           className="self-end text-sm font-semibold text-orange-500 transition-colors hover:text-orange-600"
         >
-          Lupa password?
+          Forgot password?
         </button>
       </div>
 
@@ -147,7 +145,7 @@ export function CredentialsLoginForm({
         disabled={isLoading || disabled}
         className="h-12 w-full rounded-lg bg-orange-500 text-base font-bold shadow-sm hover:bg-orange-600"
       >
-        {isLoading ? "Masuk..." : "Masuk ke Akun"}
+        {isLoading ? "Signing in..." : "Sign In"}
       </Button>
     </form>
   );

@@ -93,7 +93,7 @@ export const useNodeTestStore = create<NodeTestState>((set, get) => ({
           [node.id]: {
             ok: false,
             error:
-              error instanceof Error ? error.message : "Gagal menjalankan test",
+              error instanceof Error ? error.message : "Failed to run the test",
           },
         },
       });

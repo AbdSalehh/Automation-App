@@ -126,12 +126,12 @@ export function FlowInfoPanel() {
               </h3>
 
               <p className="text-muted-foreground text-xs">
-                Kirim HTTP POST ke URL ini untuk menjalankan workflow. Body JSON
-                akan diteruskan sebagai data trigger.
+                Send an HTTP POST to this URL to run the workflow. The JSON body
+                will be passed as trigger data.
               </p>
 
               <code className="bg-muted text-foreground block rounded-md p-2 text-xs break-all">
-                {webhookUrl || "Simpan workflow dulu untuk mendapatkan URL"}
+                {webhookUrl || "Save the workflow first to get the URL"}
               </code>
 
               {webhookUrl && (
@@ -140,13 +140,13 @@ export function FlowInfoPanel() {
                   size="sm"
                   onClick={() => navigator.clipboard.writeText(webhookUrl)}
                 >
-                  Salin URL
+                  Copy URL
                 </Button>
               )}
 
               {!isPublished && (
                 <p className="text-xs text-amber-600">
-                  Publish workflow agar webhook bisa dipanggil.
+                  Publish the workflow so the webhook can be called.
                 </p>
               )}
             </section>
@@ -161,14 +161,14 @@ export function FlowInfoPanel() {
               <p className="text-muted-foreground text-xs">
                 Cron:{" "}
                 <code className="bg-muted rounded px-1 py-0.5">
-                  {String(scheduleNode.data.config?.cron ?? "belum diatur")}
+                  {String(scheduleNode.data.config?.cron ?? "not set")}
                 </code>
               </p>
 
               <p className="text-muted-foreground text-xs">
-                Hubungkan scheduler eksternal (Vercel Cron / cron-job.org) ke{" "}
+                Connect an external scheduler (Vercel Cron / cron-job.org) to{" "}
                 <code className="bg-muted rounded px-1 py-0.5">/api/cron</code>{" "}
-                setiap menit.
+                every minute.
               </p>
             </section>
           )}

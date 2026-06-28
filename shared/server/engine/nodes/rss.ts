@@ -16,7 +16,7 @@ export const rssReadHandler: NodeHandler = async ({ config }) => {
   const url = String(config.url ?? "").trim();
 
   if (!url) {
-    throw new Error("RSS: url feed wajib diisi");
+    throw new Error("RSS: feed url is required");
   }
 
   const limit = Math.max(1, Number(config.limit ?? 20));
@@ -28,7 +28,7 @@ export const rssReadHandler: NodeHandler = async ({ config }) => {
   });
 
   if (!response.ok) {
-    throw new Error("RSS: gagal mengambil feed");
+    throw new Error("RSS: failed to fetch the feed");
   }
 
   const xml = String(response.body ?? "");

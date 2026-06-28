@@ -23,7 +23,7 @@ export const aiGeminiHandler: NodeHandler = async ({
   );
 
   if (!credential?.apiKey) {
-    throw new Error("Gemini: API key tidak ada");
+    throw new Error("Gemini: missing API key");
   }
 
   const model = String(config.model ?? GEMINI_MODEL);
@@ -40,7 +40,7 @@ export const aiGeminiHandler: NodeHandler = async ({
     );
 
     if (!prompt) {
-      throw new Error("Gemini: prompt kosong");
+      throw new Error("Gemini: empty prompt");
     }
 
     const rawText = await generateText({

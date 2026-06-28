@@ -49,7 +49,7 @@ export function UserFilters({
         <Input
           value={searchTerm}
           onChange={(changeEvent) => onSearchChange(changeEvent.target.value)}
-          placeholder="Cari nama, email, atau role..."
+          placeholder="Search by name, email, or role..."
           className="pl-9"
         />
       </div>
@@ -60,10 +60,10 @@ export function UserFilters({
           onValueChange={(value) => onRoleChange(value as RoleFilter)}
         >
           <SelectTrigger className="w-36">
-            <SelectValue placeholder="Semua Role" />
+            <SelectValue placeholder="All Roles" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Semua Role</SelectItem>
+            <SelectItem value="all">All Roles</SelectItem>
             <SelectItem value="user">User</SelectItem>
             <SelectItem value="admin">Admin</SelectItem>
           </SelectContent>
@@ -74,15 +74,15 @@ export function UserFilters({
           onValueChange={(value) => onStatusChange(value as StatusFilter)}
         >
           <SelectTrigger className="w-40">
-            <SelectValue placeholder="Semua Status" />
+            <SelectValue placeholder="All Statuses" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Semua Status</SelectItem>
-            <SelectItem value="active">Aktif</SelectItem>
-            <SelectItem value="inactive">Non-Aktif</SelectItem>
-            <SelectItem value="pending">Menunggu</SelectItem>
-            <SelectItem value="rejected">Ditolak</SelectItem>
-            <SelectItem value="locked">Terkunci</SelectItem>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="inactive">Inactive</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="rejected">Rejected</SelectItem>
+            <SelectItem value="locked">Locked</SelectItem>
           </SelectContent>
         </Select>
 

@@ -44,7 +44,7 @@ export function AiAgentCredentials({
 
   const nameById = (credentialId: string) =>
     aiCredentials.find((credential) => credential.id === credentialId)?.name ??
-    "Kredensial dihapus";
+    "Credential deleted";
 
   const addCredential = (credentialId: string) => {
     if (selectedIds.includes(credentialId)) {
@@ -81,7 +81,7 @@ export function AiAgentCredentials({
   return (
     <div className="flex flex-col gap-2">
       <label className="text-muted-foreground block text-xs font-medium">
-        Kredensial AI (urutan = prioritas fallback)
+        AI Credentials (order = fallback priority)
       </label>
 
       {selectedIds.length > 0 && (
@@ -105,7 +105,7 @@ export function AiAgentCredentials({
                 size="icon-sm"
                 disabled={index === 0}
                 onClick={() => moveCredential(credentialId, "up")}
-                aria-label="Naikkan prioritas"
+                aria-label="Increase priority"
               >
                 <ArrowUpIcon className="size-3.5" />
               </Button>
@@ -116,7 +116,7 @@ export function AiAgentCredentials({
                 size="icon-sm"
                 disabled={index === selectedIds.length - 1}
                 onClick={() => moveCredential(credentialId, "down")}
-                aria-label="Turunkan prioritas"
+                aria-label="Decrease priority"
               >
                 <ArrowDownIcon className="size-3.5" />
               </Button>
@@ -126,7 +126,7 @@ export function AiAgentCredentials({
                 variant="ghost"
                 size="icon-sm"
                 onClick={() => removeCredential(credentialId)}
-                aria-label="Hapus kredensial"
+                aria-label="Delete credential"
               >
                 <XIcon className="size-3.5" />
               </Button>
@@ -138,7 +138,7 @@ export function AiAgentCredentials({
       {availableToAdd.length > 0 ? (
         <Select value="" onValueChange={addCredential}>
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="+ Tambah kredensial AI" />
+            <SelectValue placeholder="+ Add AI credential" />
           </SelectTrigger>
 
           <SelectContent>
@@ -152,8 +152,8 @@ export function AiAgentCredentials({
       ) : (
         aiCredentials.length === 0 && (
           <p className="text-xs text-amber-600">
-            Belum ada kredensial AI. Tambahkan tipe &quot;AI Provider&quot; di
-            halaman Credentials terlebih dahulu.
+            No AI credentials yet. Add an &quot;AI Provider&quot; type on the
+            Credentials page first.
           </p>
         )
       )}
@@ -161,7 +161,7 @@ export function AiAgentCredentials({
       {selectedIds.length === 0 && aiCredentials.length > 0 && (
         <p className="text-muted-foreground flex items-center gap-1 text-xs">
           <PlusIcon className="size-3" />
-          Pilih minimal satu kredensial AI untuk dijalankan.
+          Select at least one AI credential to run.
         </p>
       )}
     </div>

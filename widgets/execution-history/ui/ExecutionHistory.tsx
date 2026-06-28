@@ -45,17 +45,17 @@ export function ExecutionHistory() {
       <div>
         <h1 className="text-foreground text-2xl font-bold">Executions</h1>
         <p className="text-muted-foreground text-sm">
-          Riwayat eksekusi workflow beserta log audit.
+          Workflow execution history and audit logs.
         </p>
       </div>
 
       {isLoading ? (
         <span className="text-muted-foreground flex items-center gap-2 text-sm">
-          <Spinner /> Memuat…
+          <Spinner /> Loading…
         </span>
       ) : executions.length === 0 ? (
         <div className="border-border text-muted-foreground rounded-xl border border-dashed py-12 text-center">
-          Belum ada eksekusi.
+          No executions yet.
         </div>
       ) : (
         <div className="border-border bg-card overflow-hidden rounded-xl border">
@@ -64,8 +64,8 @@ export function ExecutionHistory() {
               <tr>
                 <th className="px-4 py-2">Workflow</th>
                 <th className="px-4 py-2">Status</th>
-                <th className="px-4 py-2">Mulai</th>
-                <th className="px-4 py-2">Durasi</th>
+                <th className="px-4 py-2">Started</th>
+                <th className="px-4 py-2">Duration</th>
                 <th className="px-4 py-2" />
               </tr>
             </thead>
@@ -92,7 +92,7 @@ export function ExecutionHistory() {
                       onClick={() => toggleDetail(execution.id)}
                       className="text-primary text-sm hover:underline"
                     >
-                      {openExecutionId === execution.id ? "Tutup" : "Detail"}
+                      {openExecutionId === execution.id ? "Close" : "Details"}
                     </button>
                   </td>
                 </tr>
@@ -104,7 +104,7 @@ export function ExecutionHistory() {
             <div className="border-border bg-muted/50 border-t px-4 py-3">
               {isLoadingDetail || !detail ? (
                 <span className="text-muted-foreground flex items-center gap-2 text-xs">
-                  <Spinner /> Memuat log…
+                  <Spinner /> Loading logs…
                 </span>
               ) : (
                 <div className="flex flex-col gap-2">

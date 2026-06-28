@@ -42,27 +42,27 @@ export const CREDENTIAL_FIELDS: Record<CredentialType, CredentialFieldDef[]> = {
     {
       key: "apiId",
       label: "API ID",
-      placeholder: "Dari my.telegram.org → API development tools",
+      placeholder: "From my.telegram.org → API development tools",
     },
     { key: "apiHash", label: "API Hash", secret: true },
     {
       key: "phoneNumber",
-      label: "Nomor Telegram",
+      label: "Telegram Number",
       placeholder: "+628123456789",
     },
   ],
   gemini: [
     {
       key: "apiKey",
-      label: "API Key Gemini",
+      label: "Gemini API Key",
       secret: true,
-      placeholder: "Dari aistudio.google.com → Get API key",
+      placeholder: "From aistudio.google.com → Get API key",
     },
   ],
   ai: [
     {
       key: "provider",
-      label: "Penyedia AI",
+      label: "AI Provider",
       type: "select",
       options: AI_PROVIDERS.map((aiProvider) => ({
         value: aiProvider.value,
@@ -73,30 +73,30 @@ export const CREDENTIAL_FIELDS: Record<CredentialType, CredentialFieldDef[]> = {
       key: "apiKey",
       label: "API Key",
       secret: true,
-      placeholder: "API key dari penyedia yang dipilih",
+      placeholder: "API key from the selected provider",
     },
     {
       key: "model",
       label: "Model",
-      placeholder: "mis. gemini-2.5-flash",
+      placeholder: "e.g. gemini-2.5-flash",
     },
   ],
   agent_chat: [
     {
       key: "botToken",
-      label: "Bot Token Telegram",
+      label: "Telegram Bot Token",
       secret: true,
-      placeholder: "Dari @BotFather → /newbot",
+      placeholder: "From @BotFather → /newbot",
     },
     {
       key: "geminiApiKey",
-      label: "API Key Gemini",
+      label: "Gemini API Key",
       secret: true,
-      placeholder: "Dari aistudio.google.com → Get API key",
+      placeholder: "From aistudio.google.com → Get API key",
     },
     {
       key: "geminiModel",
-      label: "Model Gemini",
+      label: "Gemini Model",
       placeholder: "gemini-2.5-flash",
     },
   ],
@@ -115,7 +115,7 @@ export const CREDENTIAL_FIELDS: Record<CredentialType, CredentialFieldDef[]> = {
     {
       key: "calendarId",
       label: "Calendar ID",
-      placeholder: "primary atau email@example.com",
+      placeholder: "primary or email@example.com",
     },
   ],
   http: [

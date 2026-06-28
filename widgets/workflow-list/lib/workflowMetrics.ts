@@ -21,11 +21,11 @@ export interface WorkflowMetrics {
  * Pemetaan `kind` node trigger ke label & detail yang ramah dibaca pada tabel.
  */
 const TRIGGER_LABELS: Record<string, { type: string; detail: string }> = {
-  schedule_trigger: { type: "Cron", detail: "Berbasis jadwal" },
-  webhook_trigger: { type: "Webhook", detail: "Pemicu HTTP" },
-  whatsapp_trigger: { type: "WhatsApp", detail: "Pesan masuk" },
-  telegram_trigger: { type: "Telegram", detail: "Pesan masuk" },
-  google_sheets_trigger: { type: "Google Sheets", detail: "Baris baru" },
+  schedule_trigger: { type: "Cron", detail: "Schedule-based" },
+  webhook_trigger: { type: "Webhook", detail: "HTTP trigger" },
+  whatsapp_trigger: { type: "WhatsApp", detail: "Incoming message" },
+  telegram_trigger: { type: "Telegram", detail: "Incoming message" },
+  google_sheets_trigger: { type: "Google Sheets", detail: "New row" },
 };
 
 /**
@@ -41,22 +41,22 @@ function toRelativeLabel(isoTimestamp: string | null): string {
   const elapsedMinutes = Math.floor(elapsedMs / 60000);
 
   if (elapsedMinutes < 1) {
-    return "Baru saja";
+    return "Just now";
   }
 
   if (elapsedMinutes < 60) {
-    return `${elapsedMinutes} menit lalu`;
+    return `${elapsedMinutes} minutes ago`;
   }
 
   const elapsedHours = Math.floor(elapsedMinutes / 60);
 
   if (elapsedHours < 24) {
-    return `${elapsedHours} jam lalu`;
+    return `${elapsedHours} hours ago`;
   }
 
   const elapsedDays = Math.floor(elapsedHours / 24);
 
-  return `${elapsedDays} hari lalu`;
+  return `${elapsedDays} days ago`;
 }
 
 /**
@@ -99,11 +99,11 @@ export function deriveWorkflowMetrics(
   return {
     status,
     triggerType: triggerLabel?.type ?? "Manual",
-    triggerDetail: triggerLabel?.detail ?? "Tanpa trigger",
+    triggerDetail: triggerLabel?.detail ?? "No trigger",
     hasExecution,
     lastExecutionOk,
     lastExecutionLabel: !hasExecution
-      ? "Belum jalan"
+      ? "Not run yet"
       : lastExecutionOk
         ? "Success"
         : workflow.lastExecutionStatus === "running"

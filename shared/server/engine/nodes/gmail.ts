@@ -18,7 +18,7 @@ export const gmailSendHandler: NodeHandler = async ({
   );
 
   if (!credential) {
-    throw new Error("Gmail: kredensial Google tidak ada");
+    throw new Error("Gmail: missing Google credential");
   }
 
   const accessToken = await getGoogleAccessToken(credential);
@@ -36,7 +36,7 @@ export const gmailSendHandler: NodeHandler = async ({
     );
 
     if (!to) {
-      throw new Error("Gmail: penerima (to) kosong");
+      throw new Error("Gmail: recipient (to) is empty");
     }
 
     /**

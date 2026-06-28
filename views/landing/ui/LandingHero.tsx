@@ -14,7 +14,7 @@ const HERO_NODE_SEEDS = [
   {
     id: "cron",
     label: "Cron Trigger",
-    description: "Setup jam 09:00",
+    description: "Set for 09:00",
     category: "trigger" as const,
     icon: "Clock",
     brand: null,
@@ -23,7 +23,7 @@ const HERO_NODE_SEEDS = [
   {
     id: "sheets",
     label: "Google Sheets",
-    description: "Baca data",
+    description: "Read data",
     category: "action" as const,
     icon: "Sheet",
     brand: "google-sheets" as const,
@@ -32,7 +32,7 @@ const HERO_NODE_SEEDS = [
   {
     id: "condition",
     label: "IF Condition",
-    description: "Cek kondisi",
+    description: "Check condition",
     category: "logic" as const,
     icon: "GitBranch",
     brand: null,
@@ -41,7 +41,7 @@ const HERO_NODE_SEEDS = [
   {
     id: "whatsapp",
     label: "WhatsApp Send",
-    description: "Kirim pesan",
+    description: "Send message",
     category: "action" as const,
     icon: "MessageCircle",
     brand: "whatsapp" as const,
@@ -50,7 +50,7 @@ const HERO_NODE_SEEDS = [
   {
     id: "log",
     label: "Log Result",
-    description: "Simpan log",
+    description: "Save log",
     category: "action" as const,
     icon: "Database",
     brand: null,
@@ -67,9 +67,9 @@ const HERO_EDGES = [
 ];
 
 const HERO_PILLS = [
-  { title: "Visual & Intuitif", description: "Drag-and-drop antar node" },
-  { title: "Aman & Terenkripsi", description: "Kredensial tersimpan aman" },
-  { title: "Scalable & Reliable", description: "Dibangun untuk performa" },
+  { title: "Visual & Intuitive", description: "Drag-and-drop between nodes" },
+  { title: "Secure & Encrypted", description: "Credentials stored securely" },
+  { title: "Scalable & Reliable", description: "Built for performance" },
 ];
 
 /**
@@ -84,15 +84,15 @@ export function LandingHero() {
       <div className="relative mx-auto grid w-full max-w-6xl items-center gap-12 px-4 py-20 lg:grid-cols-2">
         <div className="flex flex-col">
           <h1 className="text-4xl leading-tight font-bold tracking-tight text-slate-900 md:text-4xl">
-            Automasi Workflow Anda,
+            Automate Your Workflow,
             <br />
-            Visual • Mudah • <span className="text-orange-500">Powerful</span>
+            Visual • Simple • <span className="text-orange-500">Powerful</span>
           </h1>
 
           <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-600">
-            {APP_NAME} adalah platform workflow automation berbasis visual node.
-            Buat, kelola, dan jalankan otomatisasi bisnis tanpa coding dengan
-            drag-and-drop yang intuitif.
+            {APP_NAME} is a visual node-based workflow automation platform.
+            Build, manage, and run business automation without coding through
+            intuitive drag-and-drop.
           </p>
 
           <div className="mt-7 grid gap-4 sm:grid-cols-3">
@@ -117,7 +117,7 @@ export function LandingHero() {
                 size="lg"
                 className="gap-2 bg-orange-500 px-7 text-white shadow-lg shadow-orange-500/30 hover:bg-orange-600"
               >
-                Mulai Gratis
+                Get Started Free
                 <ArrowRightIcon className="size-4" />
               </Button>
             </Link>
@@ -129,13 +129,13 @@ export function LandingHero() {
                 className="gap-2 border-slate-200 bg-white px-7 text-slate-700 hover:bg-slate-50"
               >
                 <PlayIcon className="size-4 text-orange-500" />
-                Lihat Demo
+                View Demo
               </Button>
             </a>
           </div>
 
           <p className="mt-4 text-xs text-slate-400">
-            Gratis untuk memulai. Tidak perlu kartu kredit.
+            Free to get started. No credit card required.
           </p>
         </div>
 
@@ -161,7 +161,7 @@ function HeroPreviewCard() {
 
           <div className="relative ml-auto">
             <span className="block rounded-md bg-orange-500 px-2 py-1 text-[10px] font-semibold text-white shadow-sm shadow-orange-500/40">
-              Jalankan
+              Run
             </span>
 
             <div className="animate-cursor-tap absolute -right-1 -bottom-3">

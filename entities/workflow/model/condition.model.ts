@@ -27,16 +27,16 @@ export interface ConditionGroup {
 }
 
 export const CONDITION_OPERATOR_LABELS: Record<ConditionOperator, string> = {
-  equals: "sama dengan",
-  not_equals: "tidak sama dengan",
-  contains: "mengandung",
-  not_contains: "tidak mengandung",
-  is_empty: "kosong",
-  is_not_empty: "tidak kosong",
-  greater_than: "lebih besar dari",
-  less_than: "lebih kecil dari",
-  starts_with: "diawali dengan",
-  ends_with: "diakhiri dengan",
+  equals: "equals",
+  not_equals: "does not equal",
+  contains: "contains",
+  not_contains: "does not contain",
+  is_empty: "is empty",
+  is_not_empty: "is not empty",
+  greater_than: "is greater than",
+  less_than: "is less than",
+  starts_with: "starts with",
+  ends_with: "ends with",
 };
 
 /** Operators that don't need a comparison value. */

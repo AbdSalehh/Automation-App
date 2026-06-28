@@ -28,7 +28,7 @@ export const aiAgentHandler: NodeHandler = async ({
     : [];
 
   if (credentialIds.length === 0) {
-    throw new Error("AI Agent: minimal satu kredensial AI wajib dipilih");
+    throw new Error("AI Agent: at least one AI credential must be selected");
   }
 
   /**
@@ -53,7 +53,7 @@ export const aiAgentHandler: NodeHandler = async ({
 
   if (chain.length === 0) {
     throw new Error(
-      "AI Agent: kredensial AI terpilih tidak lengkap (apiKey/model kosong)",
+      "AI Agent: the selected AI credential is incomplete (apiKey/model empty)",
     );
   }
 
@@ -67,7 +67,7 @@ export const aiAgentHandler: NodeHandler = async ({
     const prompt = resolveTemplate(String(config.prompt ?? ""), item);
 
     if (!prompt) {
-      throw new Error("AI Agent: prompt kosong");
+      throw new Error("AI Agent: empty prompt");
     }
 
     const rawText = await generateText({

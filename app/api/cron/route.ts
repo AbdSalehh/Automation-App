@@ -96,7 +96,7 @@ export async function GET(request: Request) {
         (request.headers.get("authorization") ?? "").replace("Bearer ", "");
 
       if (provided !== cronSecret) {
-        return unauthorized("CRON secret tidak valid");
+        return unauthorized("Invalid CRON secret");
       }
     }
 

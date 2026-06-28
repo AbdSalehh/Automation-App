@@ -187,7 +187,7 @@ export async function POST(
     const { token } = await params;
 
     if (!token) {
-      return badRequest("Token bot tidak ada di URL");
+      return badRequest("Bot token is missing from the URL");
     }
 
     let update: TelegramUpdate;
@@ -195,7 +195,7 @@ export async function POST(
     try {
       update = (await request.json()) as TelegramUpdate;
     } catch {
-      return badRequest("Body bukan JSON yang valid");
+      return badRequest("Body is not valid JSON");
     }
 
     const callbackQuery = update.callback_query;
@@ -282,7 +282,7 @@ export async function POST(
       }
 
       if (agentConfig.chain.length === 0) {
-        return badRequest("Agen chat-action belum memiliki penyedia AI");
+        return badRequest("The chat-action agent has no AI provider");
       }
 
       const transport = createTelegramTransport(token, String(callbackChatId));
@@ -295,7 +295,7 @@ export async function POST(
         transport,
       });
 
-      return ok(result, "Callback tombol diproses");
+      return ok(result, "Button callback processed");
     }
 
     const message = update.message;
@@ -315,7 +315,7 @@ export async function POST(
 
     if (agentConfig) {
       if (agentConfig.chain.length === 0) {
-        return badRequest("Agen chat-action belum memiliki penyedia AI");
+        return badRequest("The chat-action agent has no AI provider");
       }
 
       const transport = createTelegramTransport(token, String(chatId));
@@ -328,14 +328,14 @@ export async function POST(
         transport,
       });
 
-      return ok(result, "Pesan agen diproses");
+      return ok(result, "Agent message processed");
     }
 
     /** Jalur 2 — Bot biasa: picu workflow telegram_trigger milik pemilik. */
     const owner = await findTelegramOwner(token);
 
     if (!owner) {
-      return badRequest("Token bot tidak dikenali");
+      return badRequest("Bot token not recognized");
     }
 
     const senderName =
@@ -377,7 +377,7 @@ export async function POST(
 
     return ok(
       { triggered, count: triggered.length, resumed: resumedCount },
-      "Pesan masuk Telegram diterima",
+      "Incoming Telegram message received",
     );
   });
 }

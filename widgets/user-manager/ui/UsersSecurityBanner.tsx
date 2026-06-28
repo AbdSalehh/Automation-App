@@ -11,20 +11,20 @@ interface SecurityHighlight {
 const HIGHLIGHTS: SecurityHighlight[] = [
   {
     key: "encryption",
-    title: "Data terenkripsi",
+    title: "Encrypted data",
     description: "AES-256 Encryption",
     icon: LockIcon,
   },
   {
     key: "access",
-    title: "Akses terkontrol",
+    title: "Controlled access",
     description: "Role-based Access",
     icon: UsersIcon,
   },
   {
     key: "audit",
-    title: "Aktivitas tercatat",
-    description: "Audit log lengkap",
+    title: "Activity logged",
+    description: "Complete audit log",
     icon: ScrollTextIcon,
   },
 ];
@@ -48,11 +48,11 @@ export function UsersSecurityBanner() {
         </div>
         <div className="relative left-40 flex flex-col">
           <h3 className="text-foreground text-sm font-bold">
-            Keamanan data Anda adalah prioritas kami
+            The security of your data is our priority
           </h3>
           <p className="text-muted-foreground text-xs">
-            Semua data pengguna dienkripsi dan dilindungi dengan standar
-            keamanan tinggi.
+            All user data is encrypted and protected with high security
+            standards.
           </p>
         </div>
       </div>

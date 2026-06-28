@@ -25,7 +25,7 @@ export async function PATCH(request: Request) {
       const trimmedName = body.name.trim();
 
       if (!trimmedName) {
-        return badRequest("Nama tidak boleh kosong");
+        return badRequest("Name must not be empty");
       }
 
       updateData.name = trimmedName;

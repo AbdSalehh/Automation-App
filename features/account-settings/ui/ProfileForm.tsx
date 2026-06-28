@@ -37,7 +37,7 @@ export function ProfileForm({ initialName, initialImage }: ProfileFormProps) {
     }
 
     if (file.size > MAX_FILE_BYTES) {
-      setLocalError("Ukuran foto maksimal 2MB.");
+      setLocalError("Photo size must not exceed 2MB.");
       return;
     }
 
@@ -64,9 +64,9 @@ export function ProfileForm({ initialName, initialImage }: ProfileFormProps) {
       className="border-border bg-card flex flex-col gap-4 rounded-xl border p-5"
     >
       <div className="flex flex-col gap-0.5">
-        <h3 className="text-foreground text-sm font-semibold">Profil Saya</h3>
+        <h3 className="text-foreground text-sm font-semibold">My Profile</h3>
         <p className="text-muted-foreground text-xs">
-          Perbarui nama tampilan dan foto profil akun Anda.
+          Update your account display name and profile photo.
         </p>
       </div>
 
@@ -75,7 +75,7 @@ export function ProfileForm({ initialName, initialImage }: ProfileFormProps) {
           {imageDataUrl ? (
             <Image
               src={imageDataUrl}
-              alt="Foto profil"
+              alt="Profile photo"
               fill
               className="object-cover"
               unoptimized
@@ -101,7 +101,7 @@ export function ProfileForm({ initialName, initialImage }: ProfileFormProps) {
             variant="secondary"
             onClick={() => fileInputRef.current?.click()}
           >
-            Ganti Foto
+            Change Photo
           </Button>
 
           {imageDataUrl && (
@@ -110,7 +110,7 @@ export function ProfileForm({ initialName, initialImage }: ProfileFormProps) {
               onClick={() => setImageDataUrl(null)}
               className="text-muted-foreground hover:text-destructive text-xs"
             >
-              Hapus foto
+              Remove photo
             </button>
           )}
         </div>
@@ -121,13 +121,13 @@ export function ProfileForm({ initialName, initialImage }: ProfileFormProps) {
           htmlFor="profileName"
           className="text-foreground text-sm font-medium"
         >
-          Nama Tampilan
+          Display Name
         </label>
         <Input
           id="profileName"
           value={name}
           onChange={(changeEvent) => setName(changeEvent.target.value)}
-          placeholder="Nama Anda"
+          placeholder="Your name"
         />
       </div>
 
@@ -144,7 +144,7 @@ export function ProfileForm({ initialName, initialImage }: ProfileFormProps) {
       )}
 
       <Button type="submit" disabled={isSavingProfile} className="w-fit">
-        {isSavingProfile ? "Menyimpan..." : "Simpan Profil"}
+        {isSavingProfile ? "Saving..." : "Save Profile"}
       </Button>
     </form>
   );

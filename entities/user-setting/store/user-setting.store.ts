@@ -40,7 +40,7 @@ export const useUserSettingStore = create<UserSettingState>((set, get) => ({
       const setting = await userSettingService.get();
       set({ setting });
     } catch {
-      set({ errorMessage: "Gagal memuat setelan." });
+      set({ errorMessage: "Failed to load settings." });
     } finally {
       set({ isLoading: false });
     }
@@ -60,11 +60,11 @@ export const useUserSettingStore = create<UserSettingState>((set, get) => ({
     try {
       const saved = await userSettingService.update(get().setting);
 
-      set({ setting: saved, successMessage: "Setelan tersimpan." });
+      set({ setting: saved, successMessage: "Settings saved." });
 
       return true;
     } catch {
-      set({ errorMessage: "Gagal menyimpan setelan." });
+      set({ errorMessage: "Failed to save settings." });
 
       return false;
     } finally {

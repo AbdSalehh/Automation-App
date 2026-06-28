@@ -27,7 +27,7 @@ export const aiOpenAiHandler: NodeHandler = async ({
   );
 
   if (!credential?.apiKey) {
-    throw new Error("OpenAI: API key tidak ada");
+    throw new Error("OpenAI: missing API key");
   }
 
   const provider = (
@@ -50,7 +50,7 @@ export const aiOpenAiHandler: NodeHandler = async ({
     );
 
     if (!prompt) {
-      throw new Error("OpenAI: prompt kosong");
+      throw new Error("OpenAI: empty prompt");
     }
 
     const rawText = await generateText({

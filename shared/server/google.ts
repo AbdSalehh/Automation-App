@@ -20,7 +20,7 @@ export async function getGoogleAccessToken(
     !credential.refreshToken
   ) {
     throw new Error(
-      "Google: kredensial tidak lengkap (clientId, clientSecret, refreshToken)",
+      "Google: incomplete credential (clientId, clientSecret, refreshToken)",
     );
   }
 
@@ -40,7 +40,7 @@ export async function getGoogleAccessToken(
 
   if (!tokenResponse.ok) {
     throw new Error(
-      "Google: gagal menukar refresh token (cek kredensial / token kedaluwarsa)",
+      "Google: failed to exchange the refresh token (check the credential / token may be expired)",
     );
   }
 
@@ -48,7 +48,7 @@ export async function getGoogleAccessToken(
     ?.access_token;
 
   if (!accessToken) {
-    throw new Error("Google: access token kosong");
+    throw new Error("Google: empty access token");
   }
 
   return accessToken;

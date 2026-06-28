@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
     const parsed = createUserSchema.safeParse(body);
 
     if (!parsed.success) {
-      return unprocessable("Data tidak valid");
+      return unprocessable("Invalid data");
     }
 
     const { name, email, password, role } = parsed.data;
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
     const existingUser = await prisma.user.findUnique({ where: { email } });
 
     if (existingUser) {
-      return unprocessable("Email sudah terdaftar");
+      return unprocessable("Email is already registered");
     }
 
     const passwordHash = await bcrypt.hash(password, 12);

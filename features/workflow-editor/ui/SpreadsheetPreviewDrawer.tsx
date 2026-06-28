@@ -170,7 +170,7 @@ export function SpreadsheetPreviewDrawer() {
             <div
               onPointerDown={handleResizeStart}
               className="group flex h-5 shrink-0 cursor-ns-resize touch-none items-center justify-center"
-              aria-label="Ubah ukuran panel"
+              aria-label="Resize panel"
             >
               <GripHorizontalIcon className="text-border group-hover:text-muted-foreground size-4 transition-colors" />
             </div>
@@ -185,7 +185,7 @@ export function SpreadsheetPreviewDrawer() {
 
                 {data && (
                   <Badge variant="neutral">
-                    {data.totalRows.toLocaleString()} baris
+                    {data.totalRows.toLocaleString()} rows
                   </Badge>
                 )}
               </div>
@@ -194,7 +194,7 @@ export function SpreadsheetPreviewDrawer() {
                 variant="ghost"
                 size="icon-sm"
                 onClick={closeDrawer}
-                aria-label="Tutup preview"
+                aria-label="Close preview"
               >
                 <XIcon className="size-4" />
               </Button>
@@ -225,7 +225,7 @@ export function SpreadsheetPreviewDrawer() {
             {isLoading && (
               <div className="grid flex-1 place-items-center">
                 <span className="text-muted-foreground flex items-center gap-2 text-sm">
-                  <Spinner /> Memuat data…
+                  <Spinner /> Loading data…
                 </span>
               </div>
             )}
@@ -243,7 +243,7 @@ export function SpreadsheetPreviewDrawer() {
                   <div className="flex flex-col gap-4 p-4">
                     <div>
                       <p className="text-muted-foreground mb-0.5 text-[10px] font-semibold tracking-wide uppercase">
-                        Sheet Aktif
+                        Active Sheet
                       </p>
                       <p className="text-foreground truncate text-sm font-medium">
                         {activeSheet || "Sheet1"}
@@ -252,7 +252,7 @@ export function SpreadsheetPreviewDrawer() {
 
                     <div>
                       <p className="text-muted-foreground mb-0.5 text-[10px] font-semibold tracking-wide uppercase">
-                        Total Baris
+                        Total Rows
                       </p>
                       <p className="text-foreground text-sm font-medium">
                         {data.totalRows.toLocaleString()}
@@ -268,7 +268,7 @@ export function SpreadsheetPreviewDrawer() {
 
                     <div>
                       <p className="text-muted-foreground mb-2 text-[10px] font-semibold tracking-wide uppercase">
-                        Kolom ({data.headers.length})
+                        Columns ({data.headers.length})
                       </p>
                       <div className="flex flex-col gap-1">
                         {data.headers.map((header, columnIndex) => (
@@ -298,7 +298,7 @@ export function SpreadsheetPreviewDrawer() {
 
             {!isLoading && data && data.headers.length === 0 && (
               <div className="text-muted-foreground grid flex-1 place-items-center text-sm">
-                Sheet kosong atau tidak memiliki header.
+                Sheet is empty or has no header.
               </div>
             )}
           </motion.div>

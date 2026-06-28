@@ -52,7 +52,7 @@ export function UserManager() {
         <div className="flex items-center justify-center gap-3 py-16">
           <Spinner className="text-muted-foreground size-6" />
           <span className="text-muted-foreground text-sm">
-            Memuat daftar pengguna...
+            Loading user list...
           </span>
         </div>
       ) : errorMessage ? (
@@ -61,7 +61,7 @@ export function UserManager() {
         </div>
       ) : users.length === 0 ? (
         <div className="text-muted-foreground py-16 text-center text-sm">
-          Tidak ada pengguna yang cocok dengan filter.
+          No users match the filter.
         </div>
       ) : (
         <>
@@ -72,9 +72,9 @@ export function UserManager() {
                   <th className="px-4 py-3">User</th>
                   <th className="px-4 py-3">Role</th>
                   <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Terakhir Aktif</th>
-                  <th className="px-4 py-3">Dibuat Pada</th>
-                  <th className="px-4 py-3 text-right">Aksi</th>
+                  <th className="px-4 py-3">Last Active</th>
+                  <th className="px-4 py-3">Created At</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>

@@ -25,14 +25,14 @@ const REQUIRED_FIELDS: Partial<Record<NodeKind, FieldRule[]>> = {
     { key: "url", label: "URL" },
     { key: "method", label: "Method" },
   ],
-  whatsapp_send: [{ key: "message", label: "Pesan" }],
+  whatsapp_send: [{ key: "message", label: "Message" }],
   google_sheets_read: [{ key: "spreadsheetId", label: "Spreadsheet ID" }],
   google_sheets_update: [{ key: "spreadsheetId", label: "Spreadsheet ID" }],
   google_sheets_append: [{ key: "spreadsheetId", label: "Spreadsheet ID" }],
   schedule_trigger: [{ key: "cron", label: "Cron Expression" }],
   telegram_send: [
     { key: "chatId", label: "Chat ID" },
-    { key: "text", label: "Pesan" },
+    { key: "text", label: "Message" },
   ],
 };
 
@@ -68,7 +68,7 @@ export function validateNodeData(
     if (isEmpty) {
       issues.push({
         field: rule.key,
-        message: `${rule.label} wajib diisi.`,
+        message: `${rule.label} is required.`,
         severity: "error",
       });
       continue;
@@ -92,7 +92,7 @@ export function validateNodeData(
     if (!expression) {
       issues.push({
         field: "expression",
-        message: "Ekspresi kode tidak boleh kosong.",
+        message: "Code expression must not be empty.",
         severity: "error",
       });
     }
@@ -101,7 +101,7 @@ export function validateNodeData(
   if (CREDENTIAL_REQUIRED[nodeData.kind] && !nodeData.credentialId) {
     issues.push({
       field: "credentialId",
-      message: "Kredensial belum dipilih.",
+      message: "No credential selected.",
       severity: "warning",
     });
   }

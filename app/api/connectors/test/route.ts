@@ -11,7 +11,7 @@ export async function POST(req: Request) {
       data?: Record<string, string>;
     };
     if (!body.type || !CONNECTORS[body.type]) {
-      return badRequest("Tipe konektor tidak dikenal");
+      return badRequest("Unknown connector type");
     }
     const result = await CONNECTORS[body.type].test(body.data ?? {});
 

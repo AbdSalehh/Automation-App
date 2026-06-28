@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     };
 
     if (!body.node || !body.node.data?.kind) {
-      return badRequest("Node tidak valid");
+      return badRequest("Invalid node");
     }
 
     const result = await runSingleNode(

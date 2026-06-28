@@ -63,12 +63,12 @@ const TYPE_META: Partial<
 };
 
 const DESCRIPTIONS = [
-  "Digunakan untuk akses Google Sheets dan Drive",
-  "Koneksi untuk kirim pesan otomatis",
-  "Digunakan untuk mengirim email notifikasi",
-  "Database utama untuk menyimpan data aplikasi",
-  "Kirim notifikasi ke channel terkait",
-  "Cache dan queue untuk optimasi performa",
+  "Used for Google Sheets and Drive access",
+  "Connection for sending automated messages",
+  "Used for sending notification emails",
+  "Primary database for storing application data",
+  "Send notifications to related channels",
+  "Cache and queue for performance optimization",
 ];
 
 const LAST_USED = [

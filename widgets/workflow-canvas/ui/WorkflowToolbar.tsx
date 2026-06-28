@@ -21,7 +21,7 @@ export function WorkflowToolbar({ onRun }: WorkflowToolbarProps) {
   return (
     <div className="border-border bg-card flex h-14 items-center gap-3 border-b px-4">
       <Link href={ROUTES.workflows}>
-        <Button variant="ghost" size="icon-sm" aria-label="Kembali">
+        <Button variant="ghost" size="icon-sm" aria-label="Back">
           <ChevronLeftIcon />
         </Button>
       </Link>
@@ -30,10 +30,10 @@ export function WorkflowToolbar({ onRun }: WorkflowToolbarProps) {
         <span className="text-foreground text-sm font-semibold">
           {name || "Untitled Workflow"}
         </span>
-        <span className="text-muted-foreground text-xs">Overview workflow</span>
+        <span className="text-muted-foreground text-xs">Workflow overview</span>
       </div>
 
-      {isDirty && <Badge variant="warning">Belum disimpan</Badge>}
+      {isDirty && <Badge variant="warning">Unsaved</Badge>}
 
       {errorMessage && (
         <span className="text-destructive text-sm">{errorMessage}</span>

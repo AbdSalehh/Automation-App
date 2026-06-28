@@ -40,11 +40,11 @@ export function CredentialDetailDialog({
   const metrics = deriveCredentialMetrics(credential);
 
   return (
-    <Modal open={open} onClose={onClose} title="Detail Kredensial">
+    <Modal open={open} onClose={onClose} title="Credential Details">
       <div className="flex flex-col">
-        <DetailRow label="Nama" value={credential.name} />
+        <DetailRow label="Name" value={credential.name} />
         <DetailRow
-          label="Tipe"
+          label="Type"
           value={CREDENTIAL_TYPE_LABELS[credential.type as CredentialType]}
         />
         <DetailRow label="Provider" value={metrics.providerLabel} />
@@ -53,8 +53,8 @@ export function CredentialDetailDialog({
           label="Status"
           value={metrics.status === "expired" ? "Expired" : "Active"}
         />
-        <DetailRow label="Terakhir dipakai" value={metrics.lastUsedLabel} />
-        <DetailRow label="Dibuat" value={metrics.createdDate} />
+        <DetailRow label="Last used" value={metrics.lastUsedLabel} />
+        <DetailRow label="Created" value={metrics.createdDate} />
       </div>
     </Modal>
   );

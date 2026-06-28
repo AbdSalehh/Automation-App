@@ -46,7 +46,7 @@ export const useCredentialStore = create<CredentialState>((set, get) => ({
       const credentials = await credentialService.list();
       set({ credentials });
     } catch {
-      set({ errorMessage: "Gagal memuat kredensial." });
+      set({ errorMessage: "Failed to load credentials." });
     } finally {
       set({ isLoading: false });
     }
@@ -63,7 +63,7 @@ export const useCredentialStore = create<CredentialState>((set, get) => ({
 
       return true;
     } catch {
-      set({ errorMessage: "Gagal menyimpan kredensial." });
+      set({ errorMessage: "Failed to save the credential." });
 
       return false;
     } finally {
@@ -88,7 +88,7 @@ export const useCredentialStore = create<CredentialState>((set, get) => ({
 
       return true;
     } catch {
-      set({ errorMessage: "Gagal memperbarui kredensial." });
+      set({ errorMessage: "Failed to update the credential." });
 
       return false;
     } finally {

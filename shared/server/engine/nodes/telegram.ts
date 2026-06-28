@@ -19,11 +19,11 @@ export const telegramSendHandler: NodeHandler = async ({
   if (!credential?.botToken) {
     if (credential?.apiId) {
       throw new Error(
-        "Telegram nomor pribadi belum didukung di node ini — gunakan kredensial Telegram Bot (BotFather).",
+        "Telegram personal numbers are not yet supported in this node — use a Telegram Bot credential (BotFather).",
       );
     }
 
-    throw new Error("Telegram: kredensial tidak ada");
+    throw new Error("Telegram: missing credential");
   }
 
   const items = toItems(input);
@@ -45,7 +45,7 @@ export const telegramSendHandler: NodeHandler = async ({
     );
 
     if (!response.ok) {
-      throw new Error("Telegram: gagal mengirim pesan");
+      throw new Error("Telegram: failed to send the message");
     }
 
     results.push(response.body);

@@ -139,7 +139,7 @@ export function ExpressionInput({
 
           <span className="break-all">
             <span className="font-medium">Preview: </span>
-            {preview || "(kosong)"}
+            {preview || "(empty)"}
           </span>
         </div>
       )}

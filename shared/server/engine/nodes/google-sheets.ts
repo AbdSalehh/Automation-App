@@ -26,7 +26,7 @@ export const googleSheetsCreateHandler: NodeHandler = async ({
   );
 
   if (!credential) {
-    throw new Error("Google Sheets: kredensial tidak ada");
+    throw new Error("Google Sheets: missing credential");
   }
 
   const accessToken = await getGoogleAccessToken(credential);
@@ -68,7 +68,7 @@ export const googleSheetsCreateHandler: NodeHandler = async ({
     );
 
     if (!response.ok) {
-      throw new Error("Google Sheets: gagal menambah sheet baru");
+      throw new Error("Google Sheets: failed to add a new sheet");
     }
 
     return {
@@ -98,7 +98,7 @@ export const googleSheetsCreateHandler: NodeHandler = async ({
   );
 
   if (!response.ok) {
-    throw new Error("Google Sheets: gagal membuat spreadsheet baru");
+    throw new Error("Google Sheets: failed to create a new spreadsheet");
   }
 
   const body = response.body as {
@@ -107,7 +107,7 @@ export const googleSheetsCreateHandler: NodeHandler = async ({
   };
 
   if (!body.spreadsheetId) {
-    throw new Error("Google Sheets: spreadsheetId tidak diterima dari API");
+    throw new Error("Google Sheets: spreadsheetId was not returned by the API");
   }
 
   const newSpreadsheetId = body.spreadsheetId;
@@ -138,7 +138,9 @@ export const googleSheetsCreateHandler: NodeHandler = async ({
     );
 
     if (!seedResponse.ok) {
-      throw new Error("Google Sheets: gagal mengisi data awal spreadsheet");
+      throw new Error(
+        "Google Sheets: failed to seed the initial spreadsheet data",
+      );
     }
   }
 
@@ -218,7 +220,7 @@ export const googleSheetsAppendHandler: NodeHandler = async ({
   );
 
   if (!credential) {
-    throw new Error("Google Sheets: kredensial tidak ada");
+    throw new Error("Google Sheets: missing credential");
   }
 
   const accessToken = await getGoogleAccessToken(credential);
@@ -277,7 +279,7 @@ export const googleSheetsAppendHandler: NodeHandler = async ({
   );
 
   if (!response.ok) {
-    throw new Error("Google Sheets: gagal menambahkan baris");
+    throw new Error("Google Sheets: failed to append the row");
   }
 
   return { appended: values.length, rows: items };
@@ -296,7 +298,7 @@ export const googleSheetsReadHandler: NodeHandler = async ({
   );
 
   if (!credential) {
-    throw new Error("Google Sheets: kredensial tidak ada");
+    throw new Error("Google Sheets: missing credential");
   }
 
   const accessToken = await getGoogleAccessToken(credential);
@@ -308,7 +310,7 @@ export const googleSheetsReadHandler: NodeHandler = async ({
   ).trim();
 
   if (!spreadsheetId) {
-    throw new Error("Google Sheets: spreadsheetId wajib diisi");
+    throw new Error("Google Sheets: spreadsheetId is required");
   }
 
   /**
@@ -324,7 +326,7 @@ export const googleSheetsReadHandler: NodeHandler = async ({
   );
 
   if (!sheetsResponse.ok) {
-    throw new Error("Google Sheets: gagal membaca data");
+    throw new Error("Google Sheets: failed to read data");
   }
 
   const sheetsBody = sheetsResponse.body as { values?: string[][] };
@@ -381,7 +383,7 @@ export const googleSheetsUpdateHandler: NodeHandler = async ({
   );
 
   if (!credential) {
-    throw new Error("Google Sheets: kredensial tidak ada");
+    throw new Error("Google Sheets: missing credential");
   }
 
   const items = toItems(input);
@@ -394,7 +396,7 @@ export const googleSheetsUpdateHandler: NodeHandler = async ({
   ).trim();
 
   if (!spreadsheetId) {
-    throw new Error("Google Sheets: spreadsheetId wajib diisi");
+    throw new Error("Google Sheets: spreadsheetId is required");
   }
 
   if (items.length === 0) {
@@ -596,7 +598,7 @@ export const googleSheetsUpdateHandler: NodeHandler = async ({
   );
 
   if (!response.ok) {
-    throw new Error("Google Sheets: gagal meng-update baris");
+    throw new Error("Google Sheets: failed to update the row");
   }
 
   return { updated: updates.length, rows: items };

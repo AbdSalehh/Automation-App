@@ -80,8 +80,8 @@ interface ConfigFieldDef {
 const COUNTRY_CODE_OPTIONS = [
   { value: "62", label: "\uD83C\uDDEE\uD83C\uDDE9 Indonesia (+62)" },
   { value: "60", label: "\uD83C\uDDF2\uD83C\uDDFE Malaysia (+60)" },
-  { value: "65", label: "\uD83C\uDDF8\uD83C\uDDEC Singapura (+65)" },
-  { value: "63", label: "\uD83C\uDDF5\uD83C\uDDED Filipina (+63)" },
+  { value: "65", label: "\uD83C\uDDF8\uD83C\uDDEC Singapore (+65)" },
+  { value: "63", label: "\uD83C\uDDF5\uD83C\uDDED Philippines (+63)" },
   { value: "66", label: "\uD83C\uDDF9\uD83C\uDDED Thailand (+66)" },
   { value: "84", label: "\uD83C\uDDFB\uD83C\uDDF3 Vietnam (+84)" },
   { value: "91", label: "\uD83C\uDDEE\uD83C\uDDF3 India (+91)" },
@@ -94,64 +94,64 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
   ai_gemini: [
     {
       key: "systemInstruction",
-      label: "Peran AI (System Instruction)",
+      label: "AI Role (System Instruction)",
       multiline: true,
       placeholder:
-        "Kamu adalah asisten yang mencatat pengeluaran. Ekstrak nama item dan harga dari pesan.",
-      hint: "Mendefinisikan persona/peran AI dan format balasan yang diharapkan.",
+        "You are an assistant that records expenses. Extract the item name and price from the message.",
+      hint: "Defines the AI persona/role and the expected response format.",
     },
     {
       key: "prompt",
-      label: "Prompt / Pesan",
+      label: "Prompt / Message",
       multiline: true,
       placeholder: "{{message}}",
-      hint: "Pesan yang diproses AI. Gunakan {{message}} untuk isi pesan masuk.",
+      hint: "The message processed by the AI. Use {{message}} for the incoming message content.",
     },
     {
       key: "model",
-      label: "Model (opsional)",
+      label: "Model (optional)",
       selectOptions: GEMINI_MODELS,
-      hint: "Flash-Lite cocok saat Flash sedang sibuk (high-traffic).",
+      hint: "Flash-Lite is suitable when Flash is busy (high-traffic).",
     },
   ],
   supabase_insert: [
-    { key: "table", label: "Nama Tabel", placeholder: "expenses" },
+    { key: "table", label: "Table Name", placeholder: "expenses" },
     {
       key: "columns",
-      label: "Kolom (satu per baris: kolom=nilai)",
+      label: "Columns (one per line: column=value)",
       multiline: true,
       placeholder: "item={{text}}\namount={{amount}}\nsender={{sender}}",
-      hint: "Kosongkan untuk menyimpan seluruh field data masuk apa adanya. Nilai mendukung {{template}}.",
+      hint: "Leave blank to store all incoming data fields as-is. Values support {{template}}.",
     },
   ],
   supabase_query: [
-    { key: "table", label: "Nama Tabel", placeholder: "expenses" },
+    { key: "table", label: "Table Name", placeholder: "expenses" },
     {
       key: "select",
-      label: "Kolom Dipilih",
+      label: "Selected Columns",
       placeholder: "*",
-      hint: "Daftar kolom dipisah koma, atau * untuk semua.",
+      hint: "Comma-separated list of columns, or * for all.",
     },
     {
       key: "filters",
-      label: "Filter (satu per baris: kolom operator nilai)",
+      label: "Filter (one per line: column operator value)",
       multiline: true,
       placeholder: "sender eq {{sender}}\namount gte 1000",
-      hint: "Operator PostgREST: eq, gte, lte, like, dst.",
+      hint: "PostgREST operators: eq, gte, lte, like, etc.",
     },
     {
       key: "orderBy",
-      label: "Urutkan (opsional)",
+      label: "Sort (optional)",
       placeholder: "created_at.desc",
     },
-    { key: "limit", label: "Batas Baris (opsional)", placeholder: "50" },
+    { key: "limit", label: "Row Limit (optional)", placeholder: "50" },
   ],
   telegram_trigger: [
     {
       key: "info",
       label: "Info",
       placeholder: "",
-      hint: "Saat ada pesan Telegram masuk, data tersedia sebagai {{sender}}, {{message}}, {{name}}. Daftarkan webhook bot di halaman kredensial Telegram.",
+      hint: "When a Telegram message arrives, data is available as {{sender}}, {{message}}, {{name}}. Register the bot webhook on the Telegram credentials page.",
     },
   ],
   http_request: [
@@ -161,34 +161,34 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
   whatsapp_send: [
     {
       key: "targetField",
-      label: "Kolom Nomor Tujuan",
+      label: "Destination Number Column",
       columnSelect: true,
-      hint: "Pilih kolom yang berisi nomor WhatsApp dari sheet.",
+      hint: "Select the column containing the WhatsApp number from the sheet.",
     },
     {
       key: "target",
-      label: "Atau Nomor Manual / Template",
-      placeholder: "628xxx atau {{Nomor}}",
+      label: "Or Manual Number / Template",
+      placeholder: "628xxx or {{Number}}",
     },
     {
       key: "message",
-      label: "Pesan (dukung {{kolom}})",
+      label: "Message (supports {{column}})",
       multiline: true,
       placeholder:
-        "Halo {{Nama}} 👋\nReminder: {{Pesanan}} status {{Status Baru}}.",
+        "Hello {{Name}} 👋\nReminder: {{Order}} status {{New Status}}.",
     },
     { key: "countryCode", label: "Country Code", placeholder: "62" },
     {
       key: "reminderDelayMinutes",
-      label: "Tunda Kirim (menit)",
-      placeholder: "0 = kirim langsung",
-      hint: "Jika diisi, pesan dijadwalkan setelah N menit. Saat jatuh tempo, data dicek ulang — jika kondisi sudah tidak terpenuhi (mis. sudah bayar), pengiriman dibatalkan otomatis.",
+      label: "Send Delay (minutes)",
+      placeholder: "0 = send immediately",
+      hint: "If set, the message is scheduled after N minutes. When it is due, the data is rechecked — if the condition is no longer met (e.g. already paid), sending is canceled automatically.",
     },
     {
       key: "sendDelaySeconds",
-      label: "Jeda Antar Pengiriman (detik)",
+      label: "Delay Between Sends (seconds)",
       placeholder: "2",
-      hint: "Saat mengirim ke banyak nomor sekaligus, beri jeda antar pesan agar tidak terkirim di detik yang sama. Default 2 detik.",
+      hint: "When sending to many numbers at once, add a delay between messages so they are not sent at the same second. Default 2 seconds.",
     },
   ],
   whatsapp_trigger: [
@@ -196,164 +196,164 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
       key: "senderField",
       label: "Info",
       placeholder: "",
-      hint: "Saat ada balasan WA, data tersedia sebagai {{sender}}, {{message}}, {{name}}. Hubungkan akun WhatsApp (Baileys) lewat scan QR di Setelan, atau pakai WhatsApp Cloud API (Meta).",
+      hint: "When a WhatsApp reply arrives, data is available as {{sender}}, {{message}}, {{name}}. Connect your WhatsApp account (Baileys) via QR scan in Settings, or use the WhatsApp Cloud API (Meta).",
     },
   ],
   schedule: [
     {
       key: "executeDate",
-      label: "Tanggal Eksekusi / Template",
+      label: "Execution Date / Template",
       placeholder: "{{computedDate}}",
-      hint: "Tanggal absolut atau {{computedDate}} dari Date Calculator.",
+      hint: "Absolute date or {{computedDate}} from the Date Calculator.",
     },
     {
       key: "time",
-      label: "Jam (HH:MM, opsional)",
+      label: "Time (HH:MM, optional)",
       placeholder: "09:00",
     },
   ],
   wait_reply: [
     {
       key: "matchField",
-      label: "Kolom Nomor Target",
+      label: "Target Number Column",
       columnSelect: true,
-      hint: "Nomor yang ditunggu balasannya, mis. Nomor.",
+      hint: "The number whose reply is awaited, e.g. Number.",
     },
     {
       key: "matchValue",
-      label: "Atau Nomor Manual / Template",
-      placeholder: "{{Nomor}}",
+      label: "Or Manual Number / Template",
+      placeholder: "{{Number}}",
     },
     {
       key: "countryCode",
-      label: "Kode Negara",
+      label: "Country Code",
       selectOptions: COUNTRY_CODE_OPTIONS,
-      hint: "Dipakai menyamakan format nomor lokal (mis. 08xxx) dengan balasan internasional (mis. 628xxx).",
+      hint: "Used to align local number formats (e.g. 08xxx) with international replies (e.g. 628xxx).",
     },
   ],
   telegram_send: [
     {
       key: "chatId",
       label: "Chat ID",
-      placeholder: "123456789 atau {{ChatId}}",
+      placeholder: "123456789 or {{ChatId}}",
     },
-    { key: "text", label: "Pesan", multiline: true },
+    { key: "text", label: "Message", multiline: true },
   ],
   google_sheets_create: [
     {
       key: "mode",
       label: "Mode",
       selectOptions: [
-        { value: "new_spreadsheet", label: "Buat spreadsheet baru" },
-        { value: "new_sheet", label: "Tambah sheet di spreadsheet yang ada" },
+        { value: "new_spreadsheet", label: "Create new spreadsheet" },
+        { value: "new_sheet", label: "Add sheet to an existing spreadsheet" },
       ],
-      hint: "Buat spreadsheet baru (dapat ID otomatis) atau tambah tab pada spreadsheet yang sudah ada.",
+      hint: "Create a new spreadsheet (auto-generated ID) or add a tab to an existing spreadsheet.",
     },
     {
       key: "title",
-      label: "Judul Spreadsheet (mode baru)",
-      placeholder: "Catatan Keuangan {{name}}",
-      hint: "Dipakai saat mode 'Buat spreadsheet baru'. Mendukung {{template}}.",
+      label: "Spreadsheet Title (new mode)",
+      placeholder: "Financial Records {{name}}",
+      hint: "Used in 'Create new spreadsheet' mode. Supports {{template}}.",
     },
     {
       key: "spreadsheetId",
-      label: "Spreadsheet ID (mode tambah sheet)",
+      label: "Spreadsheet ID (add sheet mode)",
       placeholder: "1AbC...xyz",
-      hint: "Dipakai saat mode 'Tambah sheet di spreadsheet yang ada'.",
+      hint: "Used in 'Add sheet to an existing spreadsheet' mode.",
     },
     {
       key: "sheetName",
-      label: "Nama Sheet/Tab",
+      label: "Sheet/Tab Name",
       placeholder: "Sheet1",
     },
   ],
   google_sheets_append: [
     { key: "spreadsheetId", label: "Spreadsheet ID" },
-    { key: "sheetName", label: "Nama Sheet", placeholder: "Balasan" },
+    { key: "sheetName", label: "Sheet Name", placeholder: "Replies" },
     {
       key: "columns",
-      label: "Kolom (pisahkan koma)",
+      label: "Columns (comma-separated)",
       placeholder: "sender,message,receivedAt",
-      hint: "Nama field dari data masuk (mis. sender, message, name dari WA trigger). Baris baru ditulis mulai kolom A sesuai urutan ini.",
+      hint: "Field names from the incoming data (e.g. sender, message, name from the WA trigger). New rows are written starting at column A in this order.",
     },
   ],
   gmail_send: [
     {
       key: "to",
-      label: "Penerima (to)",
-      placeholder: "tujuan@email.com atau {{email}}",
-      hint: "Wajib diisi. Mendukung {{template}} dari data masuk, mis. {{email}}.",
+      label: "Recipient (to)",
+      placeholder: "recipient@email.com or {{email}}",
+      hint: "Required. Supports {{template}} from incoming data, e.g. {{email}}.",
     },
     {
       key: "subject",
-      label: "Subjek",
-      placeholder: "Konfirmasi pesanan {{nama}}",
+      label: "Subject",
+      placeholder: "Order confirmation {{name}}",
     },
     {
       key: "bodyType",
-      label: "Tipe Isi",
+      label: "Body Type",
       selectOptions: [
-        { value: "text", label: "Teks Biasa" },
+        { value: "text", label: "Plain Text" },
         { value: "html", label: "HTML Email" },
       ],
-      hint: "Pilih HTML Email untuk template berformat dengan preview.",
+      hint: "Choose HTML Email for a formatted template with preview.",
     },
     {
       key: "body",
-      label: "Isi Email",
+      label: "Email Body",
       multiline: true,
-      placeholder: "Halo {{nama}}, terima kasih sudah memesan.",
+      placeholder: "Hello {{name}}, thank you for your order.",
       htmlEmail: true,
     },
   ],
   google_calendar_create_event: [
-    { key: "summary", label: "Judul Event", placeholder: "Rapat {{Nama}}" },
+    { key: "summary", label: "Event Title", placeholder: "Meeting {{Name}}" },
     {
       key: "startDateTime",
-      label: "Mulai",
-      placeholder: "Pilih tanggal & jam mulai",
+      label: "Start",
+      placeholder: "Select start date & time",
       dateTime: true,
     },
     {
       key: "endDateTime",
-      label: "Selesai",
-      placeholder: "Pilih tanggal & jam selesai",
+      label: "End",
+      placeholder: "Select end date & time",
       dateTime: true,
     },
     { key: "timeZone", label: "Time Zone", placeholder: "Asia/Jakarta" },
-    { key: "description", label: "Deskripsi", multiline: true },
+    { key: "description", label: "Description", multiline: true },
   ],
   google_calendar_list_events: [
-    { key: "maxResults", label: "Maks Event", placeholder: "10" },
+    { key: "maxResults", label: "Max Events", placeholder: "10" },
     {
       key: "timeMin",
-      label: "Mulai Dari (ISO, opsional)",
+      label: "Start From (ISO, optional)",
       placeholder: "2026-06-07T00:00:00Z",
     },
   ],
   schedule_trigger: [],
-  function: [{ key: "code", label: "Kode JavaScript", multiline: true }],
+  function: [{ key: "code", label: "JavaScript Code", multiline: true }],
   switch: [
     {
       key: "field",
-      label: "Field yang Dievaluasi",
-      placeholder: "status atau {{status}}",
-      hint: "Nama field dari data masuk yang nilainya dibandingkan.",
+      label: "Field to Evaluate",
+      placeholder: "status or {{status}}",
+      hint: "Name of the incoming data field whose value is compared.",
     },
     {
       key: "value",
-      label: "Nilai Target",
-      placeholder: "approved atau {{target}}",
-      hint: "Hanya baris dengan nilai field sama dengan ini yang diteruskan.",
+      label: "Target Value",
+      placeholder: "approved or {{target}}",
+      hint: "Only rows whose field value equals this are forwarded.",
     },
   ],
   merge: [],
   loop: [
     {
       key: "batchSize",
-      label: "Ukuran Batch",
+      label: "Batch Size",
       placeholder: "1",
-      hint: "Jumlah item per batch yang diproses bertahap. Default 1.",
+      hint: "Number of items per batch processed incrementally. Default 1.",
     },
   ],
   no_op: [],
@@ -362,13 +362,13 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
       key: "webhookUrl",
       label: "Slack Incoming Webhook URL",
       placeholder: "https://hooks.slack.com/services/...",
-      hint: "Buat di Slack: Apps → Incoming Webhooks.",
+      hint: "Create in Slack: Apps → Incoming Webhooks.",
     },
     {
       key: "text",
-      label: "Pesan",
+      label: "Message",
       multiline: true,
-      placeholder: "Ada lead baru: {{name}} dari {{company}}!",
+      placeholder: "New lead: {{name}} from {{company}}!",
     },
   ],
   discord_send: [
@@ -376,37 +376,37 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
       key: "webhookUrl",
       label: "Discord Webhook URL",
       placeholder: "https://discord.com/api/webhooks/...",
-      hint: "Buat di Server Settings → Integrations → Webhooks.",
+      hint: "Create in Server Settings → Integrations → Webhooks.",
     },
     {
       key: "content",
-      label: "Pesan",
+      label: "Message",
       multiline: true,
-      placeholder: "Notifikasi: {{message}}",
+      placeholder: "Notification: {{message}}",
     },
   ],
   rss_read: [
     {
       key: "url",
-      label: "URL Feed",
+      label: "Feed URL",
       placeholder: "https://techcrunch.com/feed/",
-      hint: "Alamat RSS/Atom feed yang akan dibaca.",
+      hint: "The RSS/Atom feed address to read.",
     },
     {
       key: "limit",
-      label: "Maks Item",
+      label: "Max Items",
       placeholder: "20",
     },
   ],
   ai_openai: [
     {
       key: "provider",
-      label: "Penyedia",
+      label: "Provider",
       selectOptions: [
         { value: "openai", label: "OpenAI" },
         { value: "openrouter", label: "OpenRouter" },
       ],
-      hint: "OpenAI langsung, atau OpenRouter sebagai gateway multi-model.",
+      hint: "OpenAI directly, or OpenRouter as a multi-model gateway.",
     },
     {
       key: "model",
@@ -415,34 +415,34 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
     },
     {
       key: "systemInstruction",
-      label: "Peran AI (System Instruction)",
+      label: "AI Role (System Instruction)",
       multiline: true,
-      placeholder: "Kamu adalah asisten yang merangkum artikel dalam 3 poin.",
-      hint: "Mendefinisikan persona/peran AI dan format balasan.",
+      placeholder: "You are an assistant that summarizes articles in 3 points.",
+      hint: "Defines the AI persona/role and response format.",
     },
     {
       key: "prompt",
-      label: "Prompt / Pesan",
+      label: "Prompt / Message",
       multiline: true,
       placeholder: "{{message}}",
-      hint: "Pesan yang diproses AI. Gunakan {{template}} dari data masuk.",
+      hint: "The message processed by the AI. Use {{template}} from incoming data.",
     },
   ],
   ai_agent: [
     {
       key: "systemInstruction",
-      label: "Peran AI (System Instruction)",
+      label: "AI Role (System Instruction)",
       multiline: true,
       placeholder:
-        "Kamu adalah asisten otomasi yang membalas singkat dan jelas.",
-      hint: "Mendefinisikan persona/peran AI dan format balasan.",
+        "You are an automation assistant that replies concisely and clearly.",
+      hint: "Defines the AI persona/role and response format.",
     },
     {
       key: "prompt",
-      label: "Prompt / Pesan",
+      label: "Prompt / Message",
       multiline: true,
       placeholder: "{{message}}",
-      hint: "Pesan yang diproses AI. Gunakan {{template}} dari data masuk.",
+      hint: "The message processed by the AI. Use {{template}} from incoming data.",
     },
   ],
 };
@@ -693,7 +693,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
           <button
             onClick={onClose}
             className="text-muted-foreground hover:text-foreground"
-            aria-label="Tutup panel"
+            aria-label="Close panel"
           >
             <XIcon className="size-4" />
           </button>
@@ -721,18 +721,18 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
             {node.data.ref && (
               <div className="border-border bg-muted/40 rounded-md border px-3 py-2">
                 <p className="text-muted-foreground text-xs">
-                  Referensi node:{" "}
+                  Node reference:{" "}
                   <code className="text-foreground font-mono font-semibold">
                     {node.data.ref}
                   </code>
                 </p>
 
                 <p className="text-muted-foreground mt-1 text-[11px]">
-                  Pakai di node lain dengan{" "}
+                  Use in another node with{" "}
                   <code className="font-mono">
                     {`{{${node.data.ref}.field}}`}
                   </code>{" "}
-                  untuk memakai output node ini (mis.{" "}
+                  to use this node's output (e.g.{" "}
                   <code className="font-mono">
                     {`{{${node.data.ref}.spreadsheetId}}`}
                   </code>
@@ -752,7 +752,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                   onValueChange={handleOperationChange}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="\u2014 pilih operasi \u2014" />
+                    <SelectValue placeholder="\u2014 select operation \u2014" />
                   </SelectTrigger>
 
                   <SelectContent>
@@ -765,8 +765,8 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                 </Select>
 
                 <p className="text-muted-foreground mt-1.5 text-xs">
-                  Pilih operasi untuk node ini. Konfigurasi di bawah
-                  menyesuaikan pilihan.
+                  Select an operation for this node. The configuration below
+                  adapts to your choice.
                 </p>
               </div>
             )}
@@ -787,7 +787,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                   }}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="— Pilih provider —" />
+                    <SelectValue placeholder="— Select provider —" />
                   </SelectTrigger>
 
                   <SelectContent>
@@ -820,7 +820,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
             {effectiveCredentialType && node.data.kind !== "ai_agent" && (
               <div>
                 <label className="text-muted-foreground mb-1 block text-xs font-medium">
-                  Kredensial
+                  Credential
                 </label>
 
                 <Select
@@ -830,7 +830,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                   }
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="— Pilih kredensial —" />
+                    <SelectValue placeholder="— Select credential —" />
                   </SelectTrigger>
 
                   <SelectContent>
@@ -844,8 +844,8 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
 
                 {credentialOptions.length === 0 && (
                   <p className="mt-1.5 text-xs text-amber-600">
-                    Belum ada kredensial untuk konektor ini. Tambahkan di
-                    halaman Credentials.
+                    No credentials for this connector yet. Add one on the
+                    Credentials page.
                   </p>
                 )}
               </div>
@@ -871,7 +871,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                       }
                     />
 
-                    <SimpleTooltip label="Preview data spreadsheet">
+                    <SimpleTooltip label="Preview spreadsheet data">
                       <Button
                         variant="outline"
                         size="icon-sm"
@@ -890,7 +890,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
 
                 <div>
                   <label className="text-muted-foreground mb-1 block text-xs font-medium">
-                    Nama Sheet
+                    Sheet Name
                   </label>
 
                   <Input
@@ -902,7 +902,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                   />
 
                   <p className="text-muted-foreground mt-1 text-xs">
-                    Membaca seluruh kolom otomatis dari sheet ini.
+                    Automatically reads all columns from this sheet.
                   </p>
                 </div>
 
@@ -912,7 +912,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                   className="text-primary self-start text-xs hover:underline disabled:opacity-50"
                   disabled={isLoadingColumns}
                 >
-                  {isLoadingColumns ? "Memuat..." : "↻ Muat kolom sheet"}
+                  {isLoadingColumns ? "Loading..." : "↻ Load sheet columns"}
                 </button>
               </>
             )}
@@ -922,24 +922,24 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
               <>
                 <div>
                   <label className="text-muted-foreground mb-1 block text-xs font-medium">
-                    Kolom yang Dibaca
+                    Columns to Read
                   </label>
 
                   <MultiSelect
                     options={availableColumns}
                     value={selectedReadColumns}
                     onChange={(next) => updateConfigValue("readColumns", next)}
-                    placeholder="Semua kolom (default)"
+                    placeholder="All columns (default)"
                   />
 
                   <p className="text-muted-foreground mt-1 text-xs">
-                    Kosongkan untuk membaca semua kolom.
+                    Leave blank to read all columns.
                   </p>
                 </div>
 
                 <div>
                   <label className="text-muted-foreground mb-1 block text-xs font-medium">
-                    Maks Baris
+                    Max Rows
                   </label>
 
                   <Input
@@ -958,7 +958,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
               <>
                 <div>
                   <label className="text-muted-foreground mb-1 block text-xs font-medium">
-                    Cari Baris Berdasarkan Kolom (opsional)
+                    Find Row by Column (optional)
                   </label>
 
                   <Select
@@ -973,12 +973,12 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                     }
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="— tidak perlu (pakai baris dari Read) —" />
+                      <SelectValue placeholder="— not needed (use row from Read) —" />
                     </SelectTrigger>
 
                     <SelectContent>
                       <SelectItem value="_none">
-                        — tidak perlu (pakai baris dari Read) —
+                        — not needed (use row from Read) —
                       </SelectItem>
 
                       {availableColumns.map((column) => (
@@ -990,15 +990,15 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                   </Select>
 
                   <p className="text-muted-foreground mt-1 text-xs">
-                    Gunakan ini untuk balasan WA: cari baris yang kolomnya cocok
-                    dengan nilai di bawah (mis. kolom Nomor = {"{{sender}}"}).
+                    Use this for WA replies: find the row whose column matches
+                    the value below (e.g. Number column = {"{{sender}}"}).
                   </p>
                 </div>
 
                 {String(node.data.config.matchColumn ?? "") && (
                   <div>
                     <label className="text-muted-foreground mb-1 block text-xs font-medium">
-                      Nilai yang Dicari
+                      Value to Match
                     </label>
 
                     <Input
@@ -1032,7 +1032,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
               <div>
                 <div className="mb-1 flex items-center justify-between">
                   <label className="text-muted-foreground block text-xs font-medium">
-                    Kondisi
+                    Condition
                   </label>
 
                   {sheetSources.length > 0 && (
@@ -1042,7 +1042,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                       className="text-primary text-xs hover:underline disabled:opacity-50"
                       disabled={isLoadingColumns}
                     >
-                      {isLoadingColumns ? "Memuat..." : "↻ Muat kolom sheet"}
+                      {isLoadingColumns ? "Loading..." : "↻ Load sheet columns"}
                     </button>
                   )}
                 </div>
@@ -1085,16 +1085,16 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
 
                 {availableColumns.length === 0 && (
                   <p className="mt-1.5 text-xs text-amber-600">
-                    Kolom belum tersedia. Pastikan node Google Sheets sudah
-                    punya Kredensial + Spreadsheet ID, lalu klik &quot;Muat
-                    kolom sheet&quot;.
+                    Columns are not available yet. Make sure the Google Sheets
+                    node has a Credential + Spreadsheet ID, then click
+                    &quot;Load sheet columns&quot;.
                   </p>
                 )}
 
                 <p className="text-muted-foreground mt-1.5 text-xs">
                   {node.data.kind === "filter"
-                    ? "Hanya baris yang lolos kondisi yang diteruskan ke node berikutnya."
-                    : "Flow lanjut ke node berikutnya hanya jika ada baris yang cocok."}
+                    ? "Only rows that pass the condition are forwarded to the next node."
+                    : "The flow continues to the next node only if a matching row exists."}
                 </p>
               </div>
             )}
@@ -1161,7 +1161,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                     }
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="\u2014 pilih \u2014" />
+                      <SelectValue placeholder="\u2014 select \u2014" />
                     </SelectTrigger>
 
                     <SelectContent>
@@ -1181,19 +1181,19 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                       }
                     >
                       <SelectTrigger className="flex-1">
-                        <SelectValue placeholder="— pilih kolom —" />
+                        <SelectValue placeholder="— select column —" />
                       </SelectTrigger>
 
                       <SelectContent>
                         {availableColumns.length === 0 ? (
                           <SelectItem value="_none" disabled>
-                            Belum ada kolom — klik ↻ Muat
+                            No columns yet — click ↻ Load
                           </SelectItem>
                         ) : (
                           <>
                             {sheetColumns.length > 0 && (
                               <SelectGroup>
-                                <SelectLabel>Kolom Spreadsheet</SelectLabel>
+                                <SelectLabel>Spreadsheet Columns</SelectLabel>
 
                                 {sheetColumns.map((column) => (
                                   <SelectItem key={column} value={column}>
@@ -1204,7 +1204,9 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                             )}
 
                             <SelectGroup>
-                              <SelectLabel>Field dari Chat Masuk</SelectLabel>
+                              <SelectLabel>
+                                Fields from Incoming Chat
+                              </SelectLabel>
 
                               {triggerFields.map((field) => (
                                 <SelectItem key={field} value={field}>
@@ -1218,7 +1220,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                     </Select>
 
                     {sheetSources.length > 0 && (
-                      <SimpleTooltip label="Muat ulang kolom dari spreadsheet">
+                      <SimpleTooltip label="Reload columns from spreadsheet">
                         <button
                           type="button"
                           onClick={handleRefreshColumns}
@@ -1256,7 +1258,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                       }
                     />
 
-                    <SimpleTooltip label="Preview data spreadsheet">
+                    <SimpleTooltip label="Preview spreadsheet data">
                       <Button
                         variant="outline"
                         size="icon-sm"
@@ -1297,7 +1299,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
               <div className="flex flex-col gap-1.5 rounded-md border border-amber-200 bg-amber-50 p-2.5">
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-700">
                   <AlertTriangleIcon className="size-3.5" />
-                  Perlu diperbaiki
+                  Needs fixing
                 </div>
 
                 {validationIssues.map((issue) => (
@@ -1327,7 +1329,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                   ) : (
                     <PlayIcon className="size-3.5" />
                   )}
-                  {isTestRunning ? "Menjalankan…" : "Jalankan Test"}
+                  {isTestRunning ? "Running…" : "Run Test"}
                 </Button>
               </div>
 
@@ -1349,8 +1351,8 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
               )}
 
               <p className="text-muted-foreground text-[11px]">
-                Menjalankan node ini saja dengan data contoh. Node konektor
-                tetap memanggil API aslinya.
+                Runs only this node with sample data. Connector nodes still call
+                their actual API.
               </p>
             </div>
 
@@ -1364,7 +1366,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
               }}
             >
               <Trash2Icon />
-              Hapus Node
+              Delete Node
             </Button>
           </div>
         </ScrollArea>

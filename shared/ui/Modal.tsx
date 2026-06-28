@@ -50,7 +50,7 @@ export function Modal({ open, onClose, title, children, footer }: ModalProps) {
 
             <button
               onClick={onClose}
-              aria-label="Tutup"
+              aria-label="Close"
               className="text-muted-foreground hover:bg-accent hover:text-foreground rounded p-1"
             >
               <XIcon className="size-5" />

@@ -17,7 +17,7 @@ export const googleCalendarListEventsHandler: NodeHandler = async ({
   );
 
   if (!credential) {
-    throw new Error("Google Calendar: kredensial tidak ada");
+    throw new Error("Google Calendar: missing credential");
   }
 
   const accessToken = await getGoogleAccessToken(credential);
@@ -33,7 +33,7 @@ export const googleCalendarListEventsHandler: NodeHandler = async ({
   );
 
   if (!eventsResponse.ok) {
-    throw new Error("Google Calendar: gagal mengambil daftar event");
+    throw new Error("Google Calendar: failed to fetch the event list");
   }
 
   return eventsResponse.body;
@@ -52,7 +52,7 @@ export const googleCalendarCreateEventHandler: NodeHandler = async ({
   );
 
   if (!credential) {
-    throw new Error("Google Calendar: kredensial tidak ada");
+    throw new Error("Google Calendar: missing credential");
   }
 
   const accessToken = await getGoogleAccessToken(credential);
@@ -93,7 +93,7 @@ export const googleCalendarCreateEventHandler: NodeHandler = async ({
   );
 
   if (!createResponse.ok) {
-    throw new Error("Google Calendar: gagal membuat event");
+    throw new Error("Google Calendar: failed to create the event");
   }
 
   return createResponse.body;

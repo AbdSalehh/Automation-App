@@ -17,18 +17,18 @@ interface UserTableRowProps {
 function formatDateTime(value: string): { date: string; time: string } {
   const parsed = new Date(value);
 
-  const date = parsed.toLocaleDateString("id-ID", {
+  const date = parsed.toLocaleDateString("en-US", {
     day: "numeric",
     month: "short",
     year: "numeric",
   });
 
-  const time = parsed.toLocaleTimeString("id-ID", {
+  const time = parsed.toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
   });
 
-  return { date, time: `${time} WIB` };
+  return { date, time };
 }
 
 /**
@@ -48,22 +48,22 @@ function formatLastSeen(value: string | null): {
   const diffMinutes = Math.floor(diffMs / 60000);
 
   if (diffMinutes < 5) {
-    return { label: "Sekarang", isOnline: true };
+    return { label: "Just now", isOnline: true };
   }
 
   if (diffMinutes < 60) {
-    return { label: `${diffMinutes} menit yang lalu`, isOnline: false };
+    return { label: `${diffMinutes} minutes ago`, isOnline: false };
   }
 
   const diffHours = Math.floor(diffMinutes / 60);
 
   if (diffHours < 24) {
-    return { label: `${diffHours} jam yang lalu`, isOnline: false };
+    return { label: `${diffHours} hours ago`, isOnline: false };
   }
 
   const diffDays = Math.floor(diffHours / 24);
 
-  return { label: `${diffDays} hari yang lalu`, isOnline: false };
+  return { label: `${diffDays} days ago`, isOnline: false };
 }
 
 /** Satu baris tabel pengguna untuk pengelolaan oleh admin. */
@@ -87,7 +87,7 @@ export function UserTableRow({ user }: UserTableRowProps) {
           </Avatar>
           <div className="flex min-w-0 flex-col">
             <span className="text-foreground truncate text-sm font-semibold">
-              {user.name || "Tanpa Nama"}
+              {user.name || "No Name"}
             </span>
             <span className="text-muted-foreground truncate text-xs">
               {user.email}
@@ -110,23 +110,23 @@ export function UserTableRow({ user }: UserTableRowProps) {
       <td className="px-4 py-3">
         <div className="flex flex-wrap items-center gap-1.5">
           {user.approvalStatus === "pending" && (
-            <Badge variant="warning">Menunggu</Badge>
+            <Badge variant="warning">Pending</Badge>
           )}
 
           {user.approvalStatus === "rejected" && (
-            <Badge variant="destructive">Ditolak</Badge>
+            <Badge variant="destructive">Rejected</Badge>
           )}
 
           {user.approvalStatus === "approved" && (
             <Badge variant={user.isActive ? "success" : "neutral"}>
-              {user.isActive ? "Aktif" : "Nonaktif"}
+              {user.isActive ? "Active" : "Inactive"}
             </Badge>
           )}
 
           {user.isLocked && (
             <Badge variant="destructive" className="gap-1">
               <LockIcon className="size-3" />
-              Terkunci
+              Locked
             </Badge>
           )}
         </div>
@@ -146,7 +146,7 @@ export function UserTableRow({ user }: UserTableRowProps) {
             </span>
           </div>
         ) : (
-          <span className="text-muted-foreground/60 text-sm">Belum pernah</span>
+          <span className="text-muted-foreground/60 text-sm">Never</span>
         )}
       </td>
 

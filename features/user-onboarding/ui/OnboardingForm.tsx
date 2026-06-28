@@ -16,23 +16,23 @@ const PURPOSE_OPTIONS: {
 }[] = [
   {
     value: "learning",
-    label: "Belajar",
-    description: "Saya ingin mempelajari workflow automation",
+    label: "Learning",
+    description: "I want to learn workflow automation",
   },
   {
     value: "personal",
     label: "Personal",
-    description: "Untuk kebutuhan pribadi sehari-hari",
+    description: "For everyday personal needs",
   },
   {
     value: "professional",
-    label: "Profesional",
-    description: "Untuk mendukung pekerjaan saya",
+    label: "Professional",
+    description: "To support my work",
   },
   {
     value: "team",
-    label: "Tim / Bisnis",
-    description: "Digunakan bersama tim atau untuk kebutuhan bisnis",
+    label: "Team / Business",
+    description: "Used with a team or for business needs",
   },
 ];
 
@@ -62,9 +62,9 @@ export function OnboardingForm() {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <p className="text-foreground text-sm font-medium">Tujuan Penggunaan</p>
+        <p className="text-foreground text-sm font-medium">Usage Purpose</p>
         <p className="text-muted-foreground text-xs">
-          Apa tujuan utama kamu menggunakan Fluxera?
+          What is your main goal for using Fluxera?
         </p>
       </div>
 
@@ -97,13 +97,13 @@ export function OnboardingForm() {
           htmlFor="organisation"
           className="text-foreground text-sm font-medium"
         >
-          Nama organisasi / perusahaan{" "}
-          <span className="text-muted-foreground font-normal">(opsional)</span>
+          Organisation / company name{" "}
+          <span className="text-muted-foreground font-normal">(optional)</span>
         </label>
         <Input
           id="organisation"
           type="text"
-          placeholder="Contoh: PT Maju Bersama"
+          placeholder="Example: Acme Corp"
           value={formData.organisation}
           onChange={(event) => setOrganisation(event.target.value)}
           maxLength={120}
@@ -121,7 +121,7 @@ export function OnboardingForm() {
         disabled={isLoading || !formData.usagePurpose}
         className="w-full"
       >
-        {isLoading ? "Menyimpan..." : "Mulai Gunakan Fluxera"}
+        {isLoading ? "Saving..." : "Start Using Fluxera"}
       </Button>
     </form>
   );

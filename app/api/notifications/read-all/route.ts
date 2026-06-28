@@ -15,6 +15,6 @@ export async function PATCH() {
       data: { isRead: true },
     });
 
-    return ok(null, "Semua notifikasi ditandai sudah dibaca");
+    return ok(null, "All notifications marked as read");
   });
 }

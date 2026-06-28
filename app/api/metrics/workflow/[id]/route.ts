@@ -27,7 +27,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
     });
 
     if (!workflow) {
-      return notFound("Workflow tidak ditemukan");
+      return notFound("Workflow not found");
     }
 
     const monthStart = startOfMonthUtc();

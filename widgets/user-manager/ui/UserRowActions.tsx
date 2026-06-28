@@ -72,7 +72,9 @@ export function UserRowActions({ user }: UserRowActionsProps) {
 
   const handleResetPassword = async () => {
     if (newPassword.length < MIN_PASSWORD_LENGTH) {
-      setLocalError(`Password minimal ${MIN_PASSWORD_LENGTH} karakter.`);
+      setLocalError(
+        `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`,
+      );
       return;
     }
 
@@ -81,11 +83,11 @@ export function UserRowActions({ user }: UserRowActionsProps) {
     const success = await resetPassword(user.id, newPassword);
 
     if (success) {
-      toast.success(`Password ${user.email} berhasil direset.`);
+      toast.success(`Password for ${user.email} was successfully reset.`);
       setNewPassword("");
       setIsResetOpen(false);
     } else {
-      toast.error("Gagal mereset password.");
+      toast.error("Failed to reset the password.");
     }
   };
 
@@ -93,9 +95,9 @@ export function UserRowActions({ user }: UserRowActionsProps) {
     const success = await approveUser(user.id);
 
     if (success) {
-      toast.success(`Pengguna ${user.email} disetujui.`);
+      toast.success(`User ${user.email} has been approved.`);
     } else {
-      toast.error("Gagal menyetujui pengguna.");
+      toast.error("Failed to approve the user.");
     }
   };
 
@@ -103,9 +105,9 @@ export function UserRowActions({ user }: UserRowActionsProps) {
     const success = await rejectUser(user.id);
 
     if (success) {
-      toast.success(`Pengguna ${user.email} ditolak.`);
+      toast.success(`User ${user.email} has been rejected.`);
     } else {
-      toast.error("Gagal menolak pengguna.");
+      toast.error("Failed to reject the user.");
     }
   };
 
@@ -113,9 +115,9 @@ export function UserRowActions({ user }: UserRowActionsProps) {
     const success = await unlockUser(user.id);
 
     if (success) {
-      toast.success(`Kunci ${user.email} dibuka.`);
+      toast.success(`${user.email} has been unlocked.`);
     } else {
-      toast.error("Gagal membuka kunci pengguna.");
+      toast.error("Failed to unlock the user.");
     }
   };
 
@@ -123,10 +125,10 @@ export function UserRowActions({ user }: UserRowActionsProps) {
     const success = await setUserActive(user.id, false);
 
     if (success) {
-      toast.success(`Pengguna ${user.email} dinonaktifkan.`);
+      toast.success(`User ${user.email} has been deactivated.`);
       setIsDeactivateOpen(false);
     } else {
-      toast.error("Gagal menonaktifkan pengguna.");
+      toast.error("Failed to deactivate the user.");
     }
   };
 
@@ -134,9 +136,9 @@ export function UserRowActions({ user }: UserRowActionsProps) {
     const success = await setUserActive(user.id, true);
 
     if (success) {
-      toast.success(`Pengguna ${user.email} diaktifkan.`);
+      toast.success(`User ${user.email} has been activated.`);
     } else {
-      toast.error("Gagal mengaktifkan pengguna.");
+      toast.error("Failed to activate the user.");
     }
   };
 
@@ -144,9 +146,9 @@ export function UserRowActions({ user }: UserRowActionsProps) {
     const success = await removeUser(user.id);
 
     if (success) {
-      toast.success(`Pengguna ${user.email} berhasil dihapus.`);
+      toast.success(`User ${user.email} was successfully deleted.`);
     } else {
-      toast.error("Gagal menghapus pengguna.");
+      toast.error("Failed to delete the user.");
     }
   };
 
@@ -167,7 +169,7 @@ export function UserRowActions({ user }: UserRowActionsProps) {
               className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-emerald-600 transition-colors hover:bg-emerald-50 disabled:opacity-50"
             >
               <CheckCircle2Icon className="size-4" />
-              Setujui
+              Approve
             </button>
           )}
 
@@ -179,7 +181,7 @@ export function UserRowActions({ user }: UserRowActionsProps) {
               className="text-destructive hover:bg-destructive/10 flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm transition-colors disabled:opacity-50"
             >
               <XCircleIcon className="size-4" />
-              Tolak
+              Reject
             </button>
           )}
 
@@ -191,7 +193,7 @@ export function UserRowActions({ user }: UserRowActionsProps) {
               className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-amber-600 transition-colors hover:bg-amber-50 disabled:opacity-50"
             >
               <LockOpenIcon className="size-4" />
-              Buka Kunci
+              Unlock
             </button>
           )}
 
@@ -211,7 +213,7 @@ export function UserRowActions({ user }: UserRowActionsProps) {
               className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-amber-600 transition-colors hover:bg-amber-50"
             >
               <UserXIcon className="size-4" />
-              Nonaktifkan
+              Deactivate
             </button>
           ) : (
             <button
@@ -221,7 +223,7 @@ export function UserRowActions({ user }: UserRowActionsProps) {
               className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-emerald-600 transition-colors hover:bg-emerald-50 disabled:opacity-50"
             >
               <UserCheckIcon className="size-4" />
-              Aktifkan
+              Activate
             </button>
           )}
 
@@ -231,7 +233,7 @@ export function UserRowActions({ user }: UserRowActionsProps) {
             className="text-destructive hover:bg-destructive/10 flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm transition-colors"
           >
             <Trash2Icon className="size-4" />
-            Hapus
+            Delete
           </button>
         </PopoverContent>
       </Popover>
@@ -242,14 +244,14 @@ export function UserRowActions({ user }: UserRowActionsProps) {
           <DialogHeader>
             <DialogTitle>Reset Password</DialogTitle>
             <DialogDescription>
-              Atur password baru untuk{" "}
+              Set a new password for{" "}
               <span className="text-foreground font-medium">{user.email}</span>.
             </DialogDescription>
           </DialogHeader>
 
           <div className="flex flex-col gap-2 py-2">
             <label className="text-foreground text-sm font-medium">
-              Password Baru
+              New Password
             </label>
             <div className="relative">
               <Input
@@ -258,7 +260,7 @@ export function UserRowActions({ user }: UserRowActionsProps) {
                 onChange={(changeEvent) =>
                   setNewPassword(changeEvent.target.value)
                 }
-                placeholder="Minimal 8 karakter"
+                placeholder="At least 8 characters"
                 className="pr-10"
               />
               <button
@@ -281,10 +283,10 @@ export function UserRowActions({ user }: UserRowActionsProps) {
 
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="outline">Batal</Button>
+              <Button variant="outline">Cancel</Button>
             </DialogClose>
             <Button onClick={handleResetPassword} disabled={isSubmitting}>
-              {isSubmitting ? "Menyimpan..." : "Reset Password"}
+              {isSubmitting ? "Saving..." : "Reset Password"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -294,22 +296,22 @@ export function UserRowActions({ user }: UserRowActionsProps) {
       <AlertDialog open={isDeactivateOpen} onOpenChange={setIsDeactivateOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Nonaktifkan Pengguna?</AlertDialogTitle>
+            <AlertDialogTitle>Deactivate User?</AlertDialogTitle>
             <AlertDialogDescription>
-              Akun{" "}
+              The account{" "}
               <span className="text-foreground font-medium">{user.email}</span>{" "}
-              tidak akan bisa masuk dan sesi yang sedang berjalan akan keluar
-              otomatis. Anda dapat mengaktifkannya kembali kapan saja.
+              will not be able to sign in and any active sessions will be signed
+              out automatically. You can reactivate it at any time.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
               onClick={handleDeactivate}
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Memproses..." : "Nonaktifkan"}
+              {isSubmitting ? "Processing..." : "Deactivate"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -319,21 +321,21 @@ export function UserRowActions({ user }: UserRowActionsProps) {
       <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Hapus Pengguna?</AlertDialogTitle>
+            <AlertDialogTitle>Delete User?</AlertDialogTitle>
             <AlertDialogDescription>
-              Tindakan ini permanen. Akun{" "}
+              This action is permanent. The account{" "}
               <span className="text-foreground font-medium">{user.email}</span>{" "}
-              beserta seluruh data terkait akan dihapus.
+              along with all related data will be deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
               onClick={handleDelete}
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Menghapus..." : "Hapus"}
+              {isSubmitting ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

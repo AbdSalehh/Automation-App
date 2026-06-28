@@ -25,7 +25,7 @@ export function MultiSelect({
   options,
   value,
   onChange,
-  placeholder = "Pilih...",
+  placeholder = "Select...",
   allowCustom = false,
   className,
 }: MultiSelectProps) {

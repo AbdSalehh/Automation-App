@@ -62,7 +62,9 @@ export const useSheetPreviewStore = create<SheetPreviewState>((set, get) => ({
 
       set({ data: result });
     } catch {
-      set({ errorMessage: "Gagal mengambil data preview dari spreadsheet." });
+      set({
+        errorMessage: "Failed to fetch preview data from the spreadsheet.",
+      });
     } finally {
       set({ isLoading: false });
     }

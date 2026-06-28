@@ -73,23 +73,23 @@ export async function parseWorkflowFile(
   try {
     parsed = JSON.parse(text);
   } catch {
-    throw new Error("Berkas bukan JSON yang valid");
+    throw new Error("The file is not valid JSON");
   }
 
   if (!parsed || typeof parsed !== "object") {
-    throw new Error("Struktur berkas workflow tidak dikenali");
+    throw new Error("The workflow file structure is not recognized");
   }
 
   const record = parsed as Record<string, unknown>;
 
   if (!Array.isArray(record.nodes) || !Array.isArray(record.edges)) {
-    throw new Error("Berkas tidak memuat nodes/edges workflow");
+    throw new Error("The file does not contain workflow nodes/edges");
   }
 
   const importedName =
     typeof record.name === "string" && record.name.trim()
       ? record.name.trim()
-      : "Workflow Impor";
+      : "Imported Workflow";
 
   return {
     name: importedName,

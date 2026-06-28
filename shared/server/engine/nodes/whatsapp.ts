@@ -119,7 +119,7 @@ function assertWhatsAppCredential(
     provider === "meta" &&
     (!credential?.accessToken || !credential?.phoneNumberId)
   ) {
-    throw new Error("WhatsApp Meta: kredensial tidak lengkap");
+    throw new Error("WhatsApp Meta: incomplete credential");
   }
 }
 
@@ -347,7 +347,7 @@ export const whatsappSendHandler: NodeHandler = async ({
 
     if (!target) {
       results.push({
-        target: "(tidak ada nomor)",
+        target: "(no number)",
         ok: false,
         messageId: null,
       });

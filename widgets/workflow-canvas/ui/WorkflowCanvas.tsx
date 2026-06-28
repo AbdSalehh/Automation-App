@@ -25,7 +25,7 @@ export function WorkflowCanvas({ workflowId }: WorkflowCanvasProps) {
     return (
       <div className="text-muted-foreground grid flex-1 place-items-center">
         <span className="flex items-center gap-2">
-          <Spinner /> Memuat editor…
+          <Spinner /> Loading editor…
         </span>
       </div>
     );

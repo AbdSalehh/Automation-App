@@ -49,7 +49,7 @@ export function decryptWebhookJson<T = unknown>(token: string): T {
   const [ivB64, tagB64, dataB64] = token.split(".");
 
   if (!ivB64 || !tagB64 || !dataB64) {
-    throw new Error("Token webhook tidak valid");
+    throw new Error("Invalid webhook token");
   }
 
   const decipher = crypto.createDecipheriv(

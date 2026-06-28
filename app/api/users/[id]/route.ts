@@ -59,21 +59,21 @@ export async function PATCH(
     const targetUser = await prisma.user.findUnique({ where: { id } });
 
     if (!targetUser) {
-      return notFound("Pengguna tidak ditemukan");
+      return notFound("User not found");
     }
 
     const body = await request.json();
     const parsed = patchSchema.safeParse(body);
 
     if (!parsed.success) {
-      return unprocessable("Data tidak valid");
+      return unprocessable("Invalid data");
     }
 
     const { action, password } = parsed.data;
 
     if (action === "reset-password") {
       if (!password) {
-        return badRequest("Password baru wajib diisi");
+        return badRequest("New password is required");
       }
 
       const passwordHash = await bcrypt.hash(password, 12);
@@ -97,12 +97,12 @@ export async function PATCH(
       await createNotification({
         userId: id,
         type: "account_approved",
-        title: "Akun Anda telah disetujui",
-        body: "Selamat datang! Anda kini dapat masuk dan mulai membuat workflow.",
+        title: "Your account has been approved",
+        body: "Welcome! You can now sign in and start building workflows.",
         link: "/dashboard",
       });
 
-      return ok(updatedUser, "Pengguna berhasil disetujui");
+      return ok(updatedUser, "User approved successfully");
     }
 
     if (action === "reject") {
@@ -117,7 +117,7 @@ export async function PATCH(
 
     if (action === "deactivate") {
       if (id === sessionUser.id) {
-        return badRequest("Anda tidak dapat menonaktifkan akun sendiri");
+        return badRequest("You cannot deactivate your own account");
       }
 
       const updatedUser = await prisma.user.update({
@@ -135,11 +135,11 @@ export async function PATCH(
       await createNotification({
         userId: id,
         type: "system",
-        title: "Akun Anda dinonaktifkan",
-        body: "Hubungi admin bila menurut Anda ini keliru.",
+        title: "Your account has been deactivated",
+        body: "Contact an administrator if you believe this is a mistake.",
       });
 
-      return ok(updatedUser, "Pengguna berhasil dinonaktifkan");
+      return ok(updatedUser, "User deactivated successfully");
     }
 
     if (action === "activate") {
@@ -180,13 +180,13 @@ export async function DELETE(
     const { id } = await params;
 
     if (id === sessionUser.id) {
-      return badRequest("Anda tidak dapat menghapus akun sendiri");
+      return badRequest("You cannot delete your own account");
     }
 
     const targetUser = await prisma.user.findUnique({ where: { id } });
 
     if (!targetUser) {
-      return notFound("Pengguna tidak ditemukan");
+      return notFound("User not found");
     }
 
     await prisma.user.delete({ where: { id } });

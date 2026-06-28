@@ -90,18 +90,18 @@ export async function POST(request: Request) {
     try {
       body = (await request.json()) as AgentConfigBody;
     } catch {
-      return badRequest("Body bukan JSON yang valid");
+      return badRequest("Body is not valid JSON");
     }
 
     const botToken = body.botToken?.trim() ?? "";
     const credentialIds = sanitizeCredentialIds(body.credentialIds);
 
     if (!botToken) {
-      return badRequest("Bot Token Telegram wajib diisi");
+      return badRequest("Telegram Bot Token is required");
     }
 
     if (credentialIds.length === 0) {
-      return badRequest("Minimal satu kredensial AI wajib dipilih");
+      return badRequest("At least one AI credential must be selected");
     }
 
     /**
@@ -192,13 +192,13 @@ export async function PATCH() {
     });
 
     if (!credentialRecord) {
-      return badRequest("Agen chat-action belum aktif");
+      return badRequest("The chat-action agent is not active yet");
     }
 
     const decrypted = decryptJson<AgentChatConfig>(credentialRecord.data);
 
     if (!decrypted.botToken) {
-      return badRequest("Config agen tidak memiliki Bot Token");
+      return badRequest("The agent config has no Bot Token");
     }
 
     const webhookUrl = `${baseUrl()}/api/webhooks/telegram/${decrypted.botToken}`;

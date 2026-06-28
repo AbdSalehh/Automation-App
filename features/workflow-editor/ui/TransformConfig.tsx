@@ -77,7 +77,7 @@ export function TransformConfig({
       <TabsContent value="keyvalue" className="mt-3 flex flex-col gap-3">
         {mappings.length === 0 && (
           <p className="text-muted-foreground text-xs">
-            Belum ada field. Tambahkan minimal satu pemetaan.
+            No fields yet. Add at least one mapping.
           </p>
         )}
 
@@ -89,7 +89,7 @@ export function TransformConfig({
             <div className="flex items-center gap-2">
               <Input
                 value={mapping.key}
-                placeholder="namaField"
+                placeholder="fieldName"
                 className="h-8 text-xs"
                 onChange={(changeEvent) =>
                   updateMapping(mapping.id, { key: changeEvent.target.value })
@@ -100,7 +100,7 @@ export function TransformConfig({
                 type="button"
                 onClick={() => removeMapping(mapping.id)}
                 className="text-muted-foreground hover:text-destructive shrink-0"
-                aria-label="Hapus field"
+                aria-label="Delete field"
               >
                 <Trash2Icon className="size-4" />
               </button>
@@ -124,7 +124,7 @@ export function TransformConfig({
           onClick={addMapping}
         >
           <PlusIcon className="size-4" />
-          Tambah Field
+          Add Field
         </Button>
       </TabsContent>
 
@@ -142,8 +142,8 @@ export function TransformConfig({
         />
 
         <p className="text-muted-foreground mt-1 text-xs">
-          Akses data lewat <code className="font-mono">payload</code> dan{" "}
-          <code className="font-mono">$now</code>. Kembalikan objek hasil dengan{" "}
+          Access data via <code className="font-mono">payload</code> and{" "}
+          <code className="font-mono">$now</code>. Return the result object with{" "}
           <code className="font-mono">return</code>.
         </p>
       </TabsContent>

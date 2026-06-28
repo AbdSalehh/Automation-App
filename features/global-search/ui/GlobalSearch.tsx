@@ -78,7 +78,9 @@ export function GlobalSearch() {
         className="bg-background text-muted-foreground border-border hover:bg-accent hidden w-64 items-center gap-2 rounded-md border px-3 py-1.5 shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition-colors md:flex lg:w-80"
       >
         <SearchIcon className="size-4" />
-        <span className="truncate text-sm">Cari workflow, kredensial...</span>
+        <span className="truncate text-sm">
+          Search workflows, credentials...
+        </span>
         <kbd className="bg-muted text-muted-foreground border-border ml-auto rounded border px-1.5 py-0.5 font-mono text-[10px] font-bold shadow-sm">
           ⌘K
         </kbd>
@@ -89,7 +91,7 @@ export function GlobalSearch() {
           showCloseButton={false}
           className="gap-0 overflow-hidden p-0 sm:max-w-xl"
         >
-          <DialogTitle className="sr-only">Pencarian global</DialogTitle>
+          <DialogTitle className="sr-only">Global search</DialogTitle>
 
           <div className="border-border flex items-center gap-2 border-b px-4">
             <SearchIcon className="text-muted-foreground size-4 shrink-0" />
@@ -100,7 +102,7 @@ export function GlobalSearch() {
               onChange={(changeEvent) =>
                 handleTermChange(changeEvent.target.value)
               }
-              placeholder="Cari workflow atau kredensial..."
+              placeholder="Search workflows or credentials..."
               className="text-foreground placeholder:text-muted-foreground w-full bg-transparent py-3.5 text-sm outline-none"
             />
 
@@ -110,11 +112,11 @@ export function GlobalSearch() {
           <div className="max-h-80 overflow-y-auto p-2">
             {!term.trim() ? (
               <p className="text-muted-foreground px-2 py-6 text-center text-sm">
-                Ketik untuk mulai mencari.
+                Type to start searching.
               </p>
             ) : !hasResults && !isSearching ? (
               <p className="text-muted-foreground px-2 py-6 text-center text-sm">
-                Tidak ada hasil untuk &quot;{term}&quot;.
+                No results for &quot;{term}&quot;.
               </p>
             ) : (
               <>
@@ -134,7 +136,7 @@ export function GlobalSearch() {
                 )}
 
                 {results.credentials.length > 0 && (
-                  <ResultGroup label="Kredensial">
+                  <ResultGroup label="Credentials">
                     {results.credentials.map((credential) => (
                       <ResultRow
                         key={credential.id}

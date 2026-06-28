@@ -106,7 +106,7 @@ export function CredentialForm({ onCreated }: CredentialFormProps) {
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div>
         <label className="text-foreground mb-1 block text-sm font-medium">
-          Tipe Konektor
+          Connector Type
         </label>
 
         <Select
@@ -134,7 +134,7 @@ export function CredentialForm({ onCreated }: CredentialFormProps) {
 
       <div>
         <label className="text-foreground mb-1 block text-sm font-medium">
-          Nama Kredensial
+          Credential Name
         </label>
 
         <Input
@@ -142,7 +142,7 @@ export function CredentialForm({ onCreated }: CredentialFormProps) {
           onChange={(changeEvent) =>
             setCredentialName(changeEvent.target.value)
           }
-          placeholder="mis. Google Workspace Saya"
+          placeholder="e.g. My Google Workspace"
           required
         />
       </div>
@@ -161,7 +161,7 @@ export function CredentialForm({ onCreated }: CredentialFormProps) {
               }
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Pilih salah satu" />
+                <SelectValue placeholder="Select one" />
               </SelectTrigger>
 
               <SelectContent>
@@ -187,9 +187,9 @@ export function CredentialForm({ onCreated }: CredentialFormProps) {
 
       {isGoogleOAuth && (
         <p className="text-muted-foreground text-xs">
-          Setelah mengisi Client ID & Client Secret, klik tombol di bawah untuk
-          login Google dan memberi izin. Refresh token akan disimpan otomatis,
-          tanpa perlu OAuth Playground.
+          After entering the Client ID & Client Secret, click the button below
+          to sign in with Google and grant access. The refresh token will be
+          saved automatically, with no OAuth Playground required.
         </p>
       )}
 
@@ -202,7 +202,7 @@ export function CredentialForm({ onCreated }: CredentialFormProps) {
           disabled={isGoogleConnectDisabled}
           onClick={handleConnectGoogle}
         >
-          Hubungkan dengan Google
+          Connect with Google
         </Button>
       ) : (
         <div className="flex gap-2">
@@ -213,12 +213,12 @@ export function CredentialForm({ onCreated }: CredentialFormProps) {
             onClick={handleTestConnection}
           >
             {isTesting && <Spinner />}
-            Uji Koneksi
+            Test Connection
           </Button>
 
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting && <Spinner />}
-            Simpan
+            Save
           </Button>
         </div>
       )}

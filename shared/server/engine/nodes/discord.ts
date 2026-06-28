@@ -17,7 +17,7 @@ export const discordSendHandler: NodeHandler = async ({ input, config }) => {
   const webhookUrl = String(config.webhookUrl ?? "").trim();
 
   if (!webhookUrl) {
-    throw new Error("Discord: webhookUrl wajib diisi");
+    throw new Error("Discord: webhookUrl is required");
   }
 
   let sent = 0;
@@ -32,7 +32,7 @@ export const discordSendHandler: NodeHandler = async ({ input, config }) => {
     });
 
     if (!response.ok) {
-      throw new Error("Discord: gagal mengirim pesan");
+      throw new Error("Discord: failed to send the message");
     }
 
     sent += 1;

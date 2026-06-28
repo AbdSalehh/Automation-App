@@ -7,18 +7,18 @@ import Link from "next/link";
 const FEATURE_CARDS = [
   {
     iconColor: "bg-orange-100 text-orange-600",
-    title: "Otomatisasi Cerdas",
-    description: "Jalankan tugas berulang tanpa effort manual",
+    title: "Smart Automation",
+    description: "Run repetitive tasks without manual effort",
   },
   {
     iconColor: "bg-purple-100 text-purple-600",
-    title: "Aman & Terpercaya",
-    description: "Keamanan data Anda adalah prioritas kami",
+    title: "Secure & Trusted",
+    description: "The security of your data is our priority",
   },
   {
     iconColor: "bg-emerald-100 text-emerald-600",
-    title: "Skalabel",
-    description: "Dibangun untuk tumbuh bersama bisnis Anda",
+    title: "Scalable",
+    description: "Built to grow together with your business",
   },
 ] as const;
 
@@ -47,14 +47,14 @@ export function LoginView() {
           </span>
 
           <h1 className="text-foreground text-4xl leading-[1.15] font-bold tracking-tight xl:text-5xl">
-            Otomatisasi workflow lebih{" "}
-            <span className="text-orange-500">mudah</span> &{" "}
-            <span className="text-orange-500">cerdas</span>
+            Workflow automation made{" "}
+            <span className="text-orange-500">simpler</span> &{" "}
+            <span className="text-orange-500">smarter</span>
           </h1>
 
           <p className="text-muted-foreground mt-4 max-w-md text-base leading-relaxed">
-            {APP_NAME} membantu Anda membuat, menjalankan, dan mengelola
-            workflow otomatis dengan efisien.
+            {APP_NAME} helps you build, run, and manage automated workflows
+            efficiently.
           </p>
         </div>
         <div className="absolute top-0 left-0 z-0 flex h-full w-full justify-center">
@@ -100,10 +100,10 @@ export function LoginView() {
           <div className="border-border bg-card flex w-full flex-col gap-7 rounded-xl border p-8 shadow-xl sm:p-10">
             <div className="flex flex-col gap-2">
               <h2 className="text-foreground text-2xl font-extrabold tracking-tight">
-                Selamat datang kembali! 👋
+                Welcome back! 👋
               </h2>
               <p className="text-muted-foreground text-sm">
-                Masuk ke akun {APP_NAME} Anda untuk melanjutkan.
+                Sign in to your {APP_NAME} account to continue.
               </p>
             </div>
 
@@ -119,7 +119,7 @@ export function LoginView() {
               >
                 {APP_NAME}
               </Link>
-              . Semua hak dilindungi.
+              . All rights reserved.
             </span>
           </div>
         </div>

@@ -66,7 +66,7 @@ export const useAgentSettingsStore = create<AgentSettingsState>((set, get) => ({
         activeProviders: status.providers ?? [],
       });
     } catch {
-      set({ error: "Gagal memuat status agen chat-action." });
+      set({ error: "Failed to load chat-action agent status." });
     } finally {
       set({ isLoading: false });
     }
@@ -76,12 +76,12 @@ export const useAgentSettingsStore = create<AgentSettingsState>((set, get) => ({
     const { botToken, credentialIds } = get();
 
     if (!botToken.trim()) {
-      set({ error: "Bot Token Telegram wajib diisi." });
+      set({ error: "Telegram Bot Token is required." });
       return false;
     }
 
     if (credentialIds.length === 0) {
-      set({ error: "Minimal satu kredensial AI wajib dipilih." });
+      set({ error: "At least one AI credential must be selected." });
       return false;
     }
 
@@ -96,14 +96,14 @@ export const useAgentSettingsStore = create<AgentSettingsState>((set, get) => ({
       set({
         enabled: true,
         botToken: "",
-        successMessage: "Agen chat-action berhasil diaktifkan.",
+        successMessage: "Chat-action agent enabled successfully.",
       });
 
       return true;
     } catch {
       set({
         error:
-          "Gagal mengaktifkan agen. Periksa kembali Bot Token dan kredensial AI Anda.",
+          "Failed to enable the agent. Double-check your Bot Token and AI credentials.",
       });
       return false;
     } finally {
@@ -121,9 +121,9 @@ export const useAgentSettingsStore = create<AgentSettingsState>((set, get) => ({
     try {
       await apiClient.patch("/agent/config");
 
-      set({ successMessage: "Webhook berhasil didaftarkan ulang." });
+      set({ successMessage: "Webhook re-registered successfully." });
     } catch {
-      set({ error: "Gagal mendaftarkan ulang webhook." });
+      set({ error: "Failed to re-register the webhook." });
     } finally {
       set({ isReregistering: false });
     }
@@ -139,10 +139,10 @@ export const useAgentSettingsStore = create<AgentSettingsState>((set, get) => ({
         enabled: false,
         credentialIds: [],
         activeProviders: [],
-        successMessage: "Agen chat-action dinonaktifkan.",
+        successMessage: "Chat-action agent disabled.",
       });
     } catch {
-      set({ error: "Gagal menonaktifkan agen." });
+      set({ error: "Failed to disable the agent." });
     } finally {
       set({ isSaving: false });
     }

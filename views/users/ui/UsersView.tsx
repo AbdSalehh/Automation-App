@@ -28,11 +28,11 @@ export function UsersView() {
         <div className="from-primary/3 absolute inset-0 bg-linear-to-br to-transparent" />
         <div className="flex flex-col gap-1">
           <h1 className="text-foreground text-2xl font-bold tracking-tight">
-            Manajemen Users
+            User Management
           </h1>
           <p className="text-muted-foreground text-sm">
-            Kelola pengguna, atur peran, dan kontrol akses ke platform dengan
-            mudah.
+            Manage users, assign roles, and control access to the platform with
+            ease.
           </p>
         </div>
 
@@ -51,7 +51,7 @@ export function UsersView() {
           className="gap-2 bg-orange-400!"
         >
           <UserPlusIcon className="size-4" />
-          Tambah User
+          Add User
         </Button>
       </header>
 

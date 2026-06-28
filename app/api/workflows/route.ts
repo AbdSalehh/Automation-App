@@ -111,7 +111,7 @@ export async function POST(request: Request) {
     const body = (await request.json()) as { name?: string };
 
     if (!body.name?.trim()) {
-      return badRequest("Nama workflow wajib diisi");
+      return badRequest("Workflow name is required");
     }
 
     const workflow = await prisma.workflow.create({

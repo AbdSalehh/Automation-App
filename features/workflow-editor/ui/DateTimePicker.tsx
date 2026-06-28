@@ -58,7 +58,7 @@ function buildIsoValue(date: Date, time: string): string {
  * Format ringkas untuk ditampilkan di trigger, mis. "10 Jun 2026, 09:00".
  */
 function formatSummary(date: Date, time: string): string {
-  const dateLabel = date.toLocaleDateString("id-ID", {
+  const dateLabel = date.toLocaleDateString("en-US", {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -103,7 +103,7 @@ export function DateTimePicker({
           <CalendarIcon className="size-4 shrink-0" />
           {date
             ? formatSummary(date, time)
-            : (placeholder ?? "Pilih tanggal & jam")}
+            : (placeholder ?? "Select date & time")}
         </Button>
       </PopoverTrigger>
 
@@ -117,7 +117,7 @@ export function DateTimePicker({
 
         <div className="border-border flex items-center gap-2 border-t p-3">
           <label className="text-muted-foreground text-xs font-medium">
-            Jam
+            Time
           </label>
 
           <Input

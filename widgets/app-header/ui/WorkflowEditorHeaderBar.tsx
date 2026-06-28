@@ -71,9 +71,9 @@ export function WorkflowEditorHeaderBar() {
       const isSessionActive = await checkIsSessionActive();
 
       if (!isSessionActive) {
-        toast.warning("Sesi WhatsApp sudah habis", {
+        toast.warning("Your WhatsApp session has expired", {
           description:
-            "Hubungkan ulang WhatsApp di halaman Credentials sebelum menjalankan workflow ini.",
+            "Reconnect WhatsApp on the Credentials page before running this workflow.",
         });
 
         return;
@@ -88,11 +88,7 @@ export function WorkflowEditorHeaderBar() {
       <div className="bg-border h-5 w-px" />
 
       <Link href={ROUTES.workflows}>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label="Kembali ke Workflows"
-        >
+        <Button variant="ghost" size="icon-sm" aria-label="Back to Workflows">
           <ChevronLeftIcon />
         </Button>
       </Link>
@@ -101,10 +97,10 @@ export function WorkflowEditorHeaderBar() {
         <span className="text-foreground truncate text-sm font-semibold">
           {name || "Untitled Workflow"}
         </span>
-        <span className="text-muted-foreground text-xs">Overview workflow</span>
+        <span className="text-muted-foreground text-xs">Workflow overview</span>
       </div>
 
-      {isDirty && <Badge variant="warning">Belum disimpan</Badge>}
+      {isDirty && <Badge variant="warning">Unsaved</Badge>}
 
       {errorMessage && (
         <span className="text-destructive max-w-xs truncate text-sm">

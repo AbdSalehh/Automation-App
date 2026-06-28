@@ -39,11 +39,11 @@ export function AgentSettingsPanel() {
       <div className="flex items-center justify-between gap-4">
         <div className="flex flex-col gap-0.5">
           <h3 className="text-foreground text-sm font-semibold">
-            Agen Chat-Action (Telegram)
+            Chat-Action Agent (Telegram)
           </h3>
           <p className="text-muted-foreground text-xs">
-            Aktifkan agar bisa membuat & menjalankan otomasi lewat chat bot
-            Telegram dengan dukungan beberapa kredensial AI.
+            Enable this to create & run automations through a Telegram chat bot
+            with support for multiple AI credentials.
           </p>
         </div>
 
@@ -54,18 +54,18 @@ export function AgentSettingsPanel() {
               : "bg-muted text-muted-foreground rounded-full px-3 py-1 text-xs font-medium"
           }
         >
-          {enabled ? "Aktif" : "Nonaktif"}
+          {enabled ? "Active" : "Inactive"}
         </span>
       </div>
 
       {isLoading ? (
-        <p className="text-muted-foreground text-sm">Memuat status...</p>
+        <p className="text-muted-foreground text-sm">Loading status...</p>
       ) : (
         <div className="flex flex-col gap-4">
           {enabled && (
             <p className="rounded-md bg-green-500/10 px-3 py-2 text-sm text-green-700">
-              Agen aktif. Isi ulang formulir di bawah untuk mengganti bot atau
-              kredensial AI (Bot Token tidak ditampilkan demi keamanan).
+              The agent is active. Re-fill the form below to change the bot or
+              AI credentials (the Bot Token is hidden for security).
             </p>
           )}
 
@@ -74,12 +74,12 @@ export function AgentSettingsPanel() {
               htmlFor="agentBotToken"
               className="text-foreground text-sm font-medium"
             >
-              Bot Token Telegram
+              Telegram Bot Token
             </label>
             <Input
               id="agentBotToken"
               type="password"
-              placeholder="Dari @BotFather → /newbot"
+              placeholder="From @BotFather → /newbot"
               value={botToken}
               onChange={(event) => setBotToken(event.target.value)}
             />
@@ -87,12 +87,12 @@ export function AgentSettingsPanel() {
 
           <div className="flex flex-col gap-2">
             <label className="text-foreground text-sm font-medium">
-              Kredensial AI & Fallback
+              AI Credentials & Fallback
             </label>
 
             <p className="text-muted-foreground text-xs">
-              Kredensial paling atas dipakai lebih dulu. Bila gagal merespons,
-              sistem otomatis mencoba kredensial berikutnya.
+              The topmost credential is used first. If it fails to respond, the
+              system automatically tries the next credential.
             </p>
 
             <AiCredentialPicker
@@ -121,10 +121,10 @@ export function AgentSettingsPanel() {
               className="flex-1"
             >
               {isSaving
-                ? "Menyimpan..."
+                ? "Saving..."
                 : enabled
-                  ? "Perbarui Agen"
-                  : "Aktifkan Agen"}
+                  ? "Update Agent"
+                  : "Enable Agent"}
             </Button>
 
             {enabled && (
@@ -134,9 +134,7 @@ export function AgentSettingsPanel() {
                 onClick={reregisterWebhook}
                 disabled={isReregistering}
               >
-                {isReregistering
-                  ? "Mendaftarkan..."
-                  : "Daftarkan Ulang Webhook"}
+                {isReregistering ? "Registering..." : "Re-register Webhook"}
               </Button>
             )}
 
@@ -147,7 +145,7 @@ export function AgentSettingsPanel() {
                 onClick={disableAgent}
                 disabled={isSaving}
               >
-                Nonaktifkan
+                Disable
               </Button>
             )}
           </div>

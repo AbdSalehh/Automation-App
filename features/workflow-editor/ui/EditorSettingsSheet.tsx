@@ -131,10 +131,10 @@ export function EditorSettingsSheet({
     const success = await saveSetting();
 
     if (success) {
-      toast.success("Setelan editor tersimpan.");
+      toast.success("Editor settings saved.");
       onOpenChange(false);
     } else {
-      toast.error("Gagal menyimpan setelan.");
+      toast.error("Failed to save settings.");
     }
   };
 
@@ -142,10 +142,10 @@ export function EditorSettingsSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full gap-0 sm:max-w-md">
         <SheetHeader>
-          <SheetTitle>Setelan Editor</SheetTitle>
+          <SheetTitle>Editor Settings</SheetTitle>
           <SheetDescription>
-            Sesuaikan tampilan kanvas. Preferensi ini hanya berlaku untuk akun
-            Anda.
+            Customize the canvas appearance. These preferences apply only to
+            your account.
           </SheetDescription>
         </SheetHeader>
 
@@ -156,7 +156,7 @@ export function EditorSettingsSheet({
         ) : (
           <div className="flex flex-1 flex-col gap-5 overflow-y-auto px-4 py-2">
             <SliderRow
-              label="Ukuran Font Node"
+              label="Node Font Size"
               value={setting.fontSize}
               min={10}
               max={24}
@@ -166,14 +166,14 @@ export function EditorSettingsSheet({
             />
 
             <ToggleRow
-              label="Tampilkan Grid"
-              description="Tampilkan titik grid di latar kanvas."
+              label="Show Grid"
+              description="Show grid dots on the canvas background."
               checked={setting.showGrid}
               onCheckedChange={(checked) => updateField("showGrid", checked)}
             />
 
             <SliderRow
-              label="Ukuran Grid"
+              label="Grid Size"
               value={setting.gridSize}
               min={8}
               max={64}
@@ -183,22 +183,22 @@ export function EditorSettingsSheet({
             />
 
             <ToggleRow
-              label="Tempel ke Grid"
-              description="Node menempel ke grid saat digeser."
+              label="Snap to Grid"
+              description="Nodes snap to the grid when dragged."
               checked={setting.snapToGrid}
               onCheckedChange={(checked) => updateField("snapToGrid", checked)}
             />
 
             <ToggleRow
-              label="Tampilkan Minimap"
-              description="Peta navigasi kecil di sudut kanvas."
+              label="Show Minimap"
+              description="A small navigation map in the canvas corner."
               checked={setting.showMinimap}
               onCheckedChange={(checked) => updateField("showMinimap", checked)}
             />
 
             <ToggleRow
-              label="Tampilkan Kontrol"
-              description="Tombol zoom dan fit-view."
+              label="Show Controls"
+              description="Zoom and fit-view buttons."
               checked={setting.showControls}
               onCheckedChange={(checked) =>
                 updateField("showControls", checked)
@@ -206,7 +206,7 @@ export function EditorSettingsSheet({
             />
 
             <div className="flex flex-col gap-2">
-              <Label className="text-sm">Gaya Garis Koneksi</Label>
+              <Label className="text-sm">Connection Line Style</Label>
 
               <Select
                 value={setting.connectionMode}
@@ -229,7 +229,7 @@ export function EditorSettingsSheet({
             </div>
 
             <SliderRow
-              label="Kecepatan Animasi Run"
+              label="Run Animation Speed"
               value={setting.animationSpeed}
               min={100}
               max={2000}
@@ -246,12 +246,12 @@ export function EditorSettingsSheet({
             onClick={resetToDefault}
             disabled={isSaving || isLoading}
           >
-            Reset Default
+            Reset to Default
           </Button>
 
           <Button onClick={handleSave} disabled={isSaving || isLoading}>
             {isSaving && <Spinner />}
-            Simpan
+            Save
           </Button>
         </SheetFooter>
       </SheetContent>

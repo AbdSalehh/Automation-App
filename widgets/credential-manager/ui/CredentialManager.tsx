@@ -83,8 +83,7 @@ export function CredentialManager() {
         <div>
           <h1 className="text-foreground text-2xl font-bold">Credentials</h1>
           <p className="text-muted-foreground text-sm">
-            Kelola semua kredensial dan koneksi yang digunakan dalam workflow
-            Anda.
+            Manage all credentials and connections used in your workflows.
           </p>
         </div>
 
@@ -121,7 +120,7 @@ export function CredentialManager() {
         </div>
       ) : filteredCredentials.length === 0 ? (
         <div className="border-border text-muted-foreground rounded-xl border border-dashed py-16 text-center">
-          Tidak ada kredensial yang cocok dengan filter.
+          No credentials match the filter.
         </div>
       ) : (
         <div className="border-border bg-card overflow-hidden rounded-2xl border">
@@ -163,7 +162,7 @@ export function CredentialManager() {
       <Modal
         open={isFormOpen}
         onClose={() => setIsFormOpen(false)}
-        title="Tambah Kredensial"
+        title="Add Credential"
       >
         <CredentialForm onCreated={() => setIsFormOpen(false)} />
       </Modal>

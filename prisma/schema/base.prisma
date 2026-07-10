@@ -74,7 +74,7 @@ model UserSetting {
     snapToGrid Boolean @default(false)
 
     /// Tampilkan minimap navigasi.
-    showMinimap Boolean @default(true)
+    showMinimap Boolean @default(false)
 
     /// Tampilkan tombol kontrol zoom/fit.
     showControls Boolean @default(true)

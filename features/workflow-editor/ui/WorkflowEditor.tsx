@@ -23,6 +23,8 @@ import {
   useEditorUiStore,
   type FlowNode,
 } from "@/entities/workflow";
+import { DashboardEditorDrawer } from "@/features/workflow-dashboard";
+import { useDashboardStore, type DashboardConfig } from "@/entities/dashboard";
 import { Modal, toast } from "@/shared/ui";
 import { useExecutionStore } from "@/entities/execution";
 import { useWhatsappReplyStore } from "@/entities/whatsapp-reply";
@@ -44,6 +46,7 @@ export function WorkflowEditor() {
     setEdges,
     workflowId,
     isExecuting,
+    getSheetSources,
   } = useWorkflowStore();
 
   const {
@@ -67,7 +70,7 @@ export function WorkflowEditor() {
   const hasBaselinedRepliesRef = useRef(false);
 
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const [isMiniMapVisible, setIsMiniMapVisible] = useState(true);
+  const [isMiniMapVisible, setIsMiniMapVisible] = useState(false);
   const [isJsonOpen, setIsJsonOpen] = useState(false);
 
   const { isSettingsOpen, setSettingsOpen, openSettings } = useEditorUiStore();
@@ -90,6 +93,7 @@ export function WorkflowEditor() {
   const { fetchPreview, fetchSheetList } = useSheetPreviewStore();
 
   const { lastExecutionId } = useWorkflowStore();
+  const { openForNode: openDashboardForNode } = useDashboardStore();
 
   /**
    * Pemicu animasi cascade: run manual memakai `lastExecutionId`, sedangkan
@@ -117,10 +121,17 @@ export function WorkflowEditor() {
     pollLatestStatus(workflowId);
   }, [workflowId, pollLatestStatus]);
 
+  const hasReplyNode = useMemo(() => {
+    const baseNodes = nodes as unknown as FlowNode[];
+    return baseNodes.some(
+      (flowNode) =>
+        flowNode.data?.kind === "whatsapp_trigger" ||
+        flowNode.data?.kind === "wait_reply",
+    );
+  }, [nodes]);
+
   /**
-   * Berlangganan event `execution-update` selama editor terbuka agar eksekusi
-   * yang dipicu webhook (balasan WhatsApp) maupun schedule ikut memutar animasi
-   * run node, lalu berhenti berlangganan saat editor dilepas.
+   * Berlangganan target update eksekusi selama editor terbuka.
    */
   useEffect(() => {
     if (!sessionId) {
@@ -135,11 +146,10 @@ export function WorkflowEditor() {
   }, [sessionId, subscribeExecutions, unsubscribeExecutions]);
 
   /**
-   * Berlangganan balasan WhatsApp realtime via Ably selama editor terbuka,
-   * lalu berhenti berlangganan saat editor dilepas. Menggantikan polling.
+   * Berlangganan balasan WhatsApp realtime via Ably selama editor terbuka jika workflow menggunakan reply.
    */
   useEffect(() => {
-    if (!sessionId) {
+    if (!sessionId || !hasReplyNode) {
       return;
     }
 
@@ -148,13 +158,17 @@ export function WorkflowEditor() {
     return () => {
       unsubscribeReplies();
     };
-  }, [sessionId, subscribeReplies, unsubscribeReplies]);
+  }, [sessionId, hasReplyNode, subscribeReplies, unsubscribeReplies]);
 
   /**
    * Memunculkan toast untuk tiap balasan baru yang diterima lewat Ably. Hanya
-   * balasan yang belum pernah ditoast (di luar baseline awal) yang ditampilkan.
+   * balasan pada workflow yang menggunakan reply dan yang belum pernah ditoast.
    */
   useEffect(() => {
+    if (!hasReplyNode) {
+      return;
+    }
+
     /**
      * Saat editor pertama kali dibuka, balasan yang sudah ada di store (dari
      * kunjungan sebelumnya) bukan balasan baru — jadi jadikan baseline agar
@@ -194,7 +208,7 @@ export function WorkflowEditor() {
     }
 
     toastedReplyCountRef.current = replies.length;
-  }, [replies]);
+  }, [replies, hasReplyNode]);
 
   /** Animasikan hanya edge yang sedang aktif (berurutan), bukan semua edge. */
   const displayEdges = useMemo(() => {
@@ -285,10 +299,19 @@ export function WorkflowEditor() {
     setSelectedNodeId(node.id);
   }, []);
 
-  /** Double-click a Sheets node to open the bottom data preview drawer. */
+  /** Double-click a Sheets node to preview data, or dashboard node to open builder. */
   const handleNodeDoubleClick: NodeMouseHandler = useCallback(
     (_event, node) => {
       const flowNode = node as unknown as FlowNode;
+
+      if (flowNode.data.kind === "dashboard") {
+        openDashboardForNode({
+          nodeId: flowNode.id,
+          config: flowNode.data.config as unknown as DashboardConfig,
+          fallbackSource: getSheetSources()[0],
+        });
+        return;
+      }
 
       if (!SHEET_NODE_KINDS.has(flowNode.data.kind)) {
         return;
@@ -305,7 +328,13 @@ export function WorkflowEditor() {
       fetchSheetList({ credentialId, spreadsheetId });
       fetchPreview({ credentialId, spreadsheetId, sheetName });
     },
-    [SHEET_NODE_KINDS, fetchPreview, fetchSheetList],
+    [
+      SHEET_NODE_KINDS,
+      fetchPreview,
+      fetchSheetList,
+      getSheetSources,
+      openDashboardForNode,
+    ],
   );
 
   const selectedNode =
@@ -361,6 +390,8 @@ export function WorkflowEditor() {
         open={isSettingsOpen}
         onOpenChange={setSettingsOpen}
       />
+
+      <DashboardEditorDrawer />
 
       {selectedNode ? (
         <NodeConfigPanel

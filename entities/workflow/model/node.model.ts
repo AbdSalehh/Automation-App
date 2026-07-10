@@ -40,7 +40,8 @@ export type NodeKind =
   | "discord_send"
   | "rss_read"
   | "ai_openai"
-  | "ai_agent";
+  | "ai_agent"
+  | "dashboard";
 
 /** WhatsApp delivery provider, chosen per-node via the provider dropdown. */
 export type WhatsAppProvider = "meta" | "baileys";
@@ -474,6 +475,15 @@ export const NODE_TYPES: NodeTypeDef[] = [
     icon: "Bot",
     credentialType: "ai",
     outputs: ["text", "rows"],
+  },
+  {
+    kind: "dashboard",
+    category: "action",
+    label: "Dashboard",
+    description:
+      "Visualize input connector data with draggable charts, metrics, tables, and text blocks.",
+    icon: "LayoutDashboard",
+    outputs: ["rows", "widgets"],
   },
 ];
 

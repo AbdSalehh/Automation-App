@@ -85,6 +85,71 @@ async function isPollingDue(
   }
 }
 
+const SCHEDULE_TIMEZONE = "Asia/Jakarta";
+
+interface ScheduleDateConfig {
+  date: string;
+  time: string;
+}
+
+function getFormattedDateTimeInTimezone(
+  date: Date,
+  timeZone: string,
+): { dateStr: string; timeStr: string } {
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hour12: false,
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+  });
+
+  const parts = formatter.formatToParts(date);
+  const lookup = (type: string): string =>
+    parts.find((part) => part.type === type)?.value ?? "";
+
+  const year = lookup("year");
+  const month = lookup("month").padStart(2, "0");
+  const day = lookup("day").padStart(2, "0");
+
+  const rawHour = lookup("hour");
+  const hourNum = Number(rawHour);
+  const hour = String(hourNum === 24 ? 0 : hourNum).padStart(2, "0");
+
+  const minute = lookup("minute").padStart(2, "0");
+
+  return {
+    dateStr: `${year}-${month}-${day}`,
+    timeStr: `${hour}:${minute}`,
+  };
+}
+
+function lastDateMatchWithin(
+  scheduleDates: ScheduleDateConfig[],
+  now: Date,
+  windowMinutes: number,
+  timeZone: string,
+): number | null {
+  for (let offset = 0; offset < windowMinutes; offset += 1) {
+    const candidate = new Date(now.getTime() - offset * 60_000);
+    const { dateStr, timeStr } = getFormattedDateTimeInTimezone(
+      candidate,
+      timeZone,
+    );
+    const hasMatch = scheduleDates.some(
+      (entry) => entry.date === dateStr && entry.time === timeStr,
+    );
+
+    if (hasMatch) {
+      return Math.floor(candidate.getTime() / 60_000) * 60_000;
+    }
+  }
+
+  return null;
+}
+
 export async function GET(request: Request) {
   return handleRoute(async () => {
     const cronSecret = process.env.CRON_SECRET;
@@ -119,10 +184,25 @@ export async function GET(request: Request) {
 
       if (scheduleNode) {
         const cronExpression = String(scheduleNode.data.config?.cron ?? "");
+        const scheduleDates = scheduleNode.data.config
+          ?.scheduleDates as ScheduleDateConfig[];
 
-        const matchedSlot = cronExpression
-          ? lastCronMatchWithin(cronExpression, now, CRON_WINDOW_MINUTES)
-          : null;
+        let matchedSlot: number | null = null;
+
+        if (cronExpression) {
+          matchedSlot = lastCronMatchWithin(
+            cronExpression,
+            now,
+            CRON_WINDOW_MINUTES,
+          );
+        } else if (Array.isArray(scheduleDates) && scheduleDates.length > 0) {
+          matchedSlot = lastDateMatchWithin(
+            scheduleDates,
+            now,
+            CRON_WINDOW_MINUTES,
+            SCHEDULE_TIMEZONE,
+          );
+        }
 
         if (matchedSlot !== null) {
           const isNew = await isScheduleSlotNew(workflow.id, matchedSlot);

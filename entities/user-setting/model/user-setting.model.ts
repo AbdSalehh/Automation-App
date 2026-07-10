@@ -19,7 +19,7 @@ export const DEFAULT_USER_SETTING: UserSetting = {
   showGrid: true,
   gridSize: 20,
   snapToGrid: false,
-  showMinimap: true,
+  showMinimap: false,
   showControls: true,
   connectionMode: "bezier",
   animationSpeed: 400,

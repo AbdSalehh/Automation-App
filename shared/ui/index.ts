@@ -60,3 +60,16 @@ export {
   TooltipProvider,
 } from "./tooltip";
 export { SimpleTooltip } from "./SimpleTooltip";
+export { Calendar } from "./calendar";
+export {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitle,
+  DialogTrigger,
+} from "./dialog";

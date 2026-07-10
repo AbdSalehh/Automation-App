@@ -67,6 +67,8 @@ async function sendBaileys(
   }>(`/sessions/${sessionId}/send-message`, {
     target: cleanTarget,
     message,
+    simulateTyping: true,
+    typingDelay: 3000,
   });
 
   if (!response.success) {

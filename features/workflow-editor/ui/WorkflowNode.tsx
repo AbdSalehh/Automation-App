@@ -160,6 +160,27 @@ function describeRule(rule: {
 function NodeBody({ nodeData }: { nodeData: WorkflowNodeData }) {
   const config = nodeData.config ?? {};
 
+  if (nodeData.kind === "dashboard") {
+    const widgets = Array.isArray(config.widgets) ? config.widgets : [];
+    const source = config.source as { sheetName?: string } | undefined;
+
+    return (
+      <SectionShell title="Dashboard">
+        <div className="flex flex-col gap-1 text-[11px]">
+          <span className="text-foreground font-medium">
+            {widgets.length} widget tersimpan
+          </span>
+          <span className="text-muted-foreground">
+            Source: {source?.sheetName || "Spreadsheet workflow"}
+          </span>
+          <span className="text-orange-600">
+            Double-click untuk membuka builder
+          </span>
+        </div>
+      </SectionShell>
+    );
+  }
+
   /** Condition / Filter: only show the logic block in code mode. */
   if (CONDITION_KINDS.has(nodeData.kind)) {
     const isCodeMode = String(config.mode ?? "visual") === "code";

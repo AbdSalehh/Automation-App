@@ -64,12 +64,14 @@ export async function AppHeader() {
                 <NotificationBell />
               </HideOnEditor>
 
-              <Link
-                href={ROUTES.settings}
-                className="text-muted-foreground hover:bg-accent hover:text-foreground grid size-8 place-items-center rounded-full outline-hidden transition-colors"
-              >
-                <SettingsIcon className="size-5" />
-              </Link>
+              <HideOnEditor>
+                <Link
+                  href={ROUTES.settings}
+                  className="text-muted-foreground hover:bg-accent hover:text-foreground grid size-8 place-items-center rounded-full outline-hidden transition-colors"
+                >
+                  <SettingsIcon className="size-5" />
+                </Link>
+              </HideOnEditor>
             </div>
 
             <UserDropdown user={user} />

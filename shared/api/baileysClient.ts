@@ -15,3 +15,22 @@ export const baileysClient = axios.create({
     Authorization: `Bearer ${process.env.BAILEYS_API_KEY}`,
   },
 });
+
+baileysClient.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (axiosError) => {
+    if (axios.isAxiosError(axiosError) && axiosError.response?.data) {
+      const errorResponseData = axiosError.response.data as {
+        message?: string;
+      } | null;
+
+      if (errorResponseData && typeof errorResponseData.message === "string") {
+        axiosError.message = errorResponseData.message;
+      }
+    }
+
+    return Promise.reject(axiosError);
+  },
+);

@@ -220,6 +220,7 @@ export const whatsappSendHandler: NodeHandler = async ({
       ok: boolean;
       messageId: unknown;
       status: string;
+      error?: string;
     }> = [];
 
     const enrichedRows: Item[] = [];
@@ -246,56 +247,98 @@ export const whatsappSendHandler: NodeHandler = async ({
 
       /** Redis unavailable -> fall back to immediate send. */
       if (!reminder) {
-        const sendResult = await sendWhatsApp(
-          provider,
-          credential,
-          target,
-          message,
-          countryCode,
-          workflowSession,
-        );
+        try {
+          const sendResult = await sendWhatsApp(
+            provider,
+            credential,
+            target,
+            message,
+            countryCode,
+            workflowSession,
+          );
 
-        results.push({
-          target,
-          ok: true,
-          messageId: sendResult.messageId,
-          status: "sent_immediate",
-        });
+          results.push({
+            target,
+            ok: true,
+            messageId: sendResult.messageId,
+            status: "sent_immediate",
+          });
 
-        enrichedRows.push({
-          ...item,
-          __waTarget: target,
-          __waMessageId: sendResult.messageId,
-          __waSentAt: new Date().toISOString(),
-        });
+          enrichedRows.push({
+            ...item,
+            __waTarget: target,
+            __waMessageId: sendResult.messageId,
+            __waSentAt: new Date().toISOString(),
+          });
+        } catch (sendError) {
+          const errorMsg =
+            sendError instanceof Error ? sendError.message : String(sendError);
+
+          results.push({
+            target,
+            ok: false,
+            messageId: null,
+            status: "failed_immediate",
+            error: errorMsg,
+          });
+
+          enrichedRows.push({
+            ...item,
+            __waTarget: target,
+            __waMessageId: null,
+            __waError: errorMsg,
+            __waSentAt: new Date().toISOString(),
+          });
+        }
         continue;
       }
 
       if (now >= reminder.dueAt) {
-        const sendResult = await sendWhatsApp(
-          provider,
-          credential,
-          target,
-          reminder.message,
-          countryCode,
-          workflowSession,
-        );
+        try {
+          const sendResult = await sendWhatsApp(
+            provider,
+            credential,
+            target,
+            reminder.message,
+            countryCode,
+            workflowSession,
+          );
 
-        await clearReminder(reminderScope, rowKey);
+          await clearReminder(reminderScope, rowKey);
 
-        results.push({
-          target,
-          ok: true,
-          messageId: sendResult.messageId,
-          status: "sent",
-        });
+          results.push({
+            target,
+            ok: true,
+            messageId: sendResult.messageId,
+            status: "sent",
+          });
 
-        enrichedRows.push({
-          ...item,
-          __waTarget: target,
-          __waMessageId: sendResult.messageId,
-          __waSentAt: new Date().toISOString(),
-        });
+          enrichedRows.push({
+            ...item,
+            __waTarget: target,
+            __waMessageId: sendResult.messageId,
+            __waSentAt: new Date().toISOString(),
+          });
+        } catch (sendError) {
+          const errorMsg =
+            sendError instanceof Error ? sendError.message : String(sendError);
+
+          results.push({
+            target,
+            ok: false,
+            messageId: null,
+            status: "failed",
+            error: errorMsg,
+          });
+
+          enrichedRows.push({
+            ...item,
+            __waTarget: target,
+            __waMessageId: null,
+            __waError: errorMsg,
+            __waSentAt: new Date().toISOString(),
+          });
+        }
       } else {
         const minutesLeft = Math.ceil((reminder.dueAt - now) / 60_000);
 
@@ -338,6 +381,7 @@ export const whatsappSendHandler: NodeHandler = async ({
     target: string;
     ok: boolean;
     messageId: unknown;
+    error?: string;
   }> = [];
 
   const enrichedRows: Item[] = [];
@@ -352,6 +396,7 @@ export const whatsappSendHandler: NodeHandler = async ({
         target: "(no number)",
         ok: false,
         messageId: null,
+        error: "Nomor target kosong",
       });
       continue;
     }
@@ -371,27 +416,47 @@ export const whatsappSendHandler: NodeHandler = async ({
 
     sentIndex += 1;
 
-    const sendResult = await sendWhatsApp(
-      provider,
-      credential,
-      target,
-      message,
-      countryCode,
-      workflowSession,
-    );
+    try {
+      const sendResult = await sendWhatsApp(
+        provider,
+        credential,
+        target,
+        message,
+        countryCode,
+        workflowSession,
+      );
 
-    results.push({
-      target,
-      ok: true,
-      messageId: sendResult.messageId,
-    });
+      results.push({
+        target,
+        ok: true,
+        messageId: sendResult.messageId,
+      });
 
-    enrichedRows.push({
-      ...item,
-      __waTarget: target,
-      __waMessageId: sendResult.messageId,
-      __waSentAt: new Date().toISOString(),
-    });
+      enrichedRows.push({
+        ...item,
+        __waTarget: target,
+        __waMessageId: sendResult.messageId,
+        __waSentAt: new Date().toISOString(),
+      });
+    } catch (sendError) {
+      const errorMsg =
+        sendError instanceof Error ? sendError.message : String(sendError);
+
+      results.push({
+        target,
+        ok: false,
+        messageId: null,
+        error: errorMsg,
+      });
+
+      enrichedRows.push({
+        ...item,
+        __waTarget: target,
+        __waMessageId: null,
+        __waError: errorMsg,
+        __waSentAt: new Date().toISOString(),
+      });
+    }
   }
 
   return { sent: results.length, results, rows: enrichedRows };

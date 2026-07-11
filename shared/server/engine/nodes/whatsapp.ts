@@ -60,26 +60,49 @@ async function sendBaileys(
 ): Promise<Record<string, unknown>> {
   const cleanTarget = target.includes("@") ? target : target.replace(/\D/g, "");
 
-  const { data: response } = await baileysClient.post<{
-    success: boolean;
-    message: string;
-    data: { messageId: string | null } | null;
-  }>(`/sessions/${sessionId}/send-message`, {
-    target: cleanTarget,
-    message,
-    simulateTyping: true,
-    typingDelay: 3000,
-  });
+  const maxAttempts = 3;
+  const retryDelayMs = 5000;
 
-  if (!response.success) {
-    throw new Error(
-      `WhatsApp Baileys: ${response.message ?? "gagal mengirim pesan"}`,
-    );
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      const { data: response } = await baileysClient.post<{
+        success: boolean;
+        message: string;
+        data: { messageId: string | null } | null;
+      }>(`/sessions/${sessionId}/send-message`, {
+        target: cleanTarget,
+        message,
+        simulateTyping: true,
+        typingDelay: 3000,
+      });
+
+      if (!response.success) {
+        throw new Error(
+          `WhatsApp Baileys: ${response.message ?? "gagal mengirim pesan"}`,
+        );
+      }
+
+      const messageId = response.data?.messageId ?? null;
+
+      return { provider: "baileys", messageId, raw: response };
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      const isConnectionError =
+        errorMsg.includes("Sesi WhatsApp belum siap") ||
+        /connection|disconnect|closed|hang up|timeout/i.test(errorMsg);
+
+      if (isConnectionError && attempt < maxAttempts) {
+        await sleep(retryDelayMs);
+        continue;
+      }
+
+      throw error;
+    }
   }
 
-  const messageId = response.data?.messageId ?? null;
-
-  return { provider: "baileys", messageId, raw: response };
+  throw new Error(
+    "WhatsApp Baileys: gagal mengirim pesan setelah percobaan ulang",
+  );
 }
 
 /**

@@ -20,6 +20,8 @@ import {
   AlertDialogFooter,
   AlertDialogCancel,
 } from "@/shared/ui/alert-dialog";
+import { ConversationList } from "@/widgets/whatsapp-chat/ui/ConversationList";
+import { ChatHistoryPanel } from "@/widgets/whatsapp-chat/ui/ChatHistoryPanel";
 
 /**
  * Kartu untuk menautkan WhatsApp (Baileys). Menampilkan tombol "Tautkan

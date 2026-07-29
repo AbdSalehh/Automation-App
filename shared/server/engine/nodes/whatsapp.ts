@@ -482,5 +482,16 @@ export const whatsappSendHandler: NodeHandler = async ({
     }
   }
 
-  return { sent: results.length, results, rows: enrichedRows };
+  const sentCount = results.filter((result) => result.ok).length;
+
+  if (items.length > 0 && sentCount === 0) {
+    const lastError =
+      results.find((result) => !result.ok && result.error)?.error ||
+      "Unknown Error";
+    throw new Error(
+      `WhatsApp Send: Gagal mengirim pesan ke semua nomor (${lastError})`,
+    );
+  }
+
+  return { sent: sentCount, results, rows: enrichedRows };
 };

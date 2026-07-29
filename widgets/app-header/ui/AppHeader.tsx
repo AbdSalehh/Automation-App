@@ -20,7 +20,11 @@ export async function AppHeader() {
 
   const navItems =
     user?.role === "admin"
-      ? [...NAV_ITEMS, { href: ROUTES.users, label: "Users" }]
+      ? [
+          ...NAV_ITEMS,
+          { href: ROUTES.whatsappSessions, label: "WhatsApp" },
+          { href: ROUTES.users, label: "Users" },
+        ]
       : NAV_ITEMS;
 
   return (

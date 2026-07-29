@@ -131,6 +131,7 @@ export const ROUTES = {
   executions: "/executions",
   settings: "/settings",
   users: "/users",
+  whatsappSessions: "/whatsapp-sessions",
   login: "/login",
   onboarding: "/onboarding",
   terms: "/terms",

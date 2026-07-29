@@ -20,8 +20,6 @@ import {
   AlertDialogFooter,
   AlertDialogCancel,
 } from "@/shared/ui/alert-dialog";
-import { ConversationList } from "@/widgets/whatsapp-chat/ui/ConversationList";
-import { ChatHistoryPanel } from "@/widgets/whatsapp-chat/ui/ChatHistoryPanel";
 
 /**
  * Kartu untuk menautkan WhatsApp (Baileys). Menampilkan tombol "Tautkan
@@ -126,7 +124,8 @@ export function WhatsappLinkCard() {
             <AlertDialogTitle>Link WhatsApp</AlertDialogTitle>
             <AlertDialogDescription>
               Open WhatsApp on your phone, go to Linked Devices, then scan the
-              code below.
+              code below. If this number is connected to another account, its
+              previous session will be logged out automatically.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
@@ -149,7 +148,7 @@ export function WhatsappLinkCard() {
                 />
               </div>
             ) : (
-              <div className="border-border bg-muted/30 flex size-[264px] flex-col items-center justify-center gap-3 rounded-xl border">
+              <div className="border-border bg-muted/30 flex size-66 flex-col items-center justify-center gap-3 rounded-xl border">
                 <Spinner className="text-muted-foreground size-8" />
                 <p className="text-muted-foreground text-xs">
                   {isPolling

@@ -20,7 +20,10 @@ export interface SessionUpdatePayload {
   status: WhatsappSessionStatus["status"];
   isReady: boolean;
   qr: string | null;
-  user: unknown | null;
+  user: {
+    phoneNumber?: string | null;
+    name?: string | null;
+  } | null;
 }
 
 /** Hasil pengiriman satu pesan teks lewat Baileys. */

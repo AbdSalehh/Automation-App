@@ -10,6 +10,7 @@ import type {
   ConversationSummary,
   ConversationsMetadata,
   MessagesMetadata,
+  SessionUpdatePayload,
   WhatsappSessionSummary,
 } from "../model/whatsappSession.model";
 
@@ -37,7 +38,6 @@ interface ChatHistoryState {
   fetchConversations: (options?: { reset?: boolean }) => Promise<void>;
   openConversation: (jid: string) => Promise<void>;
   fetchMoreMessages: () => Promise<void>;
-  clearActiveConversationCache: () => Promise<void>;
   subscribeRealtime: () => void;
   unsubscribeRealtime: () => void;
   reset: () => void;
@@ -269,31 +269,6 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
     }
   },
 
-  clearActiveConversationCache: async () => {
-    const { activeSessionId, activePhoneNumber, activeJid } = get();
-
-    if (!activeSessionId || !activePhoneNumber || !activeJid) {
-      return;
-    }
-
-    try {
-      await apiClient.delete(
-        `/whatsapp/conversations/${encodeURIComponent(activeJid)}/cache`,
-        {
-          params: {
-            sessionId: activeSessionId,
-            phoneNumber: activePhoneNumber,
-          },
-        },
-      );
-    } catch (error) {
-      set({
-        errorMessage:
-          getErrorMessage(error) ?? "Gagal menghapus cache percakapan",
-      });
-    }
-  },
-
   subscribeRealtime: () => {
     const { activeSessionId, realtimeChannel: existingRealtimeChannel } = get();
 
@@ -326,6 +301,50 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
             : state.messages,
       });
     });
+    realtimeChannel.subscribe("session-update", (ablyMessage: Ably.Message) => {
+      const sessionUpdate = ablyMessage.data as SessionUpdatePayload;
+      const state = get();
+
+      if (sessionUpdate.status === "deleted") {
+        get().unsubscribeRealtime();
+        set({
+          sessions: state.sessions.filter(
+            (whatsappSession) =>
+              whatsappSession.sessionId !== state.activeSessionId,
+          ),
+          ...createEmptySelectionState(),
+          errorMessage:
+            "Sesi WhatsApp telah dipindahkan atau dihapus dari layanan.",
+        });
+
+        return;
+      }
+
+      const updatedPhoneNumber = sessionUpdate.user?.phoneNumber ?? null;
+
+      if (
+        sessionUpdate.status === "open" &&
+        sessionUpdate.isReady &&
+        updatedPhoneNumber &&
+        updatedPhoneNumber !== state.activePhoneNumber
+      ) {
+        set({
+          ...createEmptyChatState(),
+          activePhoneNumber: updatedPhoneNumber,
+          sessions: state.sessions.map((whatsappSession) =>
+            whatsappSession.sessionId === state.activeSessionId
+              ? {
+                  ...whatsappSession,
+                  phoneNumber: updatedPhoneNumber,
+                  status: sessionUpdate.status,
+                  isReady: sessionUpdate.isReady,
+                }
+              : whatsappSession,
+          ),
+        });
+        get().fetchConversations({ reset: true });
+      }
+    });
     realtimeClient.connection.on("connected", reconnectHandler);
 
     set({ realtimeClient, realtimeChannel, reconnectHandler });
@@ -336,6 +355,7 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
 
     if (realtimeChannel) {
       realtimeChannel.unsubscribe("chat-update");
+      realtimeChannel.unsubscribe("session-update");
     }
 
     if (realtimeClient && reconnectHandler) {

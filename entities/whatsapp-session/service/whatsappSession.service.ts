@@ -126,13 +126,11 @@ export const whatsappSessionService = {
   clearConversationCache: async (
     sessionId: string,
     jid: string,
-    phoneNumber: string,
   ): Promise<void> => {
     const encodedJid = encodeURIComponent(jid);
 
     await baileysClient.delete(
       `/sessions/${sessionId}/conversations/${encodedJid}/cache`,
-      { params: { phoneNumber } },
     );
   },
 };

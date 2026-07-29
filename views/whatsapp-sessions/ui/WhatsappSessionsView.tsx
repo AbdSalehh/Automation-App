@@ -40,7 +40,7 @@ export function WhatsappSessionsView() {
               WhatsApp Sessions
             </h1>
             <p className="text-muted-foreground text-sm">
-              Lihat sesi, percakapan, dan riwayat pesan 24 jam terakhir.
+              Lihat sesi, percakapan aktif, dan seluruh riwayat pesan tersimpan.
             </p>
           </div>
         </div>
@@ -72,7 +72,7 @@ export function WhatsappSessionsView() {
                 <li key={whatsappSession.sessionId}>
                   <button
                     type="button"
-                    onClick={() => selectSession(whatsappSession.sessionId)}
+                    onClick={() => selectSession(whatsappSession)}
                     className={cn(
                       "hover:bg-accent flex w-full items-center gap-3 rounded-lg p-2.5 text-left transition-colors",
                       activeSessionId === whatsappSession.sessionId &&

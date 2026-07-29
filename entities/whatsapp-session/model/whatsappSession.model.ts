@@ -59,6 +59,7 @@ export interface ChatMessage {
   id: string;
   jid: string;
   sender: string;
+  phoneNumber?: string;
   message: string;
   name: string;
   messageType: InboundMessageType;
@@ -83,7 +84,10 @@ export interface ConversationsMetadata {
   hasMore: boolean;
 }
 
-/** Metadata pagination untuk riwayat pesan (menambahkan `hours`). */
+/** Metadata pagination untuk riwayat pesan. */
 export interface MessagesMetadata extends ConversationsMetadata {
-  hours: number;
+  nextOffset: number | null;
 }
+
+/** Payload event realtime `chat-update`. */
+export type ChatUpdatePayload = ChatMessage;

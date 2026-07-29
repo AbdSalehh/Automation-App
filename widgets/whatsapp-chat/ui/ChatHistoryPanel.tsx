@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useRef } from "react";
 import { FileIcon, DownloadIcon } from "lucide-react";
 
 import { useChatHistoryStore } from "@/entities/whatsapp-session";
@@ -9,11 +10,7 @@ import { Spinner } from "@/shared/ui/spinner";
 import { cn } from "@/shared/lib/utils";
 import type { ChatMessage } from "@/entities/whatsapp-session";
 
-/**
- * Panel riwayat pesan (maksimal 24 jam) untuk percakapan yang sedang aktif.
- * Pesan datang dari API terurut terbaru->terlama; di sini dibalik agar tampil
- * kronologis (lama di atas, baru di bawah) layaknya UI chat pada umumnya.
- */
+/** Panel riwayat pesan kronologis untuk percakapan yang sedang aktif. */
 export function ChatHistoryPanel() {
   const {
     activeJid,
@@ -22,6 +19,8 @@ export function ChatHistoryPanel() {
     isLoadingMessages,
     fetchMoreMessages,
   } = useChatHistoryStore();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const isLoadingPreviousMessagesRef = useRef(false);
 
   if (!activeJid) {
     return (
@@ -31,45 +30,79 @@ export function ChatHistoryPanel() {
     );
   }
 
-  const chronologicalMessages = [...messages].reverse();
+  const handleLoadPreviousMessages = async () => {
+    const scrollContainer = scrollContainerRef.current;
+
+    if (!scrollContainer || isLoadingPreviousMessagesRef.current) {
+      return;
+    }
+
+    isLoadingPreviousMessagesRef.current = true;
+    const previousScrollHeight = scrollContainer.scrollHeight;
+    const previousScrollTop = scrollContainer.scrollTop;
+
+    await fetchMoreMessages();
+
+    requestAnimationFrame(() => {
+      scrollContainer.scrollTop =
+        previousScrollTop +
+        (scrollContainer.scrollHeight - previousScrollHeight);
+      isLoadingPreviousMessagesRef.current = false;
+    });
+  };
+
+  const handleScroll = () => {
+    const scrollContainer = scrollContainerRef.current;
+
+    if (
+      scrollContainer &&
+      scrollContainer.scrollTop < 120 &&
+      messagesMetadata?.hasMore &&
+      !isLoadingMessages
+    ) {
+      handleLoadPreviousMessages();
+    }
+  };
 
   return (
     <div className="flex h-full flex-col gap-3 overflow-hidden">
-      <div className="flex flex-1 flex-col-reverse gap-2 overflow-y-auto p-2">
-        <div className="flex flex-col gap-2">
-          {messagesMetadata?.hasMore && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="mx-auto"
-              disabled={isLoadingMessages}
-              onClick={() => fetchMoreMessages()}
-            >
-              {isLoadingMessages ? (
-                <Spinner className="size-4" />
-              ) : (
-                "Muat pesan sebelumnya"
-              )}
-            </Button>
-          )}
+      <div
+        ref={scrollContainerRef}
+        className="flex flex-1 flex-col gap-2 overflow-y-auto p-2"
+        onScroll={handleScroll}
+      >
+        {messagesMetadata?.hasMore && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="mx-auto"
+            disabled={isLoadingMessages}
+            onClick={handleLoadPreviousMessages}
+          >
+            {isLoadingMessages ? (
+              <Spinner className="size-4" />
+            ) : (
+              "Muat pesan sebelumnya"
+            )}
+          </Button>
+        )}
 
-          {chronologicalMessages.length === 0 && !isLoadingMessages ? (
-            <p className="text-muted-foreground py-8 text-center text-sm">
-              Tidak ada pesan dalam 24 jam terakhir.
-            </p>
-          ) : (
-            chronologicalMessages.map((message) => (
-              <ChatBubble key={message.id} message={message} />
-            ))
-          )}
+        {messages.length === 0 && !isLoadingMessages ? (
+          <p className="text-muted-foreground py-8 text-center text-sm">
+            Belum ada pesan tersimpan.
+          </p>
+        ) : (
+          messages.map((message) => (
+            <ChatBubble key={message.id} message={message} />
+          ))
+        )}
 
-          {isLoadingMessages && chronologicalMessages.length === 0 && (
-            <div className="flex items-center justify-center py-8">
-              <Spinner className="text-muted-foreground size-6" />
-            </div>
-          )}
-        </div>
+        {isLoadingMessages && messages.length === 0 && (
+          <div className="flex items-center justify-center py-8">
+            <Spinner className="text-muted-foreground size-6" />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -79,8 +112,7 @@ function ChatBubble({ message }: { message: ChatMessage }) {
   return (
     <div
       className={cn(
-        "flex flex-col gap-1 rounded-2xl px-3 py-2 text-sm shadow-sm",
-        "max-w-[75%]",
+        "flex max-w-3/4 flex-col gap-1 rounded-2xl px-3 py-2 text-sm shadow-sm",
         message.fromMe
           ? "self-end rounded-br-sm bg-emerald-600 text-white"
           : "bg-muted text-foreground self-start rounded-bl-sm",
@@ -89,7 +121,7 @@ function ChatBubble({ message }: { message: ChatMessage }) {
       {message.media?.url && <ChatMedia message={message} />}
 
       {message.message && (
-        <p className="break-words whitespace-pre-wrap">{message.message}</p>
+        <p className="wrap-break-word whitespace-pre-wrap">{message.message}</p>
       )}
 
       <span
@@ -125,14 +157,10 @@ function ChatMedia({ message }: { message: ChatMessage }) {
   }
 
   if (message.messageType === "video") {
-    return (
-      // eslint-disable-next-line jsx-a11y/media-has-caption
-      <video src={media.url} controls className="max-w-full rounded-lg" />
-    );
+    return <video src={media.url} controls className="max-w-full rounded-lg" />;
   }
 
   if (message.messageType === "audio") {
-    // eslint-disable-next-line jsx-a11y/media-has-caption
     return <audio src={media.url} controls className="w-full" />;
   }
 

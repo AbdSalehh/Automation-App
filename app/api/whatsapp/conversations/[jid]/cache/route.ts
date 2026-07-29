@@ -19,9 +19,14 @@ export async function DELETE(request: Request, { params }: RouteParams) {
 
     const { searchParams } = new URL(request.url);
     const sessionId = searchParams.get("sessionId")?.trim();
+    const phoneNumber = searchParams.get("phoneNumber")?.trim();
 
     if (!sessionId) {
       return badRequest("Session ID wajib diisi");
+    }
+
+    if (!phoneNumber) {
+      return badRequest("Nomor WhatsApp wajib diisi");
     }
 
     const { jid: encodedJid } = await params;
@@ -37,7 +42,11 @@ export async function DELETE(request: Request, { params }: RouteParams) {
       return badRequest("JID tidak valid");
     }
 
-    await whatsappSessionService.clearConversationCache(sessionId, jid);
+    await whatsappSessionService.clearConversationCache(
+      sessionId,
+      jid,
+      phoneNumber,
+    );
 
     return ok({ deleted: true }, "Cache percakapan berhasil dihapus");
   });

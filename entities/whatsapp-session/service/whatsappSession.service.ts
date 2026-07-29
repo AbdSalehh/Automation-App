@@ -99,13 +99,12 @@ export const whatsappSessionService = {
   },
 
   /**
-   * Mengambil riwayat pesan (maksimal 24 jam) untuk satu percakapan (`jid`)
-   * dalam satu sesi, dengan pagination `limit`/`offset`.
+   * Mengambil riwayat pesan untuk satu percakapan dengan pagination.
    */
   listMessages: async (
     sessionId: string,
     jid: string,
-    params: { hours?: number; limit?: number; offset?: number } = {},
+    params: { limit?: number; offset?: number } = {},
   ): Promise<{ data: ChatMessage[]; metadata: MessagesMetadata }> => {
     const encodedJid = encodeURIComponent(jid);
 
@@ -127,11 +126,13 @@ export const whatsappSessionService = {
   clearConversationCache: async (
     sessionId: string,
     jid: string,
+    phoneNumber: string,
   ): Promise<void> => {
     const encodedJid = encodeURIComponent(jid);
 
     await baileysClient.delete(
       `/sessions/${sessionId}/conversations/${encodedJid}/cache`,
+      { params: { phoneNumber } },
     );
   },
 };

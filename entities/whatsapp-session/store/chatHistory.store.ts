@@ -437,6 +437,8 @@ function upsertConversation(
     name: message.name,
     messageType: message.messageType,
     media: message.media,
+    replyTo: message.replyTo,
+    call: message.call,
     fromMe: message.fromMe,
     sentAt: message.sentAt,
   };

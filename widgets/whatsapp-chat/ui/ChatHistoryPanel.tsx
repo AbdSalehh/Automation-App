@@ -2,7 +2,13 @@
 
 import Image from "next/image";
 import { useRef } from "react";
-import { FileIcon, DownloadIcon } from "lucide-react";
+import {
+  FileIcon,
+  DownloadIcon,
+  PhoneCallIcon,
+  VideoIcon,
+  UsersIcon,
+} from "lucide-react";
 
 import { useChatHistoryStore } from "@/entities/whatsapp-session";
 import { Button } from "@/shared/ui/button";
@@ -118,6 +124,18 @@ function ChatBubble({ message }: { message: ChatMessage }) {
           : "bg-muted text-foreground self-start rounded-bl-sm",
       )}
     >
+      {!message.fromMe && message.jid.endsWith("@g.us") && message.name && (
+        <span className="font-semibold text-emerald-700 dark:text-emerald-300">
+          {message.name}
+        </span>
+      )}
+
+      {message.replyTo && <ReplyPreview message={message} />}
+
+      {message.messageType === "call" && message.call && (
+        <CallPreview message={message} />
+      )}
+
       {message.media?.url && <ChatMedia message={message} />}
 
       {message.message && (
@@ -132,6 +150,59 @@ function ChatBubble({ message }: { message: ChatMessage }) {
       >
         {formatTimestamp(message.sentAt)}
       </span>
+    </div>
+  );
+}
+
+function ReplyPreview({ message }: { message: ChatMessage }) {
+  const replyTo = message.replyTo;
+
+  if (!replyTo) {
+    return null;
+  }
+
+  return (
+    <div
+      className={cn(
+        "rounded-lg border-l-4 px-3 py-2 text-xs",
+        message.fromMe
+          ? "border-emerald-200 bg-black/10 text-emerald-50"
+          : "text-foreground border-emerald-500 bg-black/5",
+      )}
+    >
+      <span className="block font-semibold">Pesan yang dibalas</span>
+      <span className="block truncate opacity-80">
+        {replyTo.message || formatMessageType(replyTo.messageType)}
+      </span>
+    </div>
+  );
+}
+
+function CallPreview({ message }: { message: ChatMessage }) {
+  const call = message.call;
+
+  if (!call) {
+    return null;
+  }
+
+  const CallTypeIcon = call.isVideo ? VideoIcon : PhoneCallIcon;
+
+  return (
+    <div className="flex items-center gap-3 rounded-xl bg-black/10 px-3 py-2">
+      <div className="grid size-9 shrink-0 place-items-center rounded-full bg-emerald-500/15">
+        <CallTypeIcon className="size-4" />
+      </div>
+      <div className="min-w-0">
+        <p className="font-medium">
+          {call.isVideo ? "Panggilan video" : "Panggilan suara"}
+        </p>
+        <p className="flex items-center gap-1 text-xs opacity-75">
+          {call.isGroup && <UsersIcon className="size-3" />}
+          {formatCallStatus(call.status)}
+          {call.durationSeconds !== null &&
+            ` · ${formatCallDuration(call.durationSeconds)}`}
+        </p>
+      </div>
     </div>
   );
 }
@@ -176,6 +247,45 @@ function ChatMedia({ message }: { message: ChatMessage }) {
       <DownloadIcon className="ml-auto size-3.5 shrink-0" />
     </a>
   );
+}
+
+function formatMessageType(messageType: ChatMessage["messageType"]): string {
+  const messageTypeLabels: Record<ChatMessage["messageType"], string> = {
+    text: "Pesan teks",
+    image: "Gambar",
+    video: "Video",
+    audio: "Audio",
+    document: "Dokumen",
+    sticker: "Stiker",
+    call: "Panggilan",
+  };
+
+  return messageTypeLabels[messageType];
+}
+
+function formatCallStatus(
+  status: NonNullable<ChatMessage["call"]>["status"],
+): string {
+  const statusLabels: Record<
+    NonNullable<ChatMessage["call"]>["status"],
+    string
+  > = {
+    offer: "Memanggil",
+    ringing: "Berdering",
+    accept: "Diterima",
+    terminate: "Selesai",
+    reject: "Ditolak",
+    timeout: "Tidak terjawab",
+  };
+
+  return statusLabels[status];
+}
+
+function formatCallDuration(durationSeconds: number): string {
+  const minutes = Math.floor(durationSeconds / 60);
+  const seconds = durationSeconds % 60;
+
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
 function formatTimestamp(isoDate: string): string {

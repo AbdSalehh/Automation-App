@@ -6,6 +6,7 @@ import {
   FileIcon,
   MicIcon,
   StickerIcon,
+  PhoneCallIcon,
 } from "lucide-react";
 
 import { useChatHistoryStore } from "@/entities/whatsapp-session";
@@ -20,6 +21,7 @@ const MEDIA_ICON_BY_TYPE = {
   audio: MicIcon,
   document: FileIcon,
   sticker: StickerIcon,
+  call: PhoneCallIcon,
 };
 
 /**
@@ -121,7 +123,12 @@ function ConversationListItem({
           {lastMessage?.fromMe && <span className="shrink-0">Anda:</span>}
           {MediaIcon && <MediaIcon className="size-3 shrink-0" />}
           <span className="truncate">
-            {lastMessage?.message || (MediaIcon ? "Media" : "Belum ada pesan")}
+            {lastMessage?.message ||
+              (lastMessage?.messageType === "call"
+                ? "Panggilan WhatsApp"
+                : MediaIcon
+                  ? "Media"
+                  : "Belum ada pesan")}
           </span>
         </div>
       </button>

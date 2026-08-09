@@ -8,6 +8,7 @@ import { ConversationList } from "@/widgets/whatsapp-chat/ui/ConversationList";
 import { ChatHistoryPanel } from "@/widgets/whatsapp-chat/ui/ChatHistoryPanel";
 import { Badge } from "@/shared/ui/Badge";
 import { Spinner } from "@/shared/ui/spinner";
+import { ScrollArea } from "@/shared/ui";
 import { cn } from "@/shared/lib/utils";
 
 export function WhatsappSessionsView() {
@@ -114,7 +115,9 @@ export function WhatsappSessionsView() {
         </div>
 
         <div className="min-h-96 overflow-hidden p-3">
-          <ChatHistoryPanel />
+          <ScrollArea className="h-150">
+            <ChatHistoryPanel />
+          </ScrollArea>
         </div>
       </section>
     </main>

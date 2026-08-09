@@ -47,7 +47,30 @@ export type InboundMessageType =
   | "video"
   | "audio"
   | "document"
-  | "sticker";
+  | "sticker"
+  | "call";
+
+export interface MessageReply {
+  id: string;
+  senderJid: string;
+  message: string;
+  messageType: InboundMessageType;
+}
+
+export type WhatsappCallStatus =
+  | "offer"
+  | "ringing"
+  | "accept"
+  | "terminate"
+  | "reject"
+  | "timeout";
+
+export interface WhatsappCall {
+  status: WhatsappCallStatus;
+  isVideo: boolean;
+  isGroup: boolean;
+  durationSeconds: number | null;
+}
 
 /** Metadata media masuk (sudah diunggah ke Cloudinary, hanya URL & info). */
 export interface InboundMedia {
@@ -67,6 +90,8 @@ export interface ChatMessage {
   name: string;
   messageType: InboundMessageType;
   media: InboundMedia | null;
+  replyTo: MessageReply | null;
+  call: WhatsappCall | null;
   fromMe: boolean;
   sentAt: string;
   receivedAt?: string;

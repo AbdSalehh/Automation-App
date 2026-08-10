@@ -12,6 +12,7 @@ import type {
   ResolvedWhatsappSession,
   WhatsappSessionStatus,
   SessionUpdatePayload,
+  WhatsappSessionSummary,
 } from "../model/whatsappSession.model";
 
 interface WhatsappSessionState {
@@ -25,9 +26,12 @@ interface WhatsappSessionState {
   duplicateErrorMessage: string | null;
   isCreatingSession: boolean;
   createSessionErrorMessage: string | null;
+  sessions: WhatsappSessionSummary[];
+  isLoadingSessions: boolean;
   isSubscribed: boolean;
   channel: Ably.RealtimeChannel | null;
   pollSessionStatus: () => Promise<void>;
+  loadSessions: () => Promise<void>;
   createSession: () => Promise<boolean>;
   checkIsSessionActive: () => Promise<boolean>;
   confirmDuplicate: () => Promise<void>;
@@ -48,6 +52,8 @@ export const useWhatsappSessionStore = create<WhatsappSessionState>(
     duplicateErrorMessage: null,
     isCreatingSession: false,
     createSessionErrorMessage: null,
+    sessions: [],
+    isLoadingSessions: false,
     isSubscribed: false,
     channel: null,
 
@@ -76,6 +82,20 @@ export const useWhatsappSessionStore = create<WhatsappSessionState>(
         });
       } finally {
         set({ isPolling: false });
+      }
+    },
+
+    loadSessions: async () => {
+      set({ isLoadingSessions: true });
+
+      try {
+        const { data: response } = await apiClient.get<
+          ApiResponse<WhatsappSessionSummary[]>
+        >("/whatsapp/sessions/list");
+
+        set({ sessions: response.data });
+      } finally {
+        set({ isLoadingSessions: false });
       }
     },
 
@@ -206,6 +226,10 @@ export const useWhatsappSessionStore = create<WhatsappSessionState>(
           pendingDuplicate: update.pendingDuplicate ?? null,
           duplicateErrorMessage: null,
         });
+
+        if (update.isReady) {
+          void get().loadSessions();
+        }
       });
 
       set({ channel, isSubscribed: true });

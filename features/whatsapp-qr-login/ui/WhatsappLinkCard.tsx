@@ -38,14 +38,20 @@ export function WhatsappLinkCard() {
     duplicateErrorMessage,
     isCreatingSession,
     createSessionErrorMessage,
+    sessions,
     sessionId,
     pollSessionStatus,
+    loadSessions,
     createSession,
     confirmDuplicate,
     cancelDuplicate,
     subscribeSession,
     unsubscribeSession,
   } = useWhatsappSessionStore();
+
+  const hasConnectedSessions = sessions.some(
+    (whatsappSession) => whatsappSession.isReady,
+  );
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -59,7 +65,8 @@ export function WhatsappLinkCard() {
 
   useEffect(() => {
     void pollSessionStatus();
-  }, [pollSessionStatus]);
+    void loadSessions();
+  }, [loadSessions, pollSessionStatus]);
 
   useEffect(() => {
     if (!sessionId) {
@@ -102,9 +109,13 @@ export function WhatsappLinkCard() {
           </div>
         </div>
 
-        {isReady ? (
+        {hasConnectedSessions ? (
           <Badge variant="success" className="gap-1">
             <CheckCircle2Icon className="size-3" />
+            {
+              sessions.filter((whatsappSession) => whatsappSession.isReady)
+                .length
+            }{" "}
             Connected
           </Badge>
         ) : (
@@ -112,48 +123,60 @@ export function WhatsappLinkCard() {
         )}
       </div>
 
-      {isReady ? (
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-3 rounded-lg border border-emerald-100 bg-emerald-50/60 p-3">
-            <SmartphoneIcon className="size-5 text-emerald-600" />
-            <div className="flex flex-col">
-              <span className="text-sm font-medium text-emerald-700">
-                WhatsApp is linked
-              </span>
-              <span className="text-muted-foreground text-xs">
-                Add another account without disconnecting this session.
-              </span>
+      <div className="flex flex-wrap gap-3">
+        {sessions
+          .filter((whatsappSession) => whatsappSession.isReady)
+          .map((whatsappSession) => (
+            <div
+              key={whatsappSession.sessionId}
+              className="flex min-w-60 flex-1 items-center gap-3 rounded-lg border border-emerald-100 bg-emerald-50/60 p-4"
+            >
+              <SmartphoneIcon className="size-5 shrink-0 text-emerald-600" />
+              <div className="flex min-w-0 flex-col">
+                <span className="truncate text-sm font-medium text-emerald-700">
+                  {whatsappSession.name || "WhatsApp Account"}
+                </span>
+                <span className="text-muted-foreground truncate text-xs">
+                  {whatsappSession.phoneNumber || "Connected"}
+                </span>
+              </div>
             </div>
-          </div>
+          ))}
+
+        {hasConnectedSessions ? (
           <Button
             type="button"
             variant="outline"
             disabled={isCreatingSession}
             onClick={() => void handleAddAccount()}
-            className="w-fit gap-2"
+            className="h-auto min-h-18 min-w-60 flex-1 justify-start gap-3 p-4"
           >
             {isCreatingSession ? (
-              <Spinner className="size-4" />
+              <Spinner className="size-5" />
             ) : (
-              <MessageCircleIcon className="size-4" />
+              <MessageCircleIcon className="size-5" />
             )}
-            Add WhatsApp Account
+            <span className="flex flex-col items-start">
+              <span>Add WhatsApp Account</span>
+              <span className="text-muted-foreground text-xs font-normal">
+                Link another account
+              </span>
+            </span>
           </Button>
-          {createSessionErrorMessage && (
-            <p className="text-destructive text-xs">
-              {createSessionErrorMessage}
-            </p>
-          )}
-        </div>
-      ) : (
-        <Button
-          type="button"
-          onClick={() => setIsDialogOpen(true)}
-          className="w-fit gap-2 bg-emerald-600 text-white hover:bg-emerald-700"
-        >
-          <MessageCircleIcon className="size-4" />
-          Link WhatsApp
-        </Button>
+        ) : (
+          <Button
+            type="button"
+            onClick={() => setIsDialogOpen(true)}
+            className="w-fit gap-2 bg-emerald-600 text-white hover:bg-emerald-700"
+          >
+            <MessageCircleIcon className="size-4" />
+            Link WhatsApp
+          </Button>
+        )}
+      </div>
+
+      {createSessionErrorMessage && (
+        <p className="text-destructive text-xs">{createSessionErrorMessage}</p>
       )}
 
       <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

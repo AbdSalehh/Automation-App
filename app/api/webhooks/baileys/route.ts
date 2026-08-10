@@ -36,6 +36,14 @@ interface SharedLocation {
 interface SharedContact {
   displayName: string;
   phoneNumber: string;
+}
+
+interface SharedContacts {
+  contacts: SharedContact[];
+  contactCount: number;
+}
+
+interface LegacySharedContact extends SharedContact {
   contactCount: number;
 }
 
@@ -49,7 +57,11 @@ type InboundMessageType =
   | "location"
   | "contact";
 
-type InboundPayload = InboundMedia | SharedLocation | SharedContact;
+type InboundPayload =
+  | InboundMedia
+  | SharedLocation
+  | SharedContacts
+  | LegacySharedContact;
 
 interface BaileysWebhookPayload {
   sessionId?: string;

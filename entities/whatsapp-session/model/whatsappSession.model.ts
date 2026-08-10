@@ -109,10 +109,22 @@ export interface SharedLocation {
 export interface SharedContact {
   displayName: string;
   phoneNumber: string;
+}
+
+export interface SharedContacts {
+  contacts: SharedContact[];
   contactCount: number;
 }
 
-export type ChatMessagePayload = InboundMedia | SharedLocation | SharedContact;
+export interface LegacySharedContact extends SharedContact {
+  contactCount: number;
+}
+
+export type ChatMessagePayload =
+  | InboundMedia
+  | SharedLocation
+  | SharedContacts
+  | LegacySharedContact;
 
 export interface ChatMention {
   jid: string;

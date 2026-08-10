@@ -283,33 +283,55 @@ function LocationPreview({ message }: { message: ChatMessage }) {
 }
 
 function ContactPreview({ message }: { message: ChatMessage }) {
-  const contact = message.media;
+  const contactPayload = message.media;
 
-  if (
-    message.messageType !== "contact" ||
-    !contact ||
-    !("displayName" in contact) ||
-    !("contactCount" in contact)
-  ) {
+  if (message.messageType !== "contact" || !contactPayload) {
+    return null;
+  }
+
+  const contacts = getSharedContacts(contactPayload);
+
+  if (contacts.length === 0) {
     return null;
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-xl bg-black/10 px-3 py-2">
+    <div className="flex gap-3 rounded-xl bg-black/10 px-3 py-2">
       <div className="grid size-9 shrink-0 place-items-center rounded-full bg-emerald-500/15">
         <ContactIcon className="size-4" />
       </div>
-      <div className="min-w-0">
-        <p className="font-medium">{contact.displayName}</p>
-        <p className="truncate text-xs opacity-75">
-          {contact.phoneNumber ||
-            (contact.contactCount > 1
-              ? `${contact.contactCount} kontak dibagikan`
-              : "Kontak dibagikan")}
-        </p>
+      <div className="min-w-0 space-y-2">
+        {contacts.map((contact, contactIndex) => (
+          <div
+            key={`${contact.displayName}-${contact.phoneNumber}-${contactIndex}`}
+            className="min-w-0"
+          >
+            <p className="font-medium">{contact.displayName}</p>
+            <p className="truncate text-xs opacity-75">
+              {contact.phoneNumber || "Kontak dibagikan"}
+            </p>
+          </div>
+        ))}
       </div>
     </div>
   );
+}
+
+function getSharedContacts(contactPayload: NonNullable<ChatMessage["media"]>) {
+  if ("contacts" in contactPayload) {
+    return contactPayload.contacts;
+  }
+
+  if ("displayName" in contactPayload && "contactCount" in contactPayload) {
+    return [
+      {
+        displayName: contactPayload.displayName,
+        phoneNumber: contactPayload.phoneNumber,
+      },
+    ];
+  }
+
+  return [];
 }
 
 function ChatMedia({ message }: { message: ChatMessage }) {

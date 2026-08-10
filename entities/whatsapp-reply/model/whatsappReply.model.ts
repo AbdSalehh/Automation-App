@@ -20,10 +20,22 @@ export interface SharedLocation {
 export interface SharedContact {
   displayName: string;
   phoneNumber: string;
+}
+
+export interface SharedContacts {
+  contacts: SharedContact[];
   contactCount: number;
 }
 
-export type InboundPayload = InboundMedia | SharedLocation | SharedContact;
+export interface LegacySharedContact extends SharedContact {
+  contactCount: number;
+}
+
+export type InboundPayload =
+  | InboundMedia
+  | SharedLocation
+  | SharedContacts
+  | LegacySharedContact;
 
 /** Metadata media yang sudah diunggah backend ke Cloudinary. */
 export interface InboundMedia {

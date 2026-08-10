@@ -5,12 +5,14 @@ import { acquireAblyClient, releaseAblyClient } from "@/shared/lib/ablyClient";
 import type { ApiResponse } from "@/shared/api/http";
 import type {
   PendingDuplicateSession,
+  ResolvedWhatsappSession,
   WhatsappSessionStatus,
   SessionUpdatePayload,
 } from "../model/whatsappSession.model";
 
 interface WhatsappSessionState {
   status: WhatsappSessionStatus["status"];
+  sessionId: string | null;
   qrDataUrl: string | null;
   isReady: boolean;
   pendingDuplicate: PendingDuplicateSession | null;
@@ -30,6 +32,7 @@ interface WhatsappSessionState {
 export const useWhatsappSessionStore = create<WhatsappSessionState>(
   (set, get) => ({
     status: "connecting",
+    sessionId: null,
     qrDataUrl: null,
     isReady: false,
     pendingDuplicate: null,
@@ -49,12 +52,13 @@ export const useWhatsappSessionStore = create<WhatsappSessionState>(
 
       try {
         const { data: response } = await apiClient.get<
-          ApiResponse<WhatsappSessionStatus>
+          ApiResponse<ResolvedWhatsappSession>
         >("/whatsapp/session-status");
 
-        const session = response.data;
+        const { sessionId, session } = response.data;
 
         set({
+          sessionId,
           status: session.status,
           qrDataUrl: session.qr,
           isReady: session.isReady,
@@ -74,12 +78,13 @@ export const useWhatsappSessionStore = create<WhatsappSessionState>(
     checkIsSessionActive: async () => {
       try {
         const { data: response } = await apiClient.get<
-          ApiResponse<WhatsappSessionStatus>
+          ApiResponse<ResolvedWhatsappSession>
         >("/whatsapp/session-status");
 
-        const session = response.data;
+        const { sessionId, session } = response.data;
 
         set({
+          sessionId,
           status: session.status,
           qrDataUrl: session.qr,
           isReady: session.isReady,
@@ -93,10 +98,19 @@ export const useWhatsappSessionStore = create<WhatsappSessionState>(
     },
 
     confirmDuplicate: async () => {
+      const { sessionId } = get();
+
+      if (!sessionId) {
+        set({ duplicateErrorMessage: "Sesi WhatsApp belum tersedia" });
+        return;
+      }
+
       set({ isResolvingDuplicate: true, duplicateErrorMessage: null });
 
       try {
-        await apiClient.post("/whatsapp/session-duplicate/confirm");
+        await apiClient.post("/whatsapp/session-duplicate/confirm", {
+          sessionId,
+        });
         await get().pollSessionStatus();
       } catch {
         set({ duplicateErrorMessage: "Gagal mengonfirmasi pemindahan nomor" });
@@ -106,10 +120,19 @@ export const useWhatsappSessionStore = create<WhatsappSessionState>(
     },
 
     cancelDuplicate: async () => {
+      const { sessionId } = get();
+
+      if (!sessionId) {
+        set({ duplicateErrorMessage: "Sesi WhatsApp belum tersedia" });
+        return;
+      }
+
       set({ isResolvingDuplicate: true, duplicateErrorMessage: null });
 
       try {
-        await apiClient.post("/whatsapp/session-duplicate/cancel");
+        await apiClient.post("/whatsapp/session-duplicate/cancel", {
+          sessionId,
+        });
         await get().pollSessionStatus();
       } catch {
         set({ duplicateErrorMessage: "Gagal membatalkan pemindahan nomor" });

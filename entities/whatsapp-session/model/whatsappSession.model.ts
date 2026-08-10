@@ -51,6 +51,11 @@ export interface WhatsappSessionSummary {
   connectedAt: string | null;
 }
 
+export interface ResolvedWhatsappSession {
+  sessionId: string;
+  session: WhatsappSessionStatus;
+}
+
 export type InboundMessageType =
   | "text"
   | "image"
@@ -90,6 +95,12 @@ export interface InboundMedia {
   url: string;
 }
 
+export interface ChatMention {
+  jid: string;
+  number: string;
+  name: string;
+}
+
 /** Satu pesan chat (dipakai untuk `lastMessage` maupun riwayat pesan). */
 export interface ChatMessage {
   id: string;
@@ -101,6 +112,7 @@ export interface ChatMessage {
   messageType: InboundMessageType;
   media: InboundMedia | null;
   replyTo: MessageReply | null;
+  mentions: ChatMention[] | null;
   call: WhatsappCall | null;
   fromMe: boolean;
   sentAt: string;

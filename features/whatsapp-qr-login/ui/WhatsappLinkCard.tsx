@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { useSession } from "next-auth/react";
 import {
   MessageCircleIcon,
   CheckCircle2Icon,
@@ -37,6 +36,7 @@ export function WhatsappLinkCard() {
     isPolling,
     isResolvingDuplicate,
     duplicateErrorMessage,
+    sessionId,
     pollSessionStatus,
     confirmDuplicate,
     cancelDuplicate,
@@ -44,23 +44,23 @@ export function WhatsappLinkCard() {
     unsubscribeSession,
   } = useWhatsappSessionStore();
 
-  const { data: session } = useSession();
-  const sessionId = session?.user?.id ?? "";
-
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  useEffect(() => {
+    void pollSessionStatus();
+  }, [pollSessionStatus]);
 
   useEffect(() => {
     if (!sessionId) {
       return;
     }
 
-    pollSessionStatus();
     subscribeSession(sessionId);
 
     return () => {
       unsubscribeSession();
     };
-  }, [sessionId, pollSessionStatus, subscribeSession, unsubscribeSession]);
+  }, [sessionId, subscribeSession, unsubscribeSession]);
 
   /**
    * Tutup dialog otomatis begitu sesi berhasil tersambung agar pengguna tidak

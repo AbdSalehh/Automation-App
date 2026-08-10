@@ -13,7 +13,7 @@ export async function GET() {
       return forbidden();
     }
 
-    const sessions = await whatsappSessionService.listSessions();
+    const sessions = await whatsappSessionService.listSessions(user.id);
 
     return ok(sessions, "Daftar sesi WhatsApp berhasil diambil");
   });

@@ -1,7 +1,8 @@
 import type { ApiResponse } from "@/shared/api/http";
-import { baileysClient } from "@/shared/api/baileysClient";
+import { baileysClient, createOwnerHeaders } from "@/shared/api/baileysClient";
 import type {
   WhatsappSessionStatus,
+  ResolvedWhatsappSession,
   SendMessageResult,
   WhatsappSessionSummary,
   ConversationSummary,
@@ -28,117 +29,137 @@ interface BaileysListResponse<T, M> {
  * (API route / engine), bukan dari komponen klien.
  */
 export const whatsappSessionService = {
-  /**
-   * Mengambil status sesi WhatsApp milik sessionId tertentu beserta QR code
-   * (data URL) bila sedang menunggu proses scan.
-   */
-  getStatus: async (sessionId: string): Promise<WhatsappSessionStatus> => {
-    const { data: response } = await baileysClient.get<
-      ApiResponse<WhatsappSessionStatus>
-    >(`/sessions/${sessionId}/status`);
+  createSession: async (ownerId: string): Promise<ResolvedWhatsappSession> => {
+    const path = "/sessions";
+
+    const { data: response } = await baileysClient.post<
+      ApiResponse<ResolvedWhatsappSession>
+    >(path, undefined, { headers: createOwnerHeaders(ownerId, "POST", path) });
 
     return response.data;
   },
 
-  confirmDuplicate: async (sessionId: string): Promise<void> => {
-    await baileysClient.post(`/sessions/${sessionId}/duplicate/confirm`);
+  getStatus: async (
+    ownerId: string,
+    sessionId: string,
+  ): Promise<WhatsappSessionStatus> => {
+    const path = `/sessions/${sessionId}/status`;
+
+    const { data: response } = await baileysClient.get<
+      ApiResponse<WhatsappSessionStatus>
+    >(path, { headers: createOwnerHeaders(ownerId, "GET", path) });
+
+    return response.data;
   },
 
-  cancelDuplicate: async (sessionId: string): Promise<void> => {
-    await baileysClient.post(`/sessions/${sessionId}/duplicate/cancel`);
+  confirmDuplicate: async (
+    ownerId: string,
+    sessionId: string,
+  ): Promise<void> => {
+    const path = `/sessions/${sessionId}/duplicate/confirm`;
+
+    await baileysClient.post(path, undefined, {
+      headers: createOwnerHeaders(ownerId, "POST", path),
+    });
   },
 
-  /**
-   * Mengirim pesan teks dari sesi tertentu ke nomor target melalui Baileys.
-   */
+  cancelDuplicate: async (
+    ownerId: string,
+    sessionId: string,
+  ): Promise<void> => {
+    const path = `/sessions/${sessionId}/duplicate/cancel`;
+
+    await baileysClient.post(path, undefined, {
+      headers: createOwnerHeaders(ownerId, "POST", path),
+    });
+  },
+
   sendMessage: async (
+    ownerId: string,
     sessionId: string,
     target: string,
     message: string,
   ): Promise<SendMessageResult> => {
+    const path = `/sessions/${sessionId}/send-message`;
+
     const { data: response } = await baileysClient.post<
       ApiResponse<SendMessageResult>
-    >(`/sessions/${sessionId}/send-message`, {
-      target,
-      message,
+    >(
+      path,
+      { target, message },
+      { headers: createOwnerHeaders(ownerId, "POST", path) },
+    );
+
+    return response.data;
+  },
+
+  logout: async (ownerId: string, sessionId: string): Promise<void> => {
+    const path = `/sessions/${sessionId}`;
+
+    await baileysClient.delete(path, {
+      headers: createOwnerHeaders(ownerId, "DELETE", path),
     });
+  },
+
+  listSessions: async (ownerId: string): Promise<WhatsappSessionSummary[]> => {
+    const path = "/sessions";
+
+    const { data: response } = await baileysClient.get<
+      ApiResponse<WhatsappSessionSummary[]>
+    >(path, { headers: createOwnerHeaders(ownerId, "GET", path) });
 
     return response.data;
   },
 
-  /**
-   * Logout sekaligus menghapus sesi WhatsApp milik sessionId tertentu.
-   */
-  logout: async (sessionId: string): Promise<void> => {
-    await baileysClient.delete(`/sessions/${sessionId}`);
-  },
-
-  /**
-   * Mengambil daftar seluruh sesi WhatsApp yang terdaftar di service Baileys.
-   */
-  listSessions: async (): Promise<WhatsappSessionSummary[]> => {
-    const { data: response } =
-      await baileysClient.get<ApiResponse<WhatsappSessionSummary[]>>(
-        "/sessions",
-      );
-
-    return response.data;
-  },
-
-  /**
-   * Mengambil daftar percakapan (ringkasan chat) milik satu sesi, dengan
-   * pagination `limit`/`offset`.
-   */
   listConversations: async (
+    ownerId: string,
     sessionId: string,
     params: { limit?: number; offset?: number } = {},
   ): Promise<{
     data: ConversationSummary[];
     metadata: ConversationsMetadata;
   }> => {
+    const path = `/sessions/${sessionId}/conversations`;
+
     const { data: response } = await baileysClient.get<
       BaileysListResponse<ConversationSummary, ConversationsMetadata>
-    >(`/sessions/${sessionId}/conversations`, { params });
+    >(path, {
+      params,
+      headers: createOwnerHeaders(ownerId, "GET", path),
+    });
 
-    return {
-      data: response.data,
-      metadata: response.metadata,
-    };
+    return { data: response.data, metadata: response.metadata };
   },
 
-  /**
-   * Mengambil riwayat pesan untuk satu percakapan dengan pagination.
-   */
   listMessages: async (
+    ownerId: string,
     sessionId: string,
     jid: string,
     params: { limit?: number; offset?: number } = {},
   ): Promise<{ data: ChatMessage[]; metadata: MessagesMetadata }> => {
     const encodedJid = encodeURIComponent(jid);
+    const path = `/sessions/${sessionId}/conversations/${encodedJid}/messages`;
 
     const { data: response } = await baileysClient.get<
       BaileysListResponse<ChatMessage, MessagesMetadata>
-    >(`/sessions/${sessionId}/conversations/${encodedJid}/messages`, {
+    >(path, {
       params,
+      headers: createOwnerHeaders(ownerId, "GET", path),
     });
 
-    return {
-      data: response.data,
-      metadata: response.metadata,
-    };
+    return { data: response.data, metadata: response.metadata };
   },
 
-  /**
-   * Membuang cache percakapan (`jid`) tertentu dari RAM backend Baileys.
-   */
   clearConversationCache: async (
+    ownerId: string,
     sessionId: string,
     jid: string,
   ): Promise<void> => {
     const encodedJid = encodeURIComponent(jid);
+    const path = `/sessions/${sessionId}/conversations/${encodedJid}/cache`;
 
-    await baileysClient.delete(
-      `/sessions/${sessionId}/conversations/${encodedJid}/cache`,
-    );
+    await baileysClient.delete(path, {
+      headers: createOwnerHeaders(ownerId, "DELETE", path),
+    });
   },
 };

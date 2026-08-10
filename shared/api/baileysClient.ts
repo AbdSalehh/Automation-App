@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import axios from "axios";
 
 /**
@@ -15,6 +16,33 @@ export const baileysClient = axios.create({
     Authorization: `Bearer ${process.env.BAILEYS_API_KEY}`,
   },
 });
+
+export function createOwnerHeaders(
+  ownerId: string,
+  method: string,
+  path: string,
+): Record<string, string> {
+  const ownerSecret = process.env.BAILEYS_OWNER_SECRET;
+
+  if (!ownerSecret) {
+    throw new Error("BAILEYS_OWNER_SECRET belum dikonfigurasi");
+  }
+
+  const timestamp = Date.now().toString();
+  const signedValue = [ownerId, timestamp, method.toUpperCase(), path].join(
+    ".",
+  );
+  const signature = crypto
+    .createHmac("sha256", ownerSecret)
+    .update(signedValue)
+    .digest("hex");
+
+  return {
+    "X-Owner-Id": ownerId,
+    "X-Owner-Timestamp": timestamp,
+    "X-Owner-Signature": signature,
+  };
+}
 
 baileysClient.interceptors.response.use(
   (response) => {

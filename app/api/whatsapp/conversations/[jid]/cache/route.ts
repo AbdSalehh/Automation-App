@@ -37,7 +37,11 @@ export async function DELETE(request: Request, { params }: RouteParams) {
       return badRequest("JID tidak valid");
     }
 
-    await whatsappSessionService.clearConversationCache(sessionId, jid);
+    await whatsappSessionService.clearConversationCache(
+      user.id,
+      sessionId,
+      jid,
+    );
 
     return ok({ deleted: true }, "Cache percakapan berhasil dihapus");
   });

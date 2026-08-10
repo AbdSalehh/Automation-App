@@ -47,6 +47,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     );
 
     const { data, metadata } = await whatsappSessionService.listMessages(
+      user.id,
       sessionId,
       jid,
       { limit, offset },

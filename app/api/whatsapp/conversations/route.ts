@@ -30,6 +30,7 @@ export async function GET(request: Request) {
     );
 
     const { data, metadata } = await whatsappSessionService.listConversations(
+      user.id,
       sessionId,
       { limit, offset },
     );

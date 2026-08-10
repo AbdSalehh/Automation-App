@@ -139,7 +139,9 @@ function ChatBubble({ message }: { message: ChatMessage }) {
       {message.media?.url && <ChatMedia message={message} />}
 
       {message.message && (
-        <p className="wrap-break-word whitespace-pre-wrap">{message.message}</p>
+        <p className="wrap-break-word whitespace-pre-wrap">
+          {renderMessageWithMentions(message.message, message.mentions)}
+        </p>
       )}
 
       <span
@@ -152,6 +154,33 @@ function ChatBubble({ message }: { message: ChatMessage }) {
       </span>
     </div>
   );
+}
+
+function renderMessageWithMentions(
+  message: string,
+  mentions: ChatMessage["mentions"],
+) {
+  const mentionByToken = new Map(
+    (mentions ?? []).map((mention) => [`@${mention.number}`, mention.name]),
+  );
+  const tokens = message.split(/(@\d+)/g);
+
+  return tokens.map((token, tokenIndex) => {
+    const contactName = mentionByToken.get(token);
+
+    if (!contactName) {
+      return token;
+    }
+
+    return (
+      <span
+        key={`${token}-${tokenIndex}`}
+        className="font-medium text-emerald-500"
+      >
+        @{contactName}
+      </span>
+    );
+  });
 }
 
 function ReplyPreview({ message }: { message: ChatMessage }) {

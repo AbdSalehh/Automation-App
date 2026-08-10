@@ -438,6 +438,7 @@ function upsertConversation(
     messageType: message.messageType,
     media: message.media,
     replyTo: message.replyTo,
+    mentions: message.mentions,
     call: message.call,
     fromMe: message.fromMe,
     sentAt: message.sentAt,
@@ -448,8 +449,8 @@ function upsertConversation(
   const updatedConversation: ConversationSummary = {
     jid: message.jid,
     name:
-      message.name ||
       currentConversation?.name ||
+      message.name ||
       message.sender ||
       message.jid,
     lastMessage,

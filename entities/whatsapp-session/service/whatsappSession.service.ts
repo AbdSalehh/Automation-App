@@ -144,6 +144,14 @@ export const whatsappSessionService = {
     return response.data;
   },
 
+  listAllSessions: async (): Promise<WhatsappSessionSummary[]> => {
+    const { data: response } = await baileysClient.get<
+      ApiResponse<WhatsappSessionSummary[]>
+    >("/admin/sessions");
+
+    return response.data;
+  },
+
   listConversations: async (
     ownerId: string,
     sessionId: string,

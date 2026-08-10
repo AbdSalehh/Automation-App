@@ -20,6 +20,7 @@ const MESSAGES_PAGE_SIZE = 50;
 interface ChatHistoryState {
   sessions: WhatsappSessionSummary[];
   activeSessionId: string | null;
+  activeOwnerId: string | null;
   activePhoneNumber: string | null;
   isLoadingSessions: boolean;
   conversations: ConversationSummary[];
@@ -46,6 +47,7 @@ interface ChatHistoryState {
 export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
   sessions: [],
   activeSessionId: null,
+  activeOwnerId: null,
   activePhoneNumber: null,
   isLoadingSessions: false,
   conversations: [],
@@ -107,6 +109,7 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
     set({
       ...createEmptyChatState(),
       activeSessionId: session.sessionId,
+      activeOwnerId: session.ownerId ?? null,
       activePhoneNumber: session.phoneNumber,
     });
 
@@ -119,9 +122,14 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
 
   fetchConversations: async (options = {}) => {
     const { reset = true } = options;
-    const { activeSessionId, conversations, conversationsMetadata } = get();
+    const {
+      activeSessionId,
+      activeOwnerId,
+      conversations,
+      conversationsMetadata,
+    } = get();
 
-    if (!activeSessionId) {
+    if (!activeSessionId || !activeOwnerId) {
       return;
     }
 
@@ -142,6 +150,7 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
       >("/whatsapp/conversations", {
         params: {
           sessionId: activeSessionId,
+          ownerId: activeOwnerId,
           limit: CONVERSATIONS_PAGE_SIZE,
           offset,
         },
@@ -170,9 +179,9 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
   },
 
   openConversation: async (jid) => {
-    const { activeSessionId } = get();
+    const { activeSessionId, activeOwnerId } = get();
 
-    if (!activeSessionId) {
+    if (!activeSessionId || !activeOwnerId) {
       return;
     }
 
@@ -190,6 +199,7 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
       >(`/whatsapp/conversations/${encodeURIComponent(jid)}/messages`, {
         params: {
           sessionId: activeSessionId,
+          ownerId: activeOwnerId,
           limit: MESSAGES_PAGE_SIZE,
           offset: 0,
         },
@@ -218,6 +228,7 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
   fetchMoreMessages: async () => {
     const {
       activeSessionId,
+      activeOwnerId,
       activeJid,
       messages,
       messagesMetadata,
@@ -242,6 +253,7 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
       >(`/whatsapp/conversations/${encodeURIComponent(activeJid)}/messages`, {
         params: {
           sessionId: activeSessionId,
+          ownerId: activeOwnerId,
           limit: MESSAGES_PAGE_SIZE,
           offset: messagesMetadata.nextOffset,
         },
@@ -400,6 +412,7 @@ function createEmptyChatState() {
 function createEmptySelectionState() {
   return {
     activeSessionId: null,
+    activeOwnerId: null,
     activePhoneNumber: null,
     ...createEmptyChatState(),
   };

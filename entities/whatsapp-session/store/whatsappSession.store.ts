@@ -103,10 +103,9 @@ export const useWhatsappSessionStore = create<WhatsappSessionState>(
       set({ isCreatingSession: true, createSessionErrorMessage: null });
 
       try {
-        const { data: response } =
-          await apiClient.post<ApiResponse<ResolvedWhatsappSession>>(
-            "/whatsapp/sessions",
-          );
+        const { data: response } = await apiClient.post<
+          ApiResponse<ResolvedWhatsappSession>
+        >("/whatsapp/sessions");
         const { sessionId, session } = response.data;
 
         get().unsubscribeSession();

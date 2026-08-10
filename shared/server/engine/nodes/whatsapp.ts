@@ -186,11 +186,11 @@ export const whatsappSendHandler: NodeHandler = async ({
 
   assertWhatsAppCredential(provider, credential);
 
-  const resolvedWhatsappSession =
-    provider === "baileys"
-      ? await whatsappSessionService.resolveSession(context.ownerId)
-      : null;
-  const workflowSessionId = resolvedWhatsappSession?.sessionId ?? "";
+  const workflowSessionId = String(config.sessionId ?? "").trim();
+
+  if (provider === "baileys" && !workflowSessionId) {
+    throw new Error("WhatsApp Baileys: account is required");
+  }
 
   const { items, isCollection } = resolveActionItems(input);
   const countryCode = String(config.countryCode ?? "62");

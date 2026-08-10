@@ -112,10 +112,7 @@ export function WhatsappLinkCard() {
         {hasConnectedSessions ? (
           <Badge variant="success" className="gap-1">
             <CheckCircle2Icon className="size-3" />
-            {
-              sessions.filter((whatsappSession) => whatsappSession.isReady)
-                .length
-            }{" "}
+            {sessions.filter((whatsappSession) => whatsappSession.isReady).length}{" "}
             Connected
           </Badge>
         ) : (
@@ -176,7 +173,9 @@ export function WhatsappLinkCard() {
       </div>
 
       {createSessionErrorMessage && (
-        <p className="text-destructive text-xs">{createSessionErrorMessage}</p>
+        <p className="text-destructive text-xs">
+          {createSessionErrorMessage}
+        </p>
       )}
 
       <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

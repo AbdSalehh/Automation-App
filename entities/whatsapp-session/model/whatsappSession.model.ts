@@ -43,6 +43,7 @@ export interface SendMessageResult {
 
 /** Ringkasan satu sesi WhatsApp dari `GET /sessions`. */
 export interface WhatsappSessionSummary {
+  ownerId?: string;
   sessionId: string;
   status: WhatsappSessionStatus["status"];
   isReady: boolean;

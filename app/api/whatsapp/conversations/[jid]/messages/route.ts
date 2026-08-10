@@ -19,9 +19,10 @@ export async function GET(request: Request, { params }: RouteParams) {
 
     const { searchParams } = new URL(request.url);
     const sessionId = searchParams.get("sessionId")?.trim();
+    const ownerId = searchParams.get("ownerId")?.trim();
 
-    if (!sessionId) {
-      return badRequest("Session ID wajib diisi");
+    if (!sessionId || !ownerId) {
+      return badRequest("Session ID dan owner ID wajib diisi");
     }
 
     const { jid: encodedJid } = await params;
@@ -47,7 +48,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     );
 
     const { data, metadata } = await whatsappSessionService.listMessages(
-      user.id,
+      ownerId,
       sessionId,
       jid,
       { limit, offset },

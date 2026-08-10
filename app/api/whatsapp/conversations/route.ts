@@ -15,9 +15,10 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const sessionId = searchParams.get("sessionId")?.trim();
+    const ownerId = searchParams.get("ownerId")?.trim();
 
-    if (!sessionId) {
-      return badRequest("Session ID wajib diisi");
+    if (!sessionId || !ownerId) {
+      return badRequest("Session ID dan owner ID wajib diisi");
     }
 
     const limit = Math.min(
@@ -30,7 +31,7 @@ export async function GET(request: Request) {
     );
 
     const { data, metadata } = await whatsappSessionService.listConversations(
-      user.id,
+      ownerId,
       sessionId,
       { limit, offset },
     );

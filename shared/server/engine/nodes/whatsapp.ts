@@ -1,5 +1,5 @@
 import { requestExternal } from "@/shared/server/httpClient";
-import { baileysClient } from "@/shared/api/baileysClient";
+import { whatsappSessionService } from "@/entities/whatsapp-session";
 import { resolveTemplate } from "@/shared/server/templating";
 import {
   upsertReminder,
@@ -54,6 +54,7 @@ async function sendMeta(
  * so no per-user credential is required.
  */
 async function sendBaileys(
+  ownerId: string,
   sessionId: string,
   target: string,
   message: string,
@@ -65,26 +66,18 @@ async function sendBaileys(
 
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     try {
-      const { data: response } = await baileysClient.post<{
-        success: boolean;
-        message: string;
-        data: { messageId: string | null } | null;
-      }>(`/sessions/${sessionId}/send-message`, {
-        target: cleanTarget,
+      const response = await whatsappSessionService.sendMessage(
+        ownerId,
+        sessionId,
+        cleanTarget,
         message,
-        simulateTyping: true,
-        typingDelay: 3000,
-      });
+      );
 
-      if (!response.success) {
-        throw new Error(
-          `WhatsApp Baileys: ${response.message ?? "gagal mengirim pesan"}`,
-        );
-      }
-
-      const messageId = response.data?.messageId ?? null;
-
-      return { provider: "baileys", messageId, raw: response };
+      return {
+        provider: "baileys",
+        messageId: response.messageId,
+        raw: response,
+      };
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       const isConnectionError =
@@ -116,13 +109,14 @@ export async function sendWhatsApp(
   target: string,
   message: string,
   countryCode: string,
+  ownerId: string,
   sessionId: string,
 ): Promise<Record<string, unknown>> {
   if (provider === "meta") {
     return sendMeta(credential, target, message);
   }
 
-  return sendBaileys(sessionId, target, message);
+  return sendBaileys(ownerId, sessionId, target, message);
 }
 
 /**
@@ -192,11 +186,11 @@ export const whatsappSendHandler: NodeHandler = async ({
 
   assertWhatsAppCredential(provider, credential);
 
-  /**
-   * Node workflow mengirim lewat sesi WhatsApp pengguna (satu akun per
-   * pengguna). Kunci sesi sama dengan id pemilik workflow.
-   */
-  const workflowSession = context.ownerId;
+  const resolvedWhatsappSession =
+    provider === "baileys"
+      ? await whatsappSessionService.resolveSession(context.ownerId)
+      : null;
+  const workflowSessionId = resolvedWhatsappSession?.sessionId ?? "";
 
   const { items, isCollection } = resolveActionItems(input);
   const countryCode = String(config.countryCode ?? "62");
@@ -277,7 +271,8 @@ export const whatsappSendHandler: NodeHandler = async ({
             target,
             message,
             countryCode,
-            workflowSession,
+            context.ownerId,
+            workflowSessionId,
           );
 
           results.push({
@@ -324,7 +319,8 @@ export const whatsappSendHandler: NodeHandler = async ({
             target,
             reminder.message,
             countryCode,
-            workflowSession,
+            context.ownerId,
+            workflowSessionId,
           );
 
           await clearReminder(reminderScope, rowKey);
@@ -446,7 +442,8 @@ export const whatsappSendHandler: NodeHandler = async ({
         target,
         message,
         countryCode,
-        workflowSession,
+        context.ownerId,
+        workflowSessionId,
       );
 
       results.push({

@@ -29,6 +29,39 @@ interface BaileysListResponse<T, M> {
  * (API route / engine), bukan dari komponen klien.
  */
 export const whatsappSessionService = {
+  resolveSession: async (ownerId: string): Promise<ResolvedWhatsappSession> => {
+    const listPath = "/sessions";
+    const { data: listResponse } = await baileysClient.get<
+      ApiResponse<WhatsappSessionSummary[]>
+    >(listPath, {
+      headers: createOwnerHeaders(ownerId, "GET", listPath),
+    });
+    const existingSession = listResponse.data[0];
+
+    if (!existingSession) {
+      const createPath = "/sessions";
+      const { data: createResponse } = await baileysClient.post<
+        ApiResponse<ResolvedWhatsappSession>
+      >(createPath, undefined, {
+        headers: createOwnerHeaders(ownerId, "POST", createPath),
+      });
+
+      return createResponse.data;
+    }
+
+    const statusPath = `/sessions/${existingSession.sessionId}/status`;
+    const { data: statusResponse } = await baileysClient.get<
+      ApiResponse<WhatsappSessionStatus>
+    >(statusPath, {
+      headers: createOwnerHeaders(ownerId, "GET", statusPath),
+    });
+
+    return {
+      sessionId: existingSession.sessionId,
+      session: statusResponse.data,
+    };
+  },
+
   createSession: async (ownerId: string): Promise<ResolvedWhatsappSession> => {
     const path = "/sessions";
 

@@ -13,23 +13,10 @@ import { whatsappSessionService } from "@/entities/whatsapp-session";
 export async function GET() {
   return handleRoute(async () => {
     const user = await requireUser();
-    const sessions = await whatsappSessionService.listSessions(user.id);
-    const existingSession = sessions[0];
+    const resolvedSession = await whatsappSessionService.resolveSession(
+      user.id,
+    );
 
-    if (existingSession) {
-      const session = await whatsappSessionService.getStatus(
-        user.id,
-        existingSession.sessionId,
-      );
-
-      return ok(
-        { sessionId: existingSession.sessionId, session },
-        "Status sesi berhasil diambil",
-      );
-    }
-
-    const createdSession = await whatsappSessionService.createSession(user.id);
-
-    return ok(createdSession, "Sesi WhatsApp berhasil dibuat");
+    return ok(resolvedSession, "Status sesi berhasil diambil");
   });
 }

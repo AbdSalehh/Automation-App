@@ -6,10 +6,22 @@
  * - `open`       : tersambung & siap mengirim
  * - `close`      : terputus
  */
+export interface PendingDuplicateSession {
+  phoneNumber: string;
+  conflictingSessionIds: string[];
+}
+
+export interface WhatsappSessionUser {
+  phoneNumber?: string | null;
+  name?: string | null;
+}
+
 export interface WhatsappSessionStatus {
   status: "connecting" | "qr" | "open" | "close" | "deleted";
   isReady: boolean;
   qr: string | null;
+  pendingDuplicate: PendingDuplicateSession | null;
+  user: WhatsappSessionUser | null;
 }
 
 /**
@@ -20,10 +32,8 @@ export interface SessionUpdatePayload {
   status: WhatsappSessionStatus["status"];
   isReady: boolean;
   qr: string | null;
-  user: {
-    phoneNumber?: string | null;
-    name?: string | null;
-  } | null;
+  pendingDuplicate: PendingDuplicateSession | null;
+  user: WhatsappSessionUser | null;
 }
 
 /** Hasil pengiriman satu pesan teks lewat Baileys. */

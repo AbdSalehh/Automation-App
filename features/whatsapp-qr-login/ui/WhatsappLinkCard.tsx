@@ -19,6 +19,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogCancel,
+  AlertDialogAction,
 } from "@/shared/ui/alert-dialog";
 
 /**
@@ -32,8 +33,13 @@ export function WhatsappLinkCard() {
     status,
     qrDataUrl,
     isReady,
+    pendingDuplicate,
     isPolling,
+    isResolvingDuplicate,
+    duplicateErrorMessage,
     pollSessionStatus,
+    confirmDuplicate,
+    cancelDuplicate,
     subscribeSession,
     unsubscribeSession,
   } = useWhatsappSessionStore();
@@ -61,11 +67,11 @@ export function WhatsappLinkCard() {
    * perlu menutupnya manual.
    */
   useEffect(() => {
-    if (isReady && isDialogOpen) {
+    if (isReady && !pendingDuplicate && isDialogOpen) {
       const timeout = setTimeout(() => setIsDialogOpen(false), 1500);
       return () => clearTimeout(timeout);
     }
-  }, [isReady, isDialogOpen]);
+  }, [isReady, pendingDuplicate, isDialogOpen]);
 
   return (
     <div className="border-border bg-card flex flex-col gap-4 rounded-xl border p-5">
@@ -124,13 +130,34 @@ export function WhatsappLinkCard() {
             <AlertDialogTitle>Link WhatsApp</AlertDialogTitle>
             <AlertDialogDescription>
               Open WhatsApp on your phone, go to Linked Devices, then scan the
-              code below. If this number is connected to another account, its
-              previous session will be logged out automatically.
+              code below. If this number is already connected elsewhere, you
+              will be asked before its previous session is logged out.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
           <div className="flex flex-col items-center gap-4 py-2">
-            {isReady ? (
+            {pendingDuplicate ? (
+              <div className="border-warning/30 bg-warning/5 flex w-full flex-col gap-3 rounded-xl border p-4">
+                <p className="text-foreground text-sm font-semibold">
+                  Nomor {pendingDuplicate.phoneNumber} sudah terhubung
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  Melanjutkan akan logout sesi lama berikut:
+                </p>
+                <ul className="text-muted-foreground list-inside list-disc text-xs">
+                  {pendingDuplicate.conflictingSessionIds.map(
+                    (conflictingSessionId) => (
+                      <li key={conflictingSessionId}>{conflictingSessionId}</li>
+                    ),
+                  )}
+                </ul>
+                {duplicateErrorMessage && (
+                  <p className="text-destructive text-xs">
+                    {duplicateErrorMessage}
+                  </p>
+                )}
+              </div>
+            ) : isReady ? (
               <div className="flex flex-col items-center gap-3 py-8">
                 <CheckCircle2Icon className="size-16 text-emerald-500" />
                 <p className="text-sm font-medium text-emerald-600">
@@ -165,7 +192,27 @@ export function WhatsappLinkCard() {
           </div>
 
           <AlertDialogFooter>
-            <AlertDialogCancel>Close</AlertDialogCancel>
+            {pendingDuplicate ? (
+              <>
+                <AlertDialogCancel
+                  disabled={isResolvingDuplicate}
+                  onClick={() => void cancelDuplicate()}
+                >
+                  Batalkan
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  disabled={isResolvingDuplicate}
+                  onClick={(mouseEvent) => {
+                    mouseEvent.preventDefault();
+                    void confirmDuplicate();
+                  }}
+                >
+                  {isResolvingDuplicate ? "Memproses..." : "Lanjutkan"}
+                </AlertDialogAction>
+              </>
+            ) : (
+              <AlertDialogCancel>Close</AlertDialogCancel>
+            )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

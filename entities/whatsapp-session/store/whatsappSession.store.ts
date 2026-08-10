@@ -4,6 +4,7 @@ import { apiClient } from "@/shared/api/apiClient";
 import { acquireAblyClient, releaseAblyClient } from "@/shared/lib/ablyClient";
 import type { ApiResponse } from "@/shared/api/http";
 import type {
+  PendingDuplicateSession,
   WhatsappSessionStatus,
   SessionUpdatePayload,
 } from "../model/whatsappSession.model";
@@ -12,11 +13,16 @@ interface WhatsappSessionState {
   status: WhatsappSessionStatus["status"];
   qrDataUrl: string | null;
   isReady: boolean;
+  pendingDuplicate: PendingDuplicateSession | null;
   isPolling: boolean;
+  isResolvingDuplicate: boolean;
+  duplicateErrorMessage: string | null;
   isSubscribed: boolean;
   channel: Ably.RealtimeChannel | null;
   pollSessionStatus: () => Promise<void>;
   checkIsSessionActive: () => Promise<boolean>;
+  confirmDuplicate: () => Promise<void>;
+  cancelDuplicate: () => Promise<void>;
   subscribeSession: (sessionId: string) => void;
   unsubscribeSession: () => void;
 }
@@ -26,7 +32,10 @@ export const useWhatsappSessionStore = create<WhatsappSessionState>(
     status: "connecting",
     qrDataUrl: null,
     isReady: false,
+    pendingDuplicate: null,
     isPolling: false,
+    isResolvingDuplicate: false,
+    duplicateErrorMessage: null,
     isSubscribed: false,
     channel: null,
 
@@ -49,6 +58,8 @@ export const useWhatsappSessionStore = create<WhatsappSessionState>(
           status: session.status,
           qrDataUrl: session.qr,
           isReady: session.isReady,
+          pendingDuplicate: session.pendingDuplicate ?? null,
+          duplicateErrorMessage: null,
         });
       } finally {
         set({ isPolling: false });
@@ -72,11 +83,38 @@ export const useWhatsappSessionStore = create<WhatsappSessionState>(
           status: session.status,
           qrDataUrl: session.qr,
           isReady: session.isReady,
+          pendingDuplicate: session.pendingDuplicate ?? null,
         });
 
         return session.status === "open" && session.isReady;
       } catch {
         return false;
+      }
+    },
+
+    confirmDuplicate: async () => {
+      set({ isResolvingDuplicate: true, duplicateErrorMessage: null });
+
+      try {
+        await apiClient.post("/whatsapp/session-duplicate/confirm");
+        await get().pollSessionStatus();
+      } catch {
+        set({ duplicateErrorMessage: "Gagal mengonfirmasi pemindahan nomor" });
+      } finally {
+        set({ isResolvingDuplicate: false });
+      }
+    },
+
+    cancelDuplicate: async () => {
+      set({ isResolvingDuplicate: true, duplicateErrorMessage: null });
+
+      try {
+        await apiClient.post("/whatsapp/session-duplicate/cancel");
+        await get().pollSessionStatus();
+      } catch {
+        set({ duplicateErrorMessage: "Gagal membatalkan pemindahan nomor" });
+      } finally {
+        set({ isResolvingDuplicate: false });
       }
     },
 
@@ -100,6 +138,8 @@ export const useWhatsappSessionStore = create<WhatsappSessionState>(
           status: update.status,
           qrDataUrl: update.qr,
           isReady: update.isReady,
+          pendingDuplicate: update.pendingDuplicate ?? null,
+          duplicateErrorMessage: null,
         });
       });
 

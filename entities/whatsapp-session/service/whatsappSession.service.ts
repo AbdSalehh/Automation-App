@@ -40,6 +40,14 @@ export const whatsappSessionService = {
     return response.data;
   },
 
+  confirmDuplicate: async (sessionId: string): Promise<void> => {
+    await baileysClient.post(`/sessions/${sessionId}/duplicate/confirm`);
+  },
+
+  cancelDuplicate: async (sessionId: string): Promise<void> => {
+    await baileysClient.post(`/sessions/${sessionId}/duplicate/cancel`);
+  },
+
   /**
    * Mengirim pesan teks dari sesi tertentu ke nomor target melalui Baileys.
    */

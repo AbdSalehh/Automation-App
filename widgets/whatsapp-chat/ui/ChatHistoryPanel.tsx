@@ -198,7 +198,7 @@ function CallPreview({ message }: { message: ChatMessage }) {
         </p>
         <p className="flex items-center gap-1 text-xs opacity-75">
           {call.isGroup && <UsersIcon className="size-3" />}
-          {formatCallStatus(call.status)}
+          {formatCallStatus(call.status, call.durationSeconds)}
           {call.durationSeconds !== null &&
             ` · ${formatCallDuration(call.durationSeconds)}`}
         </p>
@@ -228,7 +228,20 @@ function ChatMedia({ message }: { message: ChatMessage }) {
   }
 
   if (message.messageType === "video") {
-    return <video src={media.url} controls className="max-w-full rounded-lg" />;
+    return (
+      <video controls preload="metadata" className="max-w-full rounded-lg">
+        <source src={media.url} type={media.mimetype || "video/mp4"} />
+        Browser tidak mendukung pemutaran video ini.{" "}
+        <a
+          href={media.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline"
+        >
+          Unduh video
+        </a>
+      </video>
+    );
   }
 
   if (message.messageType === "audio") {
@@ -265,16 +278,20 @@ function formatMessageType(messageType: ChatMessage["messageType"]): string {
 
 function formatCallStatus(
   status: NonNullable<ChatMessage["call"]>["status"],
+  durationSeconds: number | null,
 ): string {
+  if (status === "terminate") {
+    return durationSeconds === null ? "Panggilan selesai" : "Selesai";
+  }
+
   const statusLabels: Record<
-    NonNullable<ChatMessage["call"]>["status"],
+    Exclude<NonNullable<ChatMessage["call"]>["status"], "terminate">,
     string
   > = {
     offer: "Memanggil",
     ringing: "Berdering",
     accept: "Diterima",
-    terminate: "Selesai",
-    reject: "Ditolak",
+    reject: "Panggilan ditolak",
     timeout: "Tidak terjawab",
   };
 

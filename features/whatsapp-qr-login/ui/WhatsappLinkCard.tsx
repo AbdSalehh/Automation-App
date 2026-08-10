@@ -56,11 +56,12 @@ export function WhatsappLinkCard() {
     }
 
     subscribeSession(sessionId);
+    void pollSessionStatus();
 
     return () => {
       unsubscribeSession();
     };
-  }, [sessionId, subscribeSession, unsubscribeSession]);
+  }, [sessionId, pollSessionStatus, subscribeSession, unsubscribeSession]);
 
   /**
    * Tutup dialog otomatis begitu sesi berhasil tersambung agar pengguna tidak

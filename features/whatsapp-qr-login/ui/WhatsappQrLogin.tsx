@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import Image from "next/image";
-import { useSession } from "next-auth/react";
 
 import { useWhatsappSessionStore } from "@/entities/whatsapp-session";
 import { Spinner } from "@/shared/ui";
@@ -19,24 +18,23 @@ export const WhatsappQrLogin = () => {
     qrDataUrl,
     isReady,
     isPolling,
+    sessionId,
     pollSessionStatus,
     subscribeSession,
     unsubscribeSession,
   } = useWhatsappSessionStore();
 
-  const { data: session } = useSession();
-
-  const sessionId = session?.user?.id ?? "";
+  useEffect(() => {
+    void pollSessionStatus();
+  }, [pollSessionStatus]);
 
   useEffect(() => {
     if (!sessionId) {
       return;
     }
 
-    /** Fetch awal sekali untuk state saat halaman dibuka. */
-    pollSessionStatus();
-
     subscribeSession(sessionId);
+    void pollSessionStatus();
 
     return () => {
       unsubscribeSession();
@@ -79,7 +77,7 @@ export const WhatsappQrLogin = () => {
       )}
 
       {!isReady && !qrDataUrl && (
-        <div className="border-border bg-muted/30 flex h-[264px] w-[264px] flex-col items-center justify-center gap-3 rounded-xl border">
+        <div className="border-border bg-muted/30 flex size-66 flex-col items-center justify-center gap-3 rounded-xl border">
           <Spinner className="text-muted-foreground h-8 w-8" />
           <p className="text-muted-foreground text-xs">
             {isPolling ? "Loading session status..." : "Preparing QR code..."}

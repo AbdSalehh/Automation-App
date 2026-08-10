@@ -8,6 +8,8 @@ import {
   PhoneCallIcon,
   VideoIcon,
   UsersIcon,
+  MapPinIcon,
+  ContactIcon,
 } from "lucide-react";
 
 import { useChatHistoryStore } from "@/entities/whatsapp-session";
@@ -136,7 +138,18 @@ function ChatBubble({ message }: { message: ChatMessage }) {
         <CallPreview message={message} />
       )}
 
-      {message.media?.url && <ChatMedia message={message} />}
+      {message.messageType === "location" && (
+        <LocationPreview message={message} />
+      )}
+
+      {message.messageType === "contact" && (
+        <ContactPreview message={message} />
+      )}
+
+      {message.media &&
+        !["location", "contact"].includes(message.messageType) && (
+          <ChatMedia message={message} />
+        )}
 
       {message.message && (
         <p className="wrap-break-word whitespace-pre-wrap">
@@ -236,10 +249,73 @@ function CallPreview({ message }: { message: ChatMessage }) {
   );
 }
 
+function LocationPreview({ message }: { message: ChatMessage }) {
+  const location = message.media;
+
+  if (
+    message.messageType !== "location" ||
+    !location ||
+    !("latitude" in location) ||
+    !("longitude" in location) ||
+    !("url" in location)
+  ) {
+    return null;
+  }
+
+  return (
+    <a
+      href={location.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center gap-3 rounded-xl bg-black/10 px-3 py-2"
+    >
+      <div className="grid size-9 shrink-0 place-items-center rounded-full bg-emerald-500/15">
+        <MapPinIcon className="size-4" />
+      </div>
+      <div className="min-w-0">
+        <p className="font-medium">{location.name || "Lokasi dibagikan"}</p>
+        <p className="truncate text-xs opacity-75">
+          {location.address || `${location.latitude}, ${location.longitude}`}
+        </p>
+      </div>
+    </a>
+  );
+}
+
+function ContactPreview({ message }: { message: ChatMessage }) {
+  const contact = message.media;
+
+  if (
+    message.messageType !== "contact" ||
+    !contact ||
+    !("displayName" in contact) ||
+    !("contactCount" in contact)
+  ) {
+    return null;
+  }
+
+  return (
+    <div className="flex items-center gap-3 rounded-xl bg-black/10 px-3 py-2">
+      <div className="grid size-9 shrink-0 place-items-center rounded-full bg-emerald-500/15">
+        <ContactIcon className="size-4" />
+      </div>
+      <div className="min-w-0">
+        <p className="font-medium">{contact.displayName}</p>
+        <p className="truncate text-xs opacity-75">
+          {contact.phoneNumber ||
+            (contact.contactCount > 1
+              ? `${contact.contactCount} kontak dibagikan`
+              : "Kontak dibagikan")}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function ChatMedia({ message }: { message: ChatMessage }) {
   const media = message.media;
 
-  if (!media) {
+  if (!media || !("mimetype" in media)) {
     return null;
   }
 
@@ -299,6 +375,8 @@ function formatMessageType(messageType: ChatMessage["messageType"]): string {
     audio: "Audio",
     document: "Dokumen",
     sticker: "Stiker",
+    location: "Lokasi",
+    contact: "Kontak",
     call: "Panggilan",
   };
 

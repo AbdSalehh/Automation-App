@@ -8,6 +8,8 @@ import {
   StickerIcon,
   PhoneCallIcon,
   UsersIcon,
+  MapPinIcon,
+  ContactIcon,
 } from "lucide-react";
 
 import { useChatHistoryStore } from "@/entities/whatsapp-session";
@@ -22,6 +24,8 @@ const MEDIA_ICON_BY_TYPE = {
   audio: MicIcon,
   document: FileIcon,
   sticker: StickerIcon,
+  location: MapPinIcon,
+  contact: ContactIcon,
   call: PhoneCallIcon,
 };
 
@@ -133,15 +137,31 @@ function ConversationListItem({
           {MediaIcon && <MediaIcon className="size-3 shrink-0" />}
           <span className="truncate">
             {lastMessage?.message ||
-              (lastMessage?.messageType === "call"
-                ? "Panggilan WhatsApp"
-                : MediaIcon
-                  ? "Media"
-                  : "Belum ada pesan")}
+              getPreviewLabel(lastMessage, Boolean(MediaIcon))}
           </span>
         </div>
       </button>
     </li>
+  );
+}
+
+function getPreviewLabel(
+  lastMessage: ConversationSummary["lastMessage"],
+  hasMediaIcon: boolean,
+): string {
+  if (!lastMessage) {
+    return "Belum ada pesan";
+  }
+
+  const labels = {
+    call: "Panggilan WhatsApp",
+    location: "Lokasi dibagikan",
+    contact: "Kontak dibagikan",
+  };
+
+  return (
+    labels[lastMessage.messageType as keyof typeof labels] ||
+    (hasMediaIcon ? "Media" : "Belum ada pesan")
   );
 }
 

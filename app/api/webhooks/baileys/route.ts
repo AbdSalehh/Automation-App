@@ -25,13 +25,31 @@ interface InboundMedia {
   url: string;
 }
 
+interface SharedLocation {
+  latitude: number;
+  longitude: number;
+  name: string;
+  address: string;
+  url: string;
+}
+
+interface SharedContact {
+  displayName: string;
+  phoneNumber: string;
+  contactCount: number;
+}
+
 type InboundMessageType =
   | "text"
   | "image"
   | "video"
   | "audio"
   | "document"
-  | "sticker";
+  | "sticker"
+  | "location"
+  | "contact";
+
+type InboundPayload = InboundMedia | SharedLocation | SharedContact;
 
 interface BaileysWebhookPayload {
   sessionId?: string;
@@ -39,7 +57,7 @@ interface BaileysWebhookPayload {
   message?: string;
   name?: string;
   messageType?: InboundMessageType;
-  media?: InboundMedia | null;
+  media?: InboundPayload | null;
   sentAt?: string;
   receivedAt?: string;
   /** Token terenkripsi berisi field di atas (format baru). */
@@ -70,13 +88,13 @@ export async function POST(request: Request) {
       }
     }
 
-    const hasMedia = Boolean(source.media?.url);
+    const hasStructuredPayload = Boolean(source.media);
 
-    /**
-     * Pesan media tanpa caption tetap valid: cukup ada `media` walau `message`
-     * kosong. Untuk pesan teks, `message` wajib ada.
-     */
-    if (!source.sessionId || !source.sender || (!source.message && !hasMedia)) {
+    if (
+      !source.sessionId ||
+      !source.sender ||
+      (!source.message && !hasStructuredPayload)
+    ) {
       return badRequest(
         "Incomplete payload: sessionId, sender, and message/media are required",
       );

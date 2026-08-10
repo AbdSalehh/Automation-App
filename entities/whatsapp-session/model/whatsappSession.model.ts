@@ -64,6 +64,8 @@ export type InboundMessageType =
   | "audio"
   | "document"
   | "sticker"
+  | "location"
+  | "contact"
   | "call";
 
 export interface MessageReply {
@@ -96,6 +98,22 @@ export interface InboundMedia {
   url: string;
 }
 
+export interface SharedLocation {
+  latitude: number;
+  longitude: number;
+  name: string;
+  address: string;
+  url: string;
+}
+
+export interface SharedContact {
+  displayName: string;
+  phoneNumber: string;
+  contactCount: number;
+}
+
+export type ChatMessagePayload = InboundMedia | SharedLocation | SharedContact;
+
 export interface ChatMention {
   jid: string;
   number: string;
@@ -111,7 +129,7 @@ export interface ChatMessage {
   message: string;
   name: string;
   messageType: InboundMessageType;
-  media: InboundMedia | null;
+  media: ChatMessagePayload | null;
   replyTo: MessageReply | null;
   mentions: ChatMention[] | null;
   call: WhatsappCall | null;

@@ -2,22 +2,40 @@ import Ably from "ably";
 
 import { handleRoute, ok } from "@/shared/api/http";
 import { requireUser } from "@/shared/auth";
+import { whatsappSessionService } from "@/entities/whatsapp-session";
 
 /**
  * Menerbitkan token request Ably yang dibatasi hanya untuk men-subscribe
- * channel milik user yang sedang login. API key Ably tetap di server.
+ * channel session UUID milik user yang sedang login. API key Ably tetap di
+ * server.
  */
 export async function GET() {
   return handleRoute(async () => {
     const user = await requireUser();
 
+    const ownedSessions = await whatsappSessionService.listSessions(user.id);
+
+    const capability = ownedSessions.reduce<Record<string, ["subscribe"]>>(
+      (accumulator, session) => {
+        accumulator[`session:${session.sessionId}`] = ["subscribe"];
+        return accumulator;
+      },
+      {},
+    );
+
+    /**
+     * Fallback bila user belum punya session tersimpan, agar token tetap
+     * valid dan koneksi Ably tidak gagal saat halaman pertama dibuka.
+     */
+    if (Object.keys(capability).length === 0) {
+      capability[`session:${user.id}`] = ["subscribe"];
+    }
+
     const ablyRest = new Ably.Rest({ key: process.env.ABLY_API_KEY });
 
     const tokenRequest = await ablyRest.auth.createTokenRequest({
       clientId: user.id,
-      capability: {
-        [`session:${user.id}`]: ["subscribe"],
-      },
+      capability,
     });
 
     return ok(tokenRequest, "Token Ably berhasil dibuat");

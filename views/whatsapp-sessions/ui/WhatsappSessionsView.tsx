@@ -106,7 +106,9 @@ export function WhatsappSessionsView() {
 
         <div className="border-border min-h-80 overflow-hidden border-b p-3 lg:border-r lg:border-b-0">
           {activeSessionId ? (
-            <ConversationList />
+            <ScrollArea className="h-80">
+              <ConversationList />
+            </ScrollArea>
           ) : (
             <div className="text-muted-foreground flex h-full items-center justify-center text-center text-sm">
               Pilih sesi WhatsApp.

@@ -7,6 +7,7 @@ import {
   MicIcon,
   StickerIcon,
   PhoneCallIcon,
+  UsersIcon,
 } from "lucide-react";
 
 import { useChatHistoryStore } from "@/entities/whatsapp-session";
@@ -108,9 +109,17 @@ function ConversationListItem({
         )}
       >
         <div className="flex items-center justify-between gap-2">
-          <span className="text-foreground truncate text-sm font-medium">
-            {conversation.name || conversation.jid.split("@")[0]}
-          </span>
+          <div className="flex min-w-0 items-center gap-1.5">
+            <span className="text-foreground truncate text-sm font-medium">
+              {conversation.name || conversation.jid.split("@")[0]}
+            </span>
+            {conversation.jid.endsWith("@g.us") && (
+              <span className="text-muted-foreground flex shrink-0 items-center gap-1 text-[11px]">
+                <UsersIcon className="size-3" />
+                Grup
+              </span>
+            )}
+          </div>
 
           {lastMessage?.sentAt && (
             <span className="text-muted-foreground shrink-0 text-[11px]">

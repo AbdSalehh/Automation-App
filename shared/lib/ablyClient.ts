@@ -42,6 +42,12 @@ export function acquireAblyClient(): Ably.Realtime {
   return sharedClient;
 }
 
+export async function refreshAblyAuthorization(): Promise<void> {
+  if (sharedClient) {
+    await sharedClient.auth.authorize();
+  }
+}
+
 /**
  * Melepas satu referensi koneksi. Saat tidak ada lagi pemakai, koneksi ditutup
  * dan direset agar bisa dibuat ulang ketika dibutuhkan lagi.

@@ -36,8 +36,11 @@ export function WhatsappLinkCard() {
     isPolling,
     isResolvingDuplicate,
     duplicateErrorMessage,
+    isCreatingSession,
+    createSessionErrorMessage,
     sessionId,
     pollSessionStatus,
+    createSession,
     confirmDuplicate,
     cancelDuplicate,
     subscribeSession,
@@ -45,6 +48,14 @@ export function WhatsappLinkCard() {
   } = useWhatsappSessionStore();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const handleAddAccount = async () => {
+    const wasCreated = await createSession();
+
+    if (wasCreated) {
+      setIsDialogOpen(true);
+    }
+  };
 
   useEffect(() => {
     void pollSessionStatus();
@@ -102,17 +113,37 @@ export function WhatsappLinkCard() {
       </div>
 
       {isReady ? (
-        <div className="flex items-center gap-3 rounded-lg border border-emerald-100 bg-emerald-50/60 p-3">
-          <SmartphoneIcon className="size-5 text-emerald-600" />
-          <div className="flex flex-col">
-            <span className="text-sm font-medium text-emerald-700">
-              WhatsApp is linked
-            </span>
-            <span className="text-muted-foreground text-xs">
-              To re-link, remove this device from the Linked Devices menu in the
-              WhatsApp app on your phone.
-            </span>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-3 rounded-lg border border-emerald-100 bg-emerald-50/60 p-3">
+            <SmartphoneIcon className="size-5 text-emerald-600" />
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-emerald-700">
+                WhatsApp is linked
+              </span>
+              <span className="text-muted-foreground text-xs">
+                Add another account without disconnecting this session.
+              </span>
+            </div>
           </div>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isCreatingSession}
+            onClick={() => void handleAddAccount()}
+            className="w-fit gap-2"
+          >
+            {isCreatingSession ? (
+              <Spinner className="size-4" />
+            ) : (
+              <MessageCircleIcon className="size-4" />
+            )}
+            Add WhatsApp Account
+          </Button>
+          {createSessionErrorMessage && (
+            <p className="text-destructive text-xs">
+              {createSessionErrorMessage}
+            </p>
+          )}
         </div>
       ) : (
         <Button

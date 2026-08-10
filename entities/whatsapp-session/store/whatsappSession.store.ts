@@ -1,7 +1,11 @@
 import { create } from "zustand";
 import type * as Ably from "ably";
 import { apiClient } from "@/shared/api/apiClient";
-import { acquireAblyClient, releaseAblyClient } from "@/shared/lib/ablyClient";
+import {
+  acquireAblyClient,
+  refreshAblyAuthorization,
+  releaseAblyClient,
+} from "@/shared/lib/ablyClient";
 import type { ApiResponse } from "@/shared/api/http";
 import type {
   PendingDuplicateSession,
@@ -19,9 +23,12 @@ interface WhatsappSessionState {
   isPolling: boolean;
   isResolvingDuplicate: boolean;
   duplicateErrorMessage: string | null;
+  isCreatingSession: boolean;
+  createSessionErrorMessage: string | null;
   isSubscribed: boolean;
   channel: Ably.RealtimeChannel | null;
   pollSessionStatus: () => Promise<void>;
+  createSession: () => Promise<boolean>;
   checkIsSessionActive: () => Promise<boolean>;
   confirmDuplicate: () => Promise<void>;
   cancelDuplicate: () => Promise<void>;
@@ -39,6 +46,8 @@ export const useWhatsappSessionStore = create<WhatsappSessionState>(
     isPolling: false,
     isResolvingDuplicate: false,
     duplicateErrorMessage: null,
+    isCreatingSession: false,
+    createSessionErrorMessage: null,
     isSubscribed: false,
     channel: null,
 
@@ -67,6 +76,39 @@ export const useWhatsappSessionStore = create<WhatsappSessionState>(
         });
       } finally {
         set({ isPolling: false });
+      }
+    },
+
+    createSession: async () => {
+      set({ isCreatingSession: true, createSessionErrorMessage: null });
+
+      try {
+        const { data: response } =
+          await apiClient.post<ApiResponse<ResolvedWhatsappSession>>(
+            "/whatsapp/sessions",
+          );
+        const { sessionId, session } = response.data;
+
+        get().unsubscribeSession();
+        await refreshAblyAuthorization();
+
+        set({
+          sessionId,
+          status: session.status,
+          qrDataUrl: session.qr,
+          isReady: session.isReady,
+          pendingDuplicate: session.pendingDuplicate ?? null,
+        });
+
+        return true;
+      } catch {
+        set({
+          createSessionErrorMessage: "Gagal menambahkan akun WhatsApp",
+        });
+
+        return false;
+      } finally {
+        set({ isCreatingSession: false });
       }
     },
 

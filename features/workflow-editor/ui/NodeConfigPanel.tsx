@@ -38,6 +38,7 @@ import {
   type NodeKind,
 } from "@/entities/workflow";
 import { useCredentialStore } from "@/entities/credential";
+import { useWhatsappSessionStore } from "@/entities/whatsapp-session";
 import { ConditionBuilder } from "./ConditionBuilder";
 import { SheetWriteTargets, type WriteTarget } from "./SheetWriteTargets";
 import { SpreadsheetPreviewDrawer } from "./SpreadsheetPreviewDrawer";
@@ -449,21 +450,6 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
 
 const CONDITION_NODE_KINDS = new Set(["condition", "filter"]);
 
-/**
- * Maps the chosen WhatsApp provider to the credential type it requires.
- * `baileys` sengaja tidak dipetakan karena memakai konfigurasi env (URL service
- * + API key), bukan kredensial per-user, sehingga pemilih kredensial tidak
- * ditampilkan untuk provider tersebut.
- */
-const PROVIDER_TO_CREDENTIAL_TYPE = {
-  meta: "whatsapp",
-} as const;
-
-const WHATSAPP_PROVIDER_OPTIONS = [
-  { value: "meta", label: "WhatsApp Cloud API (Meta)" },
-  { value: "baileys", label: "Self-host (Baileys)" },
-];
-
 const EMPTY_CONDITION_GROUP: ConditionGroup = { match: "all", rules: [] };
 
 export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
@@ -474,6 +460,9 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
 
   const { credentials, fetchCredentials, credentialsByType } =
     useCredentialStore();
+
+  const { sessions: whatsappSessions, loadSessions: loadWhatsappSessions } =
+    useWhatsappSessionStore();
 
   const {
     fetchColumns,
@@ -520,13 +509,8 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
   };
 
   const isWhatsAppSend = node.data.kind === "whatsapp_send";
-  const selectedProvider = String(node.data.config.provider ?? "whapi");
-
-  /** For Send WhatsApp the credential type follows the provider dropdown. */
   const effectiveCredentialType = isWhatsAppSend
-    ? PROVIDER_TO_CREDENTIAL_TYPE[
-        selectedProvider as keyof typeof PROVIDER_TO_CREDENTIAL_TYPE
-      ]
+    ? undefined
     : nodeTypeDefinition?.credentialType;
   const usesConditionBuilder = CONDITION_NODE_KINDS.has(node.data.kind);
   const isSheetReadNode = node.data.kind === "google_sheets_read";
@@ -610,6 +594,12 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
       fetchCredentials();
     }
   }, [effectiveCredentialType, credentials.length, fetchCredentials]);
+
+  useEffect(() => {
+    if (isWhatsAppSend) {
+      void loadWhatsappSessions();
+    }
+  }, [isWhatsAppSend, loadWhatsappSessions]);
 
   /** Auto-fetch on mount (non-force, skip if already cached). */
   useEffect(() => {
@@ -774,33 +764,43 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
             {isWhatsAppSend && (
               <div>
                 <label className="text-muted-foreground mb-1 block text-xs font-medium">
-                  Provider
+                  Account
                 </label>
 
                 <Select
-                  value={selectedProvider}
-                  onValueChange={(provider) => {
-                    updateNodeData(node.id, {
-                      credentialId: "",
-                      config: { ...node.data.config, provider },
-                    });
-                  }}
+                  value={String(node.data.config.sessionId ?? "")}
+                  onValueChange={(sessionId) =>
+                    updateConfigValuesBatch({ sessionId, provider: "baileys" })
+                  }
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="— Select provider —" />
+                    <SelectValue placeholder="— Select WhatsApp account —" />
                   </SelectTrigger>
 
                   <SelectContent>
-                    {WHATSAPP_PROVIDER_OPTIONS.map((providerOption) => (
-                      <SelectItem
-                        key={providerOption.value}
-                        value={providerOption.value}
-                      >
-                        {providerOption.label}
-                      </SelectItem>
-                    ))}
+                    {whatsappSessions
+                      .filter((whatsappSession) => whatsappSession.isReady)
+                      .map((whatsappSession) => (
+                        <SelectItem
+                          key={whatsappSession.sessionId}
+                          value={whatsappSession.sessionId}
+                        >
+                          {whatsappSession.name || "WhatsApp Account"}
+                          {whatsappSession.phoneNumber
+                            ? ` (${whatsappSession.phoneNumber})`
+                            : ""}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
+
+                {!whatsappSessions.some(
+                  (whatsappSession) => whatsappSession.isReady,
+                ) && (
+                  <p className="mt-1.5 text-xs text-amber-600">
+                    No connected WhatsApp accounts. Link one in Settings.
+                  </p>
+                )}
               </div>
             )}
 

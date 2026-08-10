@@ -379,13 +379,13 @@ export function ScheduleTriggerConfig({
             Interval
           </TabsTrigger>
           <TabsTrigger value="daily" className="flex-1">
-            Harian
+            Daily
           </TabsTrigger>
           <TabsTrigger value="weekly" className="flex-1">
-            Mingguan
+            Weekly
           </TabsTrigger>
           <TabsTrigger value="dates" className="flex-1">
-            Tanggal
+            Dates
           </TabsTrigger>
         </TabsList>
 
@@ -503,14 +503,14 @@ export function ScheduleTriggerConfig({
         <TabsContent value="dates" className="mt-3 flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <Label className="text-muted-foreground text-xs font-semibold">
-              Jadwal Tanggal Spesifik
+              Specific Date Schedules
             </Label>
             <button
               type="button"
               onClick={handleAddNew}
               className="text-primary flex items-center gap-1 text-[11px] font-semibold hover:underline"
             >
-              <Plus className="h-3.5 w-3.5" /> Tambah Jadwal
+              <Plus className="h-3.5 w-3.5" /> Add Schedule
             </button>
           </div>
 
@@ -518,10 +518,10 @@ export function ScheduleTriggerConfig({
             <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50/50 py-6 text-center">
               <CalendarDays className="mb-1.5 h-8 w-8 text-slate-300" />
               <span className="text-xs font-medium text-slate-500">
-                Belum ada jadwal
+                No schedules yet
               </span>
               <span className="text-[10px] text-slate-400">
-                Klik "Tambah Jadwal" untuk memulai
+                Click "Add Schedule" to begin
               </span>
             </div>
           ) : (
@@ -571,8 +571,8 @@ export function ScheduleTriggerConfig({
               <DialogHeader>
                 <DialogTitle>
                   {editingIndex === null
-                    ? "Tambah Jadwal & Waktu"
-                    : "Edit Jadwal & Waktu"}
+                    ? "Add Schedule & Time"
+                    : "Edit Schedule & Time"}
                 </DialogTitle>
               </DialogHeader>
 
@@ -705,7 +705,7 @@ export function ScheduleTriggerConfig({
                     onClick={() => setIsModalOpen(false)}
                     className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
                   >
-                    Batal
+                    Cancel
                   </button>
                   <button
                     type="button"
@@ -713,7 +713,7 @@ export function ScheduleTriggerConfig({
                     className="bg-primary text-primary-foreground hover:bg-primary/95 rounded-lg px-4 py-2 text-xs font-semibold transition-colors disabled:opacity-50"
                     disabled={!modalDate}
                   >
-                    Simpan
+                    Save
                   </button>
                 </div>
               </DialogFooter>
@@ -724,7 +724,7 @@ export function ScheduleTriggerConfig({
 
       <div className="border-border bg-muted/20 rounded-md border px-3 py-2">
         <span className="text-muted-foreground text-[11px]">
-          Cron aktif:{" "}
+          Active cron:{" "}
           <code className="text-foreground font-mono">{currentCron}</code>
         </span>
       </div>

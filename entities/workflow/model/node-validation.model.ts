@@ -29,7 +29,6 @@ const REQUIRED_FIELDS: Partial<Record<NodeKind, FieldRule[]>> = {
   google_sheets_read: [{ key: "spreadsheetId", label: "Spreadsheet ID" }],
   google_sheets_update: [{ key: "spreadsheetId", label: "Spreadsheet ID" }],
   google_sheets_append: [{ key: "spreadsheetId", label: "Spreadsheet ID" }],
-  schedule_trigger: [{ key: "cron", label: "Cron Expression" }],
   telegram_send: [
     { key: "chatId", label: "Chat ID" },
     { key: "text", label: "Message" },
@@ -98,7 +97,45 @@ export function validateNodeData(
     }
   }
 
-  if (CREDENTIAL_REQUIRED[nodeData.kind] && !nodeData.credentialId) {
+  if (nodeData.kind === "schedule_trigger") {
+    const scheduleMode = String(config.scheduleMode ?? "daily");
+    const hasCron = String(config.cron ?? "").trim() !== "";
+    const hasDates =
+      Array.isArray(config.scheduleDates) && config.scheduleDates.length > 0;
+
+    if (scheduleMode === "dates" && !hasDates) {
+      issues.push({
+        field: "scheduleDates",
+        message: "At least one schedule date is required.",
+        severity: "error",
+      });
+    }
+
+    if (scheduleMode !== "dates" && !hasCron) {
+      issues.push({
+        field: "cron",
+        message: "Cron Expression is required.",
+        severity: "error",
+      });
+    }
+  }
+
+  if (
+    nodeData.kind === "whatsapp_send" &&
+    !String(config.sessionId ?? "").trim()
+  ) {
+    issues.push({
+      field: "sessionId",
+      message: "No WhatsApp account selected.",
+      severity: "warning",
+    });
+  }
+
+  if (
+    nodeData.kind !== "whatsapp_send" &&
+    CREDENTIAL_REQUIRED[nodeData.kind] &&
+    !nodeData.credentialId
+  ) {
     issues.push({
       field: "credentialId",
       message: "No credential selected.",

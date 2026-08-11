@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   PhoneCallIcon,
   VideoIcon,
@@ -26,16 +26,14 @@ export function ChatHistoryPanel() {
   } = useChatHistoryStore();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isLoadingPreviousMessagesRef = useRef(false);
+  const initialScrolledJidRef = useRef<string | null>(null);
+  const previousMessageCountRef = useRef(0);
+  const [pendingReplyId, setPendingReplyId] = useState<string | null>(null);
+  const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(
+    null,
+  );
 
-  if (!activeJid) {
-    return (
-      <div className="text-muted-foreground flex h-full items-center justify-center text-sm">
-        Pilih percakapan untuk melihat riwayat pesan.
-      </div>
-    );
-  }
-
-  const handleLoadPreviousMessages = async () => {
+  const handleLoadPreviousMessages = useCallback(async () => {
     const scrollContainer = scrollContainerRef.current;
 
     if (!scrollContainer || isLoadingPreviousMessagesRef.current) {
@@ -54,7 +52,82 @@ export function ChatHistoryPanel() {
         (scrollContainer.scrollHeight - previousScrollHeight);
       isLoadingPreviousMessagesRef.current = false;
     });
-  };
+  }, [fetchMoreMessages]);
+
+  useEffect(() => {
+    if (!activeJid) {
+      initialScrolledJidRef.current = null;
+      previousMessageCountRef.current = 0;
+      return;
+    }
+
+    if (
+      messages.length > 0 &&
+      !isLoadingMessages &&
+      initialScrolledJidRef.current !== activeJid
+    ) {
+      requestAnimationFrame(() => {
+        const scrollContainer = scrollContainerRef.current;
+
+        if (scrollContainer) {
+          scrollContainer.scrollTop = scrollContainer.scrollHeight;
+          initialScrolledJidRef.current = activeJid;
+        }
+      });
+    }
+
+    previousMessageCountRef.current = messages.length;
+  }, [activeJid, isLoadingMessages, messages.length]);
+
+  useEffect(() => {
+    if (!pendingReplyId) {
+      return;
+    }
+
+    const targetMessage = document.getElementById(
+      getMessageElementId(pendingReplyId),
+    );
+
+    if (targetMessage) {
+      targetMessage.scrollIntoView({ behavior: "smooth", block: "center" });
+
+      const highlightFrame = requestAnimationFrame(() => {
+        setHighlightedMessageId(pendingReplyId);
+        setPendingReplyId(null);
+      });
+      const highlightTimer = window.setTimeout(
+        () => setHighlightedMessageId(null),
+        1800,
+      );
+
+      return () => {
+        cancelAnimationFrame(highlightFrame);
+        window.clearTimeout(highlightTimer);
+      };
+    }
+
+    if (messagesMetadata?.hasMore && !isLoadingMessages) {
+      void handleLoadPreviousMessages();
+    } else {
+      const resetFrame = requestAnimationFrame(() => setPendingReplyId(null));
+
+      return () => cancelAnimationFrame(resetFrame);
+    }
+  }, [
+    handleLoadPreviousMessages,
+    isLoadingMessages,
+    messages,
+    messagesMetadata?.hasMore,
+    pendingReplyId,
+  ]);
+
+  if (!activeJid) {
+    return (
+      <div className="text-muted-foreground flex h-full items-center justify-center text-sm">
+        Pilih percakapan untuk melihat riwayat pesan.
+      </div>
+    );
+  }
 
   const handleScroll = () => {
     const scrollContainer = scrollContainerRef.current;
@@ -65,15 +138,15 @@ export function ChatHistoryPanel() {
       messagesMetadata?.hasMore &&
       !isLoadingMessages
     ) {
-      handleLoadPreviousMessages();
+      void handleLoadPreviousMessages();
     }
   };
 
   return (
-    <div className="flex h-full flex-col gap-3 overflow-hidden">
+    <div className="flex h-full min-h-0 flex-col gap-3 overflow-hidden">
       <div
         ref={scrollContainerRef}
-        className="flex flex-1 flex-col gap-2 overflow-y-auto p-2"
+        className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-2"
         onScroll={handleScroll}
       >
         {messagesMetadata?.hasMore && (
@@ -83,7 +156,7 @@ export function ChatHistoryPanel() {
             size="sm"
             className="mx-auto"
             disabled={isLoadingMessages}
-            onClick={handleLoadPreviousMessages}
+            onClick={() => void handleLoadPreviousMessages()}
           >
             {isLoadingMessages ? (
               <Spinner className="size-4" />
@@ -99,7 +172,12 @@ export function ChatHistoryPanel() {
           </p>
         ) : (
           messages.map((message) => (
-            <ChatBubble key={message.id} message={message} />
+            <ChatBubble
+              key={message.id}
+              message={message}
+              isHighlighted={highlightedMessageId === message.id}
+              onReplyClick={setPendingReplyId}
+            />
           ))
         )}
 
@@ -113,14 +191,24 @@ export function ChatHistoryPanel() {
   );
 }
 
-function ChatBubble({ message }: { message: ChatMessage }) {
+function ChatBubble({
+  message,
+  isHighlighted,
+  onReplyClick,
+}: {
+  message: ChatMessage;
+  isHighlighted: boolean;
+  onReplyClick: (messageId: string) => void;
+}) {
   return (
     <div
+      id={getMessageElementId(message.id)}
       className={cn(
-        "flex max-w-[85%] min-w-0 flex-col gap-1 overflow-hidden rounded-2xl px-3 py-2 text-sm shadow-sm sm:max-w-3/4",
+        "flex max-w-[85%] min-w-0 flex-col gap-1 overflow-hidden rounded-2xl px-3 py-2 text-sm shadow-sm transition-all duration-500 sm:max-w-3/4",
         message.fromMe
           ? "self-end rounded-br-sm bg-emerald-600 text-white"
           : "bg-muted text-foreground self-start rounded-bl-sm",
+        isHighlighted && "ring-4 ring-amber-400/70 ring-offset-2",
       )}
     >
       {!message.fromMe && message.jid.endsWith("@g.us") && message.name && (
@@ -129,7 +217,9 @@ function ChatBubble({ message }: { message: ChatMessage }) {
         </span>
       )}
 
-      {message.replyTo && <ReplyPreview message={message} />}
+      {message.replyTo && (
+        <ReplyPreview message={message} onReplyClick={onReplyClick} />
+      )}
 
       {message.messageType === "call" && message.call && (
         <CallPreview message={message} />
@@ -192,7 +282,13 @@ function renderMessageWithMentions(
   });
 }
 
-function ReplyPreview({ message }: { message: ChatMessage }) {
+function ReplyPreview({
+  message,
+  onReplyClick,
+}: {
+  message: ChatMessage;
+  onReplyClick: (messageId: string) => void;
+}) {
   const replyTo = message.replyTo;
 
   if (!replyTo) {
@@ -200,19 +296,22 @@ function ReplyPreview({ message }: { message: ChatMessage }) {
   }
 
   return (
-    <div
+    <button
+      type="button"
+      onClick={() => onReplyClick(replyTo.id)}
       className={cn(
-        "rounded-lg border-l-4 px-3 py-2 text-xs",
+        "min-w-0 rounded-lg border-l-4 px-3 py-2 text-left text-xs transition-colors hover:bg-black/15 focus-visible:ring-2 focus-visible:outline-none",
         message.fromMe
           ? "border-emerald-200 bg-black/10 text-emerald-50"
           : "text-foreground border-emerald-500 bg-black/5",
       )}
+      aria-label="Buka pesan yang dibalas"
     >
       <span className="block font-semibold">Pesan yang dibalas</span>
       <span className="block truncate opacity-80">
         {replyTo.message || formatMessageType(replyTo.messageType)}
       </span>
-    </div>
+    </button>
   );
 }
 
@@ -339,6 +438,10 @@ function formatCallDuration(durationSeconds: number): string {
   const seconds = durationSeconds % 60;
 
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}
+
+function getMessageElementId(messageId: string): string {
+  return `chat-message-${encodeURIComponent(messageId)}`;
 }
 
 function formatTimestamp(isoDate: string): string {

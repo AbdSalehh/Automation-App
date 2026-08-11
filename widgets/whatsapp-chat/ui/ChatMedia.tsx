@@ -1,20 +1,20 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   DownloadIcon,
   ExternalLinkIcon,
   FileIcon,
   MapPinIcon,
-  PauseIcon,
-  PlayIcon,
-  Volume2Icon,
 } from "lucide-react";
 
+import { useLinkPreviewStore } from "@/entities/link-preview";
 import type { ChatMessage } from "@/entities/whatsapp-session";
-import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
+import { LocationMap } from "./LocationMap";
+import { VideoPlayer } from "./VideoPlayer";
+import { VoiceWaveform } from "./VoiceWaveform";
 
 export function ChatMedia({ message }: { message: ChatMessage }) {
   if (message.messageType === "location") {
@@ -45,11 +45,11 @@ export function ChatMedia({ message }: { message: ChatMessage }) {
   }
 
   if (message.messageType === "audio") {
-    return <VoiceNote media={media} />;
+    return <VoiceWaveform audioUrl={media.url} />;
   }
 
   if (message.messageType === "video") {
-    return <VideoPreview media={media} />;
+    return <VideoPlayer mediaUrl={media.url} mimetype={media.mimetype} />;
   }
 
   return <DocumentPreview media={media} />;
@@ -57,6 +57,15 @@ export function ChatMedia({ message }: { message: ChatMessage }) {
 
 export function LinkPreview({ message }: { message: string }) {
   const link = getFirstLink(message);
+  const { metadataByUrl, loadingByUrl, loadPreview } = useLinkPreviewStore();
+  const metadata = link ? metadataByUrl[link] : null;
+  const isLoading = link ? loadingByUrl[link] : false;
+
+  useEffect(() => {
+    if (link) {
+      void loadPreview(link);
+    }
+  }, [link, loadPreview]);
 
   if (!link) {
     return null;
@@ -71,16 +80,34 @@ export function LinkPreview({ message }: { message: string }) {
       rel="noopener noreferrer"
       className="block min-w-0 max-w-full overflow-hidden rounded-xl border border-current/15 bg-black/10 transition-colors hover:bg-black/15"
     >
-      <div className="flex min-h-28 items-end bg-[radial-gradient(circle_at_75%_18%,rgba(255,255,255,0.2),transparent_32%),linear-gradient(135deg,rgba(16,185,129,0.45),rgba(15,23,42,0.8))] p-3">
-        <span className="rounded-full bg-black/25 px-2 py-1 text-[10px] font-semibold tracking-wide uppercase">
-          {url.hostname.replace("www.", "")}
-        </span>
-      </div>
+      {metadata?.imageUrl ? (
+        <Image
+          src={metadata.imageUrl}
+          alt=""
+          width={640}
+          height={320}
+          unoptimized
+          className="h-36 w-full object-cover"
+        />
+      ) : (
+        <div className="flex min-h-24 items-end bg-[radial-gradient(circle_at_75%_18%,rgba(255,255,255,0.2),transparent_32%),linear-gradient(135deg,rgba(16,185,129,0.45),rgba(15,23,42,0.8))] p-3">
+          <span className="rounded-full bg-black/25 px-2 py-1 text-[10px] font-semibold tracking-wide uppercase">
+            {url.hostname.replace("www.", "")}
+          </span>
+        </div>
+      )}
       <div className="space-y-1 px-3 py-2.5">
-        <p className="line-clamp-1 text-sm font-semibold">
-          {getLinkTitle(url)}
+        <p className="line-clamp-2 text-sm font-semibold">
+          {metadata?.title ?? (isLoading ? "Memuat preview..." : url.hostname)}
         </p>
-        <p className="line-clamp-1 text-xs opacity-75">{url.hostname}</p>
+        {metadata?.description && (
+          <p className="line-clamp-2 text-xs opacity-75">
+            {metadata.description}
+          </p>
+        )}
+        <p className="line-clamp-1 text-[11px] opacity-65">
+          {metadata?.siteName ?? url.hostname}
+        </p>
       </div>
     </a>
   );
@@ -105,15 +132,10 @@ function LocationPreview({ message }: { message: ChatMessage }) {
       rel="noopener noreferrer"
       className="block overflow-hidden rounded-xl bg-black/12 transition-transform hover:scale-[1.01]"
     >
-      <div className="relative h-36 overflow-hidden bg-[linear-gradient(30deg,transparent_47%,rgba(255,255,255,0.12)_48%,transparent_49%),linear-gradient(145deg,rgba(30,41,59,0.95),rgba(15,23,42,0.95))]">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(148,163,184,0.28)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.28)_1px,transparent_1px)] bg-size-[34px_34px] opacity-45" />
-        <div className="absolute top-1/2 left-1/2 grid size-12 -translate-x-1/2 -translate-y-full place-items-center rounded-full bg-rose-500 text-white shadow-lg after:absolute after:-bottom-2 after:size-5 after:rotate-45 after:rounded-sm after:bg-rose-500">
-          <MapPinIcon className="relative z-10 size-6" />
-        </div>
-        <span className="absolute bottom-2 left-3 text-sm font-bold tracking-tight text-white/90">
-          MAP
-        </span>
-      </div>
+      <LocationMap
+        latitude={location.latitude}
+        longitude={location.longitude}
+      />
       <div className="flex items-center gap-3 px-3 py-2.5">
         <div className="grid size-9 shrink-0 place-items-center rounded-full bg-emerald-500/20">
           <MapPinIcon className="size-4" />
@@ -132,92 +154,6 @@ function LocationPreview({ message }: { message: ChatMessage }) {
   );
 }
 
-function VoiceNote({
-  media,
-}: {
-  media: Extract<NonNullable<ChatMessage["media"]>, { mimetype: string }>;
-}) {
-  const audioReference = useRef<HTMLAudioElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [duration, setDuration] = useState(0);
-  const [currentTime, setCurrentTime] = useState(0);
-
-  const togglePlayback = async () => {
-    const audio = audioReference.current;
-
-    if (!audio) {
-      return;
-    }
-
-    if (audio.paused) {
-      await audio.play();
-      return;
-    }
-
-    audio.pause();
-  };
-
-  return (
-    <div className="flex min-w-64 items-center gap-3 rounded-xl bg-black/15 p-3">
-      <audio
-        ref={audioReference}
-        src={media.url}
-        preload="metadata"
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
-        onEnded={() => setIsPlaying(false)}
-        onLoadedMetadata={(event) => setDuration(event.currentTarget.duration)}
-        onTimeUpdate={(event) =>
-          setCurrentTime(event.currentTarget.currentTime)
-        }
-      />
-      <Button
-        type="button"
-        size="icon"
-        variant="secondary"
-        className="rounded-full"
-        onClick={() => void togglePlayback()}
-        aria-label={isPlaying ? "Jeda voice note" : "Putar voice note"}
-      >
-        {isPlaying ? <PauseIcon /> : <PlayIcon />}
-      </Button>
-      <div className="min-w-0 flex-1 space-y-1.5">
-        <div className="flex h-7 items-center gap-0.5 overflow-hidden opacity-70">
-          <span className="h-3 w-full rounded-full bg-current mask-[repeating-linear-gradient(90deg,#000_0_2px,transparent_2px_4px)]" />
-        </div>
-        <div className="flex justify-between text-[11px] tabular-nums opacity-75">
-          <span>{formatDuration(currentTime)}</span>
-          <span>{formatDuration(duration)}</span>
-        </div>
-      </div>
-      <Volume2Icon className="size-4 shrink-0 opacity-75" />
-    </div>
-  );
-}
-
-function VideoPreview({
-  media,
-}: {
-  media: Extract<NonNullable<ChatMessage["media"]>, { mimetype: string }>;
-}) {
-  return (
-    <div className="overflow-hidden rounded-xl bg-black/20">
-      <video controls preload="metadata" className="max-h-96 w-full bg-black">
-        <source src={media.url} type={media.mimetype || "video/mp4"} />
-        Browser tidak mendukung pemutaran video ini.
-      </video>
-      <a
-        href={media.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center gap-2 px-3 py-2 text-xs opacity-80 hover:opacity-100"
-      >
-        <DownloadIcon className="size-3.5" />
-        Unduh video
-      </a>
-    </div>
-  );
-}
 
 function ImagePreview({
   media,
@@ -342,14 +278,6 @@ function getFirstLink(message: string): string | null {
   return message.match(/https?:\/\/[^\s<]+/i)?.[0] ?? null;
 }
 
-function getLinkTitle(url: URL): string {
-  if (url.hostname.includes("instagram.com")) {
-    return "Tautan Instagram";
-  }
-
-  return `Tautan dari ${url.hostname.replace("www.", "")}`;
-}
-
 function getTouchDistance(touches: React.TouchList): number {
   return Math.hypot(
     touches[0].clientX - touches[1].clientX,
@@ -357,13 +285,4 @@ function getTouchDistance(touches: React.TouchList): number {
   );
 }
 
-function formatDuration(duration: number): string {
-  if (!Number.isFinite(duration)) {
-    return "0:00";
-  }
 
-  const minutes = Math.floor(duration / 60);
-  const seconds = Math.floor(duration % 60);
-
-  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-}

@@ -69,7 +69,7 @@ export function WhatsappSessionsView() {
         </div>
       )}
 
-      <section className="border-border bg-card hidden min-h-160 overflow-hidden rounded-2xl border lg:grid lg:grid-cols-[240px_300px_1fr]">
+      <section className="border-border bg-card hidden h-160 min-h-0 overflow-hidden rounded-2xl border lg:grid lg:grid-cols-[240px_300px_1fr]">
         <SessionList
           sessions={sessions}
           activeSessionId={activeSessionId}
@@ -108,7 +108,10 @@ export function WhatsappSessionsView() {
       </section>
 
       <Sheet open={isNavigationOpen} onOpenChange={setIsNavigationOpen}>
-        <SheetContent side="left" className="w-[88vw] gap-0 p-0 sm:max-w-sm">
+        <SheetContent
+          side="left"
+          className="h-dvh w-[88vw] max-w-sm gap-0 overflow-hidden p-0"
+        >
           <SheetHeader className="border-border border-b px-5 py-4">
             <SheetTitle>Sesi & Percakapan</SheetTitle>
             <SheetDescription>
@@ -145,8 +148,8 @@ function SessionList({
   onSelectSession: (whatsappSession: WhatsappSessionSummary) => void;
 }) {
   return (
-    <aside className="border-border border-b p-3 lg:border-r lg:border-b-0">
-      <h2 className="text-muted-foreground px-2 pb-3 text-xs font-semibold tracking-wider uppercase">
+    <aside className="border-border flex h-full min-h-0 flex-col overflow-hidden border-b p-3 lg:border-r lg:border-b-0">
+      <h2 className="text-muted-foreground shrink-0 px-2 pb-3 text-xs font-semibold tracking-wider uppercase">
         Sessions
       </h2>
       {isLoadingSessions ? (
@@ -158,7 +161,7 @@ function SessionList({
           Belum ada sesi WhatsApp.
         </p>
       ) : (
-        <ul className="flex flex-col gap-1">
+        <ul className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
           {sessions.map((whatsappSession) => (
             <li key={whatsappSession.sessionId}>
               <Button
@@ -211,7 +214,7 @@ function ConversationPane({
   }
 
   return (
-    <div className="border-border min-h-80 overflow-hidden border-b p-3 lg:border-r lg:border-b-0">
+    <div className="border-border h-full min-h-0 overflow-hidden border-b p-3 lg:border-r lg:border-b-0">
       <ConversationList onConversationOpened={onConversationOpened} />
     </div>
   );
@@ -219,7 +222,7 @@ function ConversationPane({
 
 function ChatPane() {
   return (
-    <div className="min-h-96 overflow-hidden p-3">
+    <div className="h-full min-h-0 overflow-hidden p-3">
       <ChatHistoryPanel />
     </div>
   );

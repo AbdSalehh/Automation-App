@@ -11,9 +11,9 @@ import {
   MapPinIcon,
   ContactIcon,
 } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 import { useChatHistoryStore } from "@/entities/whatsapp-session";
-import { Button } from "@/shared/ui/button";
 import { Spinner } from "@/shared/ui/spinner";
 import { cn } from "@/shared/lib/utils";
 import type { ConversationSummary } from "@/entities/whatsapp-session";
@@ -29,12 +29,12 @@ const MEDIA_ICON_BY_TYPE = {
   call: PhoneCallIcon,
 };
 
-/**
- * Daftar percakapan (ringkasan chat) milik sesi WhatsApp pengguna. Memuat 15
- * percakapan awal, dengan tombol "Muat lebih banyak" untuk paginasi
- * berikutnya berdasarkan `metadata.hasMore`/`offset`.
- */
-export function ConversationList() {
+/** Daftar percakapan (ringkasan chat) milik sesi WhatsApp pengguna. */
+export function ConversationList({
+  onConversationOpened,
+}: {
+  onConversationOpened?: () => void;
+}) {
   const {
     conversations,
     conversationsMetadata,
@@ -43,6 +43,32 @@ export function ConversationList() {
     fetchConversations,
     openConversation,
   } = useChatHistoryStore();
+  const loadMoreReference = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const loadMoreElement = loadMoreReference.current;
+
+    if (
+      !loadMoreElement ||
+      !conversationsMetadata?.hasMore ||
+      isLoadingConversations
+    ) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          void fetchConversations({ reset: false });
+        }
+      },
+      { rootMargin: "160px 0px" },
+    );
+
+    observer.observe(loadMoreElement);
+
+    return () => observer.disconnect();
+  }, [conversationsMetadata?.hasMore, fetchConversations, isLoadingConversations]);
 
   return (
     <div className="flex h-full flex-col gap-2 overflow-hidden">
@@ -58,10 +84,16 @@ export function ConversationList() {
                 key={conversation.jid}
                 conversation={conversation}
                 isActive={conversation.jid === activeJid}
-                onClick={() => openConversation(conversation.jid)}
+                onClick={() => {
+                  void openConversation(conversation.jid).then(onConversationOpened);
+                }}
               />
             ))}
           </ul>
+        )}
+
+        {conversationsMetadata?.hasMore && (
+          <div ref={loadMoreReference} className="h-1" aria-hidden="true" />
         )}
 
         {isLoadingConversations && (
@@ -70,18 +102,6 @@ export function ConversationList() {
           </div>
         )}
       </div>
-
-      {conversationsMetadata?.hasMore && !isLoadingConversations && (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="w-full"
-          onClick={() => fetchConversations({ reset: false })}
-        >
-          Muat lebih banyak
-        </Button>
-      )}
     </div>
   );
 }

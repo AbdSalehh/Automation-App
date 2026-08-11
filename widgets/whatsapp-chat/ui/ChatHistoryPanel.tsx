@@ -1,14 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import { useRef } from "react";
 import {
-  FileIcon,
-  DownloadIcon,
   PhoneCallIcon,
   VideoIcon,
   UsersIcon,
-  MapPinIcon,
   ContactIcon,
 } from "lucide-react";
 
@@ -17,6 +13,7 @@ import { Button } from "@/shared/ui/button";
 import { Spinner } from "@/shared/ui/spinner";
 import { cn } from "@/shared/lib/utils";
 import type { ChatMessage } from "@/entities/whatsapp-session";
+import { ChatMedia, LinkPreview } from "./ChatMedia";
 
 /** Panel riwayat pesan kronologis untuk percakapan yang sedang aktif. */
 export function ChatHistoryPanel() {
@@ -120,7 +117,7 @@ function ChatBubble({ message }: { message: ChatMessage }) {
   return (
     <div
       className={cn(
-        "flex max-w-3/4 flex-col gap-1 rounded-2xl px-3 py-2 text-sm shadow-sm",
+        "flex max-w-[85%] min-w-0 flex-col gap-1 overflow-hidden rounded-2xl px-3 py-2 text-sm shadow-sm sm:max-w-3/4",
         message.fromMe
           ? "self-end rounded-br-sm bg-emerald-600 text-white"
           : "bg-muted text-foreground self-start rounded-bl-sm",
@@ -138,23 +135,22 @@ function ChatBubble({ message }: { message: ChatMessage }) {
         <CallPreview message={message} />
       )}
 
-      {message.messageType === "location" && (
-        <LocationPreview message={message} />
-      )}
-
       {message.messageType === "contact" && (
         <ContactPreview message={message} />
       )}
 
       {message.media &&
-        !["location", "contact"].includes(message.messageType) && (
+        !["contact", "call"].includes(message.messageType) && (
           <ChatMedia message={message} />
         )}
 
       {message.message && (
-        <p className="wrap-break-word whitespace-pre-wrap">
-          {renderMessageWithMentions(message.message, message.mentions)}
-        </p>
+        <>
+          <LinkPreview message={message.message} />
+          <p className="min-w-0 wrap-break-word whitespace-pre-wrap">
+            {renderMessageWithMentions(message.message, message.mentions)}
+          </p>
+        </>
       )}
 
       <span
@@ -248,40 +244,6 @@ function CallPreview({ message }: { message: ChatMessage }) {
     </div>
   );
 }
-
-function LocationPreview({ message }: { message: ChatMessage }) {
-  const location = message.media;
-
-  if (
-    message.messageType !== "location" ||
-    !location ||
-    !("latitude" in location) ||
-    !("longitude" in location) ||
-    !("url" in location)
-  ) {
-    return null;
-  }
-
-  return (
-    <a
-      href={location.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="flex items-center gap-3 rounded-xl bg-black/10 px-3 py-2"
-    >
-      <div className="grid size-9 shrink-0 place-items-center rounded-full bg-emerald-500/15">
-        <MapPinIcon className="size-4" />
-      </div>
-      <div className="min-w-0">
-        <p className="font-medium">{location.name || "Lokasi dibagikan"}</p>
-        <p className="truncate text-xs opacity-75">
-          {location.address || `${location.latitude}, ${location.longitude}`}
-        </p>
-      </div>
-    </a>
-  );
-}
-
 function ContactPreview({ message }: { message: ChatMessage }) {
   const contactPayload = message.media;
 
@@ -332,61 +294,6 @@ function getSharedContacts(contactPayload: NonNullable<ChatMessage["media"]>) {
   }
 
   return [];
-}
-
-function ChatMedia({ message }: { message: ChatMessage }) {
-  const media = message.media;
-
-  if (!media || !("mimetype" in media)) {
-    return null;
-  }
-
-  if (message.messageType === "image" || message.messageType === "sticker") {
-    return (
-      <Image
-        src={media.url}
-        alt={media.fileName || "Gambar"}
-        width={240}
-        height={240}
-        className="rounded-lg object-cover"
-        unoptimized
-      />
-    );
-  }
-
-  if (message.messageType === "video") {
-    return (
-      <video controls preload="metadata" className="max-w-full rounded-lg">
-        <source src={media.url} type={media.mimetype || "video/mp4"} />
-        Browser tidak mendukung pemutaran video ini.{" "}
-        <a
-          href={media.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline"
-        >
-          Unduh video
-        </a>
-      </video>
-    );
-  }
-
-  if (message.messageType === "audio") {
-    return <audio src={media.url} controls className="w-full" />;
-  }
-
-  return (
-    <a
-      href={media.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="flex items-center gap-2 rounded-lg bg-black/10 px-3 py-2 text-xs"
-    >
-      <FileIcon className="size-4 shrink-0" />
-      <span className="truncate">{media.fileName || "Dokumen"}</span>
-      <DownloadIcon className="ml-auto size-3.5 shrink-0" />
-    </a>
-  );
 }
 
 function formatMessageType(messageType: ChatMessage["messageType"]): string {

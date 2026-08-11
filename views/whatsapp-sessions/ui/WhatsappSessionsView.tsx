@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MenuIcon, MessageCircleIcon, SmartphoneIcon } from "lucide-react";
+import {
+  ArrowLeftIcon,
+  MenuIcon,
+  MessageCircleIcon,
+  SmartphoneIcon,
+  XIcon,
+} from "lucide-react";
 
 import {
   useChatHistoryStore,
@@ -11,13 +17,6 @@ import { ConversationList } from "@/widgets/whatsapp-chat/ui/ConversationList";
 import { ChatHistoryPanel } from "@/widgets/whatsapp-chat/ui/ChatHistoryPanel";
 import { Badge } from "@/shared/ui/Badge";
 import { Button } from "@/shared/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/shared/ui/sheet";
 import { Spinner } from "@/shared/ui/spinner";
 import { cn } from "@/shared/lib/utils";
 
@@ -33,6 +32,9 @@ export function WhatsappSessionsView() {
     reset,
   } = useChatHistoryStore();
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
+  const [mobileNavigationStep, setMobileNavigationStep] = useState<
+    "sessions" | "conversations"
+  >("sessions");
 
   useEffect(() => {
     void fetchSessions();
@@ -40,8 +42,17 @@ export function WhatsappSessionsView() {
     return () => reset();
   }, [fetchSessions, reset]);
 
-  const handleSelectSession = (whatsappSession: WhatsappSessionSummary) => {
-    void selectSession(whatsappSession);
+  const handleSelectSession = async (
+    whatsappSession: WhatsappSessionSummary,
+  ) => {
+    await selectSession(whatsappSession);
+    setMobileNavigationStep("conversations");
+    setIsNavigationOpen(true);
+  };
+
+  const handleOpenNavigation = () => {
+    setMobileNavigationStep(activeSessionId ? "conversations" : "sessions");
+    setIsNavigationOpen(true);
   };
 
   return (
@@ -80,13 +91,13 @@ export function WhatsappSessionsView() {
         <ChatPane />
       </section>
 
-      <section className="border-border bg-card flex min-h-[calc(100dvh-15rem)] flex-1 flex-col overflow-hidden rounded-2xl border lg:hidden">
-        <div className="border-border flex items-center gap-2 border-b p-3">
+      <section className="border-border bg-card relative flex h-[calc(100dvh-10rem)] min-h-128 flex-1 flex-col overflow-hidden rounded-2xl border lg:hidden">
+        <div className="border-border flex shrink-0 items-center gap-2 border-b p-3">
           <Button
             type="button"
             variant="ghost"
             size="icon"
-            onClick={() => setIsNavigationOpen(true)}
+            onClick={handleOpenNavigation}
             aria-label="Buka daftar sesi dan percakapan"
           >
             <MenuIcon />
@@ -97,41 +108,99 @@ export function WhatsappSessionsView() {
             </p>
             <p className="text-muted-foreground truncate text-xs">
               {activeSessionId
-                ? "Pilih percakapan dari menu"
+                ? activeJid
+                  ? "Percakapan aktif"
+                  : "Pilih percakapan"
                 : "Pilih sesi WhatsApp terlebih dahulu"}
             </p>
           </div>
         </div>
-        <div className="min-h-0 flex-1 p-2">
-          <ChatHistoryPanel />
-        </div>
-      </section>
 
-      <Sheet open={isNavigationOpen} onOpenChange={setIsNavigationOpen}>
-        <SheetContent
-          side="left"
-          className="h-dvh w-[88vw] max-w-sm gap-0 overflow-hidden p-0"
+        <div className="min-h-0 flex-1 overflow-hidden p-2">
+          {activeJid ? (
+            <ChatHistoryPanel />
+          ) : (
+            <div className="text-muted-foreground flex h-full items-center justify-center p-6 text-center text-sm">
+              {activeSessionId
+                ? "Pilih percakapan dari sidebar untuk melihat riwayat chat."
+                : "Buka sidebar dan pilih sesi WhatsApp terlebih dahulu."}
+            </div>
+          )}
+        </div>
+
+        <button
+          type="button"
+          aria-label="Tutup sidebar navigasi"
+          onClick={() => setIsNavigationOpen(false)}
+          className={cn(
+            "absolute inset-0 z-20 bg-black/45 transition-opacity duration-300",
+            isNavigationOpen
+              ? "pointer-events-auto opacity-100"
+              : "pointer-events-none opacity-0",
+          )}
+        />
+
+        <aside
+          className={cn(
+            "border-border bg-card absolute inset-y-0 left-0 z-30 flex w-[88%] max-w-sm flex-col overflow-hidden border-r shadow-2xl transition-transform duration-300 ease-out",
+            isNavigationOpen ? "translate-x-0" : "-translate-x-full",
+          )}
+          aria-hidden={!isNavigationOpen}
         >
-          <SheetHeader className="border-border border-b px-5 py-4">
-            <SheetTitle>Sesi & Percakapan</SheetTitle>
-            <SheetDescription>
-              Pilih sesi WhatsApp sebelum membuka percakapan.
-            </SheetDescription>
-          </SheetHeader>
-          <div className="min-h-0 flex-1 overflow-y-auto">
-            <SessionList
-              sessions={sessions}
-              activeSessionId={activeSessionId}
-              isLoadingSessions={isLoadingSessions}
-              onSelectSession={handleSelectSession}
-            />
-            <ConversationPane
-              activeSessionId={activeSessionId}
-              onConversationOpened={() => setIsNavigationOpen(false)}
-            />
+          <div className="border-border flex shrink-0 items-center gap-2 border-b p-3">
+            {mobileNavigationStep === "conversations" && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => setMobileNavigationStep("sessions")}
+                aria-label="Kembali ke daftar sesi"
+              >
+                <ArrowLeftIcon />
+              </Button>
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold">
+                {mobileNavigationStep === "sessions"
+                  ? "Pilih sesi"
+                  : "Pilih percakapan"}
+              </p>
+              <p className="text-muted-foreground truncate text-xs">
+                {mobileNavigationStep === "sessions"
+                  ? "Sesi WhatsApp tersedia"
+                  : "Percakapan dari sesi terpilih"}
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsNavigationOpen(false)}
+              aria-label="Tutup sidebar"
+            >
+              <XIcon />
+            </Button>
           </div>
-        </SheetContent>
-      </Sheet>
+
+          <div className="min-h-0 flex-1 overflow-hidden">
+            {mobileNavigationStep === "sessions" ? (
+              <SessionList
+                sessions={sessions}
+                activeSessionId={activeSessionId}
+                isLoadingSessions={isLoadingSessions}
+                onSelectSession={(whatsappSession) => {
+                  void handleSelectSession(whatsappSession);
+                }}
+              />
+            ) : (
+              <ConversationPane
+                activeSessionId={activeSessionId}
+                onConversationOpened={() => setIsNavigationOpen(false)}
+              />
+            )}
+          </div>
+        </aside>
+      </section>
     </main>
   );
 }

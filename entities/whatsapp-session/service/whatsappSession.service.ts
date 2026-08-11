@@ -9,6 +9,7 @@ import type {
   ConversationsMetadata,
   ChatMessage,
   MessagesMetadata,
+  WhatsappStory,
 } from "../model/whatsappSession.model";
 
 /**
@@ -201,6 +202,30 @@ export const whatsappSessionService = {
 
     await baileysClient.delete(path, {
       headers: createOwnerHeaders(ownerId, "DELETE", path),
+    });
+  },
+
+  listStories: async (
+    ownerId: string,
+    sessionId: string,
+  ): Promise<WhatsappStory[]> => {
+    const path = `/sessions/${sessionId}/stories`;
+    const { data: response } = await baileysClient.get<
+      ApiResponse<WhatsappStory[]>
+    >(path, { headers: createOwnerHeaders(ownerId, "GET", path) });
+
+    return response.data;
+  },
+
+  markStoryViewed: async (
+    ownerId: string,
+    sessionId: string,
+    storyId: string,
+  ): Promise<void> => {
+    const path = `/sessions/${sessionId}/stories/${storyId}/view`;
+
+    await baileysClient.post(path, undefined, {
+      headers: createOwnerHeaders(ownerId, "POST", path),
     });
   },
 };

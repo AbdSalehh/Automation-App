@@ -126,6 +126,27 @@ export type ChatMessagePayload =
   | SharedContacts
   | LegacySharedContact;
 
+export interface WhatsappStory {
+  id: string;
+  whatsappId: string;
+  senderJid: string;
+  senderName: string;
+  messageType: InboundMessageType;
+  message: string;
+  media: ChatMessagePayload | null;
+  fromMe: boolean;
+  sentAt: string;
+  expiresAt: string;
+  viewedAt: string | null;
+}
+
+export interface WhatsappStoryGroup {
+  senderJid: string;
+  senderName: string;
+  stories: WhatsappStory[];
+  hasUnviewed: boolean;
+}
+
 export interface ChatMention {
   jid: string;
   number: string;
@@ -172,3 +193,20 @@ export interface MessagesMetadata extends ConversationsMetadata {
 
 /** Payload event realtime `chat-update`. */
 export type ChatUpdatePayload = ChatMessage;
+
+export const groupWhatsappStories = (
+  stories: WhatsappStory[],
+): WhatsappStoryGroup[] => {
+  const groups = new Map<string, WhatsappStory[]>();
+
+  stories.forEach((story) => {
+    groups.set(story.senderJid, [...(groups.get(story.senderJid) ?? []), story]);
+  });
+
+  return Array.from(groups, ([senderJid, groupedStories]) => ({
+    senderJid,
+    senderName: groupedStories[0]?.senderName || senderJid.split("@")[0],
+    stories: groupedStories,
+    hasUnviewed: groupedStories.some((story) => !story.viewedAt),
+  }));
+};

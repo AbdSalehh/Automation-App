@@ -127,15 +127,9 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
       activeOwnerId,
       conversations,
       conversationsMetadata,
-      isLoadingConversations,
     } = get();
 
-    if (
-      !activeSessionId ||
-      !activeOwnerId ||
-      isLoadingConversations ||
-      (!reset && !conversationsMetadata?.hasMore)
-    ) {
+    if (!activeSessionId || !activeOwnerId) {
       return;
     }
 

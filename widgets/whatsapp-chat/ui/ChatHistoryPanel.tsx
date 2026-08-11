@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 
 import { useChatHistoryStore } from "@/entities/whatsapp-session";
-import { Button } from "@/shared/ui/button";
+import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Spinner } from "@/shared/ui/spinner";
 import { cn } from "@/shared/lib/utils";
 import type { ChatMessage } from "@/entities/whatsapp-session";
@@ -25,9 +25,10 @@ export function ChatHistoryPanel() {
     fetchMoreMessages,
   } = useChatHistoryStore();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const loadPreviousSentinelRef = useRef<HTMLDivElement>(null);
   const isLoadingPreviousMessagesRef = useRef(false);
   const initialScrolledJidRef = useRef<string | null>(null);
-  const previousMessageCountRef = useRef(0);
+  const highlightTimerRef = useRef<number | null>(null);
   const [pendingReplyId, setPendingReplyId] = useState<string | null>(null);
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(
     null,
@@ -55,29 +56,79 @@ export function ChatHistoryPanel() {
   }, [fetchMoreMessages]);
 
   useEffect(() => {
-    if (!activeJid) {
+    const scrollContainer = scrollContainerRef.current;
+
+    if (!activeJid || !scrollContainer) {
       initialScrolledJidRef.current = null;
-      previousMessageCountRef.current = 0;
       return;
     }
 
     if (
-      messages.length > 0 &&
-      !isLoadingMessages &&
-      initialScrolledJidRef.current !== activeJid
+      messages.length === 0 ||
+      isLoadingMessages ||
+      initialScrolledJidRef.current === activeJid
     ) {
-      requestAnimationFrame(() => {
-        const scrollContainer = scrollContainerRef.current;
-
-        if (scrollContainer) {
-          scrollContainer.scrollTop = scrollContainer.scrollHeight;
-          initialScrolledJidRef.current = activeJid;
-        }
-      });
+      return;
     }
 
-    previousMessageCountRef.current = messages.length;
+    const scrollToLatestMessage = () => {
+      scrollContainer.scrollTop = scrollContainer.scrollHeight;
+    };
+    const firstFrame = requestAnimationFrame(() => {
+      const secondFrame = requestAnimationFrame(() => {
+        scrollToLatestMessage();
+        initialScrolledJidRef.current = activeJid;
+      });
+
+      scrollContainer.dataset.initialScrollFrame = String(secondFrame);
+    });
+    const resizeObserver = new ResizeObserver(scrollToLatestMessage);
+
+    resizeObserver.observe(scrollContainer);
+
+    return () => {
+      cancelAnimationFrame(firstFrame);
+
+      const secondFrame = Number(scrollContainer.dataset.initialScrollFrame);
+
+      if (secondFrame) {
+        cancelAnimationFrame(secondFrame);
+      }
+
+      delete scrollContainer.dataset.initialScrollFrame;
+      resizeObserver.disconnect();
+    };
   }, [activeJid, isLoadingMessages, messages.length]);
+
+  useEffect(() => {
+    const scrollContainer = scrollContainerRef.current;
+    const loadPreviousSentinel = loadPreviousSentinelRef.current;
+
+    if (
+      !scrollContainer ||
+      !loadPreviousSentinel ||
+      !messagesMetadata?.hasMore
+    ) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && !isLoadingMessages) {
+          void handleLoadPreviousMessages();
+        }
+      },
+      { root: scrollContainer, rootMargin: "160px 0px 0px" },
+    );
+
+    observer.observe(loadPreviousSentinel);
+
+    return () => observer.disconnect();
+  }, [
+    handleLoadPreviousMessages,
+    isLoadingMessages,
+    messagesMetadata?.hasMore,
+  ]);
 
   useEffect(() => {
     if (!pendingReplyId) {
@@ -88,31 +139,33 @@ export function ChatHistoryPanel() {
       getMessageElementId(pendingReplyId),
     );
 
-    if (targetMessage) {
+    if (!targetMessage) {
+      if (messagesMetadata?.hasMore && !isLoadingMessages) {
+        void handleLoadPreviousMessages();
+      } else if (!messagesMetadata?.hasMore) {
+        requestAnimationFrame(() => setPendingReplyId(null));
+      }
+
+      return;
+    }
+
+    const replyId = pendingReplyId;
+    const highlightFrame = requestAnimationFrame(() => {
       targetMessage.scrollIntoView({ behavior: "smooth", block: "center" });
+      setHighlightedMessageId(replyId);
+      setPendingReplyId(null);
 
-      const highlightFrame = requestAnimationFrame(() => {
-        setHighlightedMessageId(pendingReplyId);
-        setPendingReplyId(null);
-      });
-      const highlightTimer = window.setTimeout(
-        () => setHighlightedMessageId(null),
-        1800,
-      );
+      if (highlightTimerRef.current) {
+        window.clearTimeout(highlightTimerRef.current);
+      }
 
-      return () => {
-        cancelAnimationFrame(highlightFrame);
-        window.clearTimeout(highlightTimer);
-      };
-    }
+      highlightTimerRef.current = window.setTimeout(() => {
+        setHighlightedMessageId(null);
+        highlightTimerRef.current = null;
+      }, 1800);
+    });
 
-    if (messagesMetadata?.hasMore && !isLoadingMessages) {
-      void handleLoadPreviousMessages();
-    } else {
-      const resetFrame = requestAnimationFrame(() => setPendingReplyId(null));
-
-      return () => cancelAnimationFrame(resetFrame);
-    }
+    return () => cancelAnimationFrame(highlightFrame);
   }, [
     handleLoadPreviousMessages,
     isLoadingMessages,
@@ -120,6 +173,14 @@ export function ChatHistoryPanel() {
     messagesMetadata?.hasMore,
     pendingReplyId,
   ]);
+
+  useEffect(() => {
+    return () => {
+      if (highlightTimerRef.current) {
+        window.clearTimeout(highlightTimerRef.current);
+      }
+    };
+  }, []);
 
   if (!activeJid) {
     return (
@@ -129,64 +190,46 @@ export function ChatHistoryPanel() {
     );
   }
 
-  const handleScroll = () => {
-    const scrollContainer = scrollContainerRef.current;
-
-    if (
-      scrollContainer &&
-      scrollContainer.scrollTop < 120 &&
-      messagesMetadata?.hasMore &&
-      !isLoadingMessages
-    ) {
-      void handleLoadPreviousMessages();
-    }
-  };
-
   return (
-    <div className="flex h-full min-h-0 flex-col gap-3 overflow-hidden">
-      <div
-        ref={scrollContainerRef}
-        className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-2"
-        onScroll={handleScroll}
+    <div className="flex h-full max-h-full min-h-0 flex-col overflow-hidden">
+      <ScrollArea
+        className="h-full max-h-full min-h-0 flex-1"
+        viewportRef={scrollContainerRef}
+        viewportProps={{ className: "overscroll-contain" }}
       >
-        {messagesMetadata?.hasMore && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="mx-auto"
-            disabled={isLoadingMessages}
-            onClick={() => void handleLoadPreviousMessages()}
-          >
-            {isLoadingMessages ? (
-              <Spinner className="size-4" />
-            ) : (
-              "Muat pesan sebelumnya"
-            )}
-          </Button>
-        )}
+        <div className="flex min-h-full min-w-0 flex-col gap-2 p-2">
+          {messagesMetadata?.hasMore && (
+            <div
+              ref={loadPreviousSentinelRef}
+              className="flex h-8 shrink-0 items-center justify-center"
+              aria-hidden="true"
+            >
+              {isLoadingMessages && <Spinner className="size-4" />}
+            </div>
+          )}
 
-        {messages.length === 0 && !isLoadingMessages ? (
-          <p className="text-muted-foreground py-8 text-center text-sm">
-            Belum ada pesan tersimpan.
-          </p>
-        ) : (
-          messages.map((message) => (
-            <ChatBubble
-              key={message.id}
-              message={message}
-              isHighlighted={highlightedMessageId === message.id}
-              onReplyClick={setPendingReplyId}
-            />
-          ))
-        )}
+          {messages.length === 0 && !isLoadingMessages ? (
+            <p className="text-muted-foreground py-8 text-center text-sm">
+              Belum ada pesan tersimpan.
+            </p>
+          ) : (
+            messages.map((message) => (
+              <ChatBubble
+                key={message.id}
+                message={message}
+                isHighlighted={highlightedMessageId === message.id}
+                onReplyClick={setPendingReplyId}
+              />
+            ))
+          )}
 
-        {isLoadingMessages && messages.length === 0 && (
-          <div className="flex items-center justify-center py-8">
-            <Spinner className="text-muted-foreground size-6" />
-          </div>
-        )}
-      </div>
+          {isLoadingMessages && messages.length === 0 && (
+            <div className="flex items-center justify-center py-8">
+              <Spinner className="text-muted-foreground size-6" />
+            </div>
+          )}
+        </div>
+      </ScrollArea>
     </div>
   );
 }
@@ -204,53 +247,59 @@ function ChatBubble({
     <div
       id={getMessageElementId(message.id)}
       className={cn(
-        "flex max-w-[85%] min-w-0 flex-col gap-1 overflow-hidden rounded-2xl px-3 py-2 text-sm shadow-sm transition-all duration-500 sm:max-w-3/4",
-        message.fromMe
-          ? "self-end rounded-br-sm bg-emerald-600 text-white"
-          : "bg-muted text-foreground self-start rounded-bl-sm",
-        isHighlighted && "ring-4 ring-amber-400/70 ring-offset-2",
+        "flex w-full min-w-0 transition-colors duration-500",
+        isHighlighted && "bg-amber-400/10",
       )}
     >
-      {!message.fromMe && message.jid.endsWith("@g.us") && message.name && (
-        <span className="font-semibold text-emerald-700 dark:text-emerald-300">
-          {message.name}
-        </span>
-      )}
-
-      {message.replyTo && (
-        <ReplyPreview message={message} onReplyClick={onReplyClick} />
-      )}
-
-      {message.messageType === "call" && message.call && (
-        <CallPreview message={message} />
-      )}
-
-      {message.messageType === "contact" && (
-        <ContactPreview message={message} />
-      )}
-
-      {message.media &&
-        !["contact", "call"].includes(message.messageType) && (
-          <ChatMedia message={message} />
-        )}
-
-      {message.message && (
-        <>
-          <LinkPreview message={message.message} />
-          <p className="min-w-0 wrap-break-word whitespace-pre-wrap">
-            {renderMessageWithMentions(message.message, message.mentions)}
-          </p>
-        </>
-      )}
-
-      <span
+      <div
         className={cn(
-          "self-end text-[10px]",
-          message.fromMe ? "text-emerald-100" : "text-muted-foreground",
+          "flex max-w-[85%] min-w-0 flex-col gap-1 overflow-hidden rounded-2xl px-3 py-2 text-sm shadow-sm sm:max-w-3/4",
+          message.fromMe
+            ? "ml-auto rounded-br-sm bg-emerald-600 text-white"
+            : "bg-muted text-foreground mr-auto rounded-bl-sm",
         )}
       >
-        {formatTimestamp(message.sentAt)}
-      </span>
+        {!message.fromMe && message.jid.endsWith("@g.us") && message.name && (
+          <span className="font-semibold text-emerald-700 dark:text-emerald-300">
+            {message.name}
+          </span>
+        )}
+
+        {message.replyTo && (
+          <ReplyPreview message={message} onReplyClick={onReplyClick} />
+        )}
+
+        {message.messageType === "call" && message.call && (
+          <CallPreview message={message} />
+        )}
+
+        {message.messageType === "contact" && (
+          <ContactPreview message={message} />
+        )}
+
+        {message.media &&
+          !["contact", "call"].includes(message.messageType) && (
+            <ChatMedia message={message} />
+          )}
+
+        {message.message && (
+          <>
+            <LinkPreview message={message.message} />
+            <p className="min-w-0 wrap-break-word whitespace-pre-wrap">
+              {renderMessageWithMentions(message.message, message.mentions)}
+            </p>
+          </>
+        )}
+
+        <span
+          className={cn(
+            "self-end text-[10px]",
+            message.fromMe ? "text-emerald-100" : "text-muted-foreground",
+          )}
+        >
+          {formatTimestamp(message.sentAt)}
+        </span>
+      </div>
     </div>
   );
 }

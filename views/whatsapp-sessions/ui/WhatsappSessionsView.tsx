@@ -17,6 +17,7 @@ import { ConversationList } from "@/widgets/whatsapp-chat/ui/ConversationList";
 import { ChatHistoryPanel } from "@/widgets/whatsapp-chat/ui/ChatHistoryPanel";
 import { Badge } from "@/shared/ui/Badge";
 import { Button } from "@/shared/ui/button";
+import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Spinner } from "@/shared/ui/spinner";
 import { cn } from "@/shared/lib/utils";
 
@@ -80,7 +81,7 @@ export function WhatsappSessionsView() {
         </div>
       )}
 
-      <section className="border-border bg-card hidden h-160 min-h-0 overflow-hidden rounded-2xl border lg:grid lg:grid-cols-[240px_300px_1fr]">
+      <section className="border-border bg-card hidden h-[calc(100dvh-4rem)] max-h-208 min-h-160 overflow-hidden rounded-2xl border lg:grid lg:grid-cols-[240px_300px_minmax(0,1fr)]">
         <SessionList
           sessions={sessions}
           activeSessionId={activeSessionId}
@@ -133,7 +134,7 @@ export function WhatsappSessionsView() {
           aria-label="Tutup sidebar navigasi"
           onClick={() => setIsNavigationOpen(false)}
           className={cn(
-            "absolute inset-0 z-20 bg-black/45 transition-opacity duration-300",
+            "absolute inset-0 z-40 bg-black/45 transition-opacity duration-300",
             isNavigationOpen
               ? "pointer-events-auto opacity-100"
               : "pointer-events-none opacity-0",
@@ -142,7 +143,7 @@ export function WhatsappSessionsView() {
 
         <aside
           className={cn(
-            "border-border bg-card absolute inset-y-0 left-0 z-30 flex w-[88%] max-w-sm flex-col overflow-hidden border-r shadow-2xl transition-transform duration-300 ease-out",
+            "border-border bg-card absolute inset-y-0 left-0 z-50 flex w-[88%] max-w-sm flex-col overflow-hidden border-r shadow-2xl transition-transform duration-300 ease-out",
             isNavigationOpen ? "translate-x-0" : "-translate-x-full",
           )}
           aria-hidden={!isNavigationOpen}
@@ -230,38 +231,41 @@ function SessionList({
           Belum ada sesi WhatsApp.
         </p>
       ) : (
-        <ul className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
-          {sessions.map((whatsappSession) => (
-            <li key={whatsappSession.sessionId}>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => onSelectSession(whatsappSession)}
-                className={cn(
-                  "h-auto w-full justify-start gap-3 rounded-lg p-2.5 text-left",
-                  activeSessionId === whatsappSession.sessionId && "bg-accent",
-                )}
-              >
-                <SmartphoneIcon className="text-muted-foreground size-4 shrink-0" />
-                <span className="min-w-0 flex-1">
-                  <span className="text-foreground block truncate text-sm font-medium">
-                    {whatsappSession.name ||
-                      whatsappSession.phoneNumber ||
-                      whatsappSession.sessionId}
-                  </span>
-                  <span className="text-muted-foreground block truncate text-xs">
-                    {whatsappSession.phoneNumber || whatsappSession.sessionId}
-                  </span>
-                </span>
-                <Badge
-                  variant={whatsappSession.isReady ? "success" : "neutral"}
+        <ScrollArea className="min-h-0 flex-1">
+          <ul className="flex flex-col gap-1">
+            {sessions.map((whatsappSession) => (
+              <li key={whatsappSession.sessionId}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => onSelectSession(whatsappSession)}
+                  className={cn(
+                    "h-auto w-full justify-start gap-3 rounded-lg p-2.5 text-left",
+                    activeSessionId === whatsappSession.sessionId &&
+                      "bg-accent",
+                  )}
                 >
-                  {whatsappSession.status}
-                </Badge>
-              </Button>
-            </li>
-          ))}
-        </ul>
+                  <SmartphoneIcon className="text-muted-foreground size-4 shrink-0" />
+                  <span className="min-w-0 flex-1">
+                    <span className="text-foreground block truncate text-sm font-medium">
+                      {whatsappSession.name ||
+                        whatsappSession.phoneNumber ||
+                        whatsappSession.sessionId}
+                    </span>
+                    <span className="text-muted-foreground block truncate text-xs">
+                      {whatsappSession.phoneNumber || whatsappSession.sessionId}
+                    </span>
+                  </span>
+                  <Badge
+                    variant={whatsappSession.isReady ? "success" : "neutral"}
+                  >
+                    {whatsappSession.status}
+                  </Badge>
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </ScrollArea>
       )}
     </aside>
   );

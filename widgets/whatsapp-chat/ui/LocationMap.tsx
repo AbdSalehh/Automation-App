@@ -61,5 +61,10 @@ export function LocationMap({ latitude, longitude }: LocationMapProps) {
     };
   }, [latitude, longitude]);
 
-  return <div ref={containerReference} className="h-36 w-full bg-slate-800" />;
+  return (
+    <div
+      ref={containerReference}
+      className="relative z-0 h-36 w-full overflow-hidden bg-slate-800 [&_.leaflet-pane]:z-0! [&_.leaflet-control]:z-0!"
+    />
+  );
 }

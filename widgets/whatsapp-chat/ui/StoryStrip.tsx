@@ -3,7 +3,10 @@
 import { useEffect, useState } from "react";
 import { EyeIcon, XIcon } from "lucide-react";
 
-import { useChatHistoryStore, useStoryStore } from "@/entities/whatsapp-session";
+import {
+  useChatHistoryStore,
+  useStoryStore,
+} from "@/entities/whatsapp-session";
 import type { WhatsappStory } from "@/entities/whatsapp-session";
 import { Button } from "@/shared/ui/button";
 import { Spinner } from "@/shared/ui/spinner";
@@ -81,10 +84,23 @@ export function StoryStrip() {
             >
               <XIcon className="size-5" />
             </Button>
-            {activeStory.messageType === "image" && activeStory.media && "url" in activeStory.media ? (
-              <img src={activeStory.media.url} alt={activeStory.message || "Story WhatsApp"} className="max-h-[75vh] w-full object-contain" />
-            ) : activeStory.messageType === "video" && activeStory.media && "url" in activeStory.media ? (
-              <video src={activeStory.media.url} controls autoPlay className="max-h-[75vh] w-full" />
+            {activeStory.messageType === "image" &&
+            activeStory.media &&
+            "url" in activeStory.media ? (
+              <img
+                src={activeStory.media.url}
+                alt={activeStory.message || "Story WhatsApp"}
+                className="max-h-[75vh] w-full object-contain"
+              />
+            ) : activeStory.messageType === "video" &&
+              activeStory.media &&
+              "url" in activeStory.media ? (
+              <video
+                src={activeStory.media.url}
+                controls
+                autoPlay
+                className="max-h-[75vh] w-full"
+              />
             ) : (
               <div className="grid min-h-96 place-items-center bg-linear-to-br from-emerald-700 to-cyan-950 p-10 text-center text-2xl font-semibold">
                 {activeStory.message || "Story WhatsApp"}
@@ -92,7 +108,9 @@ export function StoryStrip() {
             )}
             <footer className="flex items-center justify-between p-4 text-sm">
               <strong>{activeStory.senderName}</strong>
-              <span className="flex items-center gap-1 text-zinc-400"><EyeIcon className="size-4" /> Dilihat di aplikasi</span>
+              <span className="flex items-center gap-1 text-zinc-400">
+                <EyeIcon className="size-4" /> Dilihat di aplikasi
+              </span>
             </footer>
           </section>
         </div>

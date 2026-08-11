@@ -15,6 +15,7 @@ import {
 } from "@/entities/whatsapp-session";
 import { ConversationList } from "@/widgets/whatsapp-chat/ui/ConversationList";
 import { ChatHistoryPanel } from "@/widgets/whatsapp-chat/ui/ChatHistoryPanel";
+import { StoryStrip } from "@/widgets/whatsapp-chat/ui/StoryStrip";
 import { Badge } from "@/shared/ui/Badge";
 import { Button } from "@/shared/ui/button";
 import { ScrollArea } from "@/shared/ui/scroll-area";
@@ -287,8 +288,13 @@ function ConversationPane({
   }
 
   return (
-    <div className="border-border h-full min-h-0 overflow-hidden border-b p-3 lg:border-r lg:border-b-0">
-      <ConversationList onConversationOpened={onConversationOpened} />
+    <div className="border-border flex h-full min-h-0 flex-col overflow-hidden border-b p-3 lg:border-r lg:border-b-0">
+      <div className="border-border shrink-0 border-b pb-3">
+        <StoryStrip />
+      </div>
+      <div className="min-h-0 flex-1 pt-3">
+        <ConversationList onConversationOpened={onConversationOpened} />
+      </div>
     </div>
   );
 }

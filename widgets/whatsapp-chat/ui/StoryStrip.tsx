@@ -1,37 +1,97 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { EyeIcon, XIcon } from "lucide-react";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  EyeIcon,
+  XIcon,
+} from "lucide-react";
 
 import {
   useChatHistoryStore,
   useStoryStore,
 } from "@/entities/whatsapp-session";
-import type { WhatsappStory } from "@/entities/whatsapp-session";
 import { Button } from "@/shared/ui/button";
 import { Spinner } from "@/shared/ui/spinner";
 import { cn } from "@/shared/lib/utils";
+
+interface ActiveStoryPosition {
+  groupIndex: number;
+  storyIndex: number;
+}
+
+const storyTimeFormatter = new Intl.DateTimeFormat("id-ID", {
+  day: "numeric",
+  month: "short",
+  hour: "2-digit",
+  minute: "2-digit",
+});
 
 export function StoryStrip() {
   const { activeSessionId, activeOwnerId } = useChatHistoryStore();
   const { groups, isLoading, errorMessage, fetchStories, markViewed, reset } =
     useStoryStore();
-  const [activeStory, setActiveStory] = useState<WhatsappStory | null>(null);
+  const [activePosition, setActivePosition] =
+    useState<ActiveStoryPosition | null>(null);
+
+  const activeGroup = activePosition
+    ? groups[activePosition.groupIndex]
+    : undefined;
+  const activeStory = activeGroup?.stories[activePosition?.storyIndex ?? -1];
 
   useEffect(() => {
     if (activeSessionId && activeOwnerId) {
-      fetchStories(activeSessionId, activeOwnerId);
+      void fetchStories(activeSessionId, activeOwnerId);
     } else {
       reset();
     }
   }, [activeOwnerId, activeSessionId, fetchStories, reset]);
 
-  const openStory = async (story: WhatsappStory) => {
-    setActiveStory(story);
+  const showStory = async (groupIndex: number, storyIndex: number) => {
+    const story = groups[groupIndex]?.stories[storyIndex];
+
+    if (!story) {
+      return;
+    }
+
+    setActivePosition({ groupIndex, storyIndex });
 
     if (!story.viewedAt && activeSessionId && activeOwnerId) {
       await markViewed(activeSessionId, activeOwnerId, story.id);
     }
+  };
+
+  const openStoryGroup = (groupIndex: number) => {
+    const stories = groups[groupIndex]?.stories ?? [];
+    const firstUnviewedIndex = stories.findIndex((story) => !story.viewedAt);
+    const storyIndex =
+      firstUnviewedIndex >= 0
+        ? firstUnviewedIndex
+        : Math.max(stories.length - 1, 0);
+
+    void showStory(groupIndex, storyIndex);
+  };
+
+  const showPreviousStory = () => {
+    if (!activePosition || activePosition.storyIndex === 0) {
+      return;
+    }
+
+    void showStory(activePosition.groupIndex, activePosition.storyIndex - 1);
+  };
+
+  const showNextStory = () => {
+    if (!activePosition || !activeGroup) {
+      return;
+    }
+
+    if (activePosition.storyIndex === activeGroup.stories.length - 1) {
+      setActivePosition(null);
+      return;
+    }
+
+    void showStory(activePosition.groupIndex, activePosition.storyIndex + 1);
   };
 
   if (isLoading) {
@@ -42,73 +102,143 @@ export function StoryStrip() {
     return <p className="text-destructive text-xs">{errorMessage}</p>;
   }
 
+  if (groups.length === 0) {
+    return null;
+  }
+
   return (
     <>
       <div className="flex gap-3 overflow-x-auto pb-2">
-        {groups.map((group) => {
-          const latestStory = group.stories[group.stories.length - 1];
-
-          return (
-            <button
-              key={group.senderJid}
-              type="button"
-              onClick={() => latestStory && openStory(latestStory)}
-              className="group flex w-16 shrink-0 flex-col items-center gap-1.5"
+        {groups.map((group, groupIndex) => (
+          <Button
+            key={group.senderJid}
+            type="button"
+            variant="ghost"
+            onClick={() => openStoryGroup(groupIndex)}
+            className="group h-auto w-16 shrink-0 flex-col gap-1.5 p-0"
+          >
+            <span
+              className={cn(
+                "grid size-12 place-items-center rounded-full border-2 bg-emerald-500/10 text-sm font-bold",
+                group.hasUnviewed
+                  ? "border-emerald-500 text-emerald-600"
+                  : "border-muted text-muted-foreground",
+              )}
             >
-              <span
-                className={cn(
-                  "grid size-12 place-items-center rounded-full border-2 bg-emerald-500/10 text-sm font-bold",
-                  group.hasUnviewed
-                    ? "border-emerald-500 text-emerald-600"
-                    : "border-muted text-muted-foreground",
-                )}
-              >
-                {group.senderName.slice(0, 2).toUpperCase()}
-              </span>
-              <span className="w-full truncate text-center text-[11px]">
-                {group.senderName}
-              </span>
-            </button>
-          );
-        })}
+              {group.senderName.slice(0, 2).toUpperCase()}
+            </span>
+            <span className="w-full truncate text-center text-[11px]">
+              {group.senderName}
+            </span>
+          </Button>
+        ))}
       </div>
 
-      {activeStory && (
+      {activeStory && activeGroup && activePosition && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/85 p-4">
           <section className="relative w-full max-w-lg overflow-hidden rounded-2xl bg-zinc-950 text-white shadow-2xl">
-            <Button
-              variant="ghost"
-              onClick={() => setActiveStory(null)}
-              className="absolute top-3 right-3 z-10 text-white"
-              aria-label="Tutup story"
-            >
-              <XIcon className="size-5" />
-            </Button>
-            {activeStory.messageType === "image" &&
-            activeStory.media &&
-            "url" in activeStory.media ? (
-              <img
-                src={activeStory.media.url}
-                alt={activeStory.message || "Story WhatsApp"}
-                className="max-h-[75vh] w-full object-contain"
-              />
-            ) : activeStory.messageType === "video" &&
+            <div className="absolute inset-x-3 top-3 z-20 flex gap-1">
+              {activeGroup.stories.map((story, storyIndex) => (
+                <span
+                  key={story.id}
+                  className={cn(
+                    "h-1 flex-1 rounded-full",
+                    storyIndex <= activePosition.storyIndex
+                      ? "bg-white"
+                      : "bg-white/30",
+                  )}
+                />
+              ))}
+            </div>
+
+            <div className="absolute inset-x-3 top-7 z-20 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold">
+                  {activeStory.senderName}
+                </p>
+                <p className="text-xs text-white/70">
+                  {storyTimeFormatter.format(new Date(activeStory.sentAt))}
+                  {" · "}
+                  {activePosition.storyIndex + 1}/{activeGroup.stories.length}
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setActivePosition(null)}
+                className="shrink-0 text-white hover:bg-white/10 hover:text-white"
+                aria-label="Tutup story"
+              >
+                <XIcon className="size-5" />
+              </Button>
+            </div>
+
+            <div className="relative grid min-h-112 place-items-center pt-18">
+              {activeStory.messageType === "image" &&
               activeStory.media &&
               "url" in activeStory.media ? (
-              <video
-                src={activeStory.media.url}
-                controls
-                autoPlay
-                className="max-h-[75vh] w-full"
-              />
-            ) : (
-              <div className="grid min-h-96 place-items-center bg-linear-to-br from-emerald-700 to-cyan-950 p-10 text-center text-2xl font-semibold">
-                {activeStory.message || "Story WhatsApp"}
-              </div>
-            )}
-            <footer className="flex items-center justify-between p-4 text-sm">
-              <strong>{activeStory.senderName}</strong>
-              <span className="flex items-center gap-1 text-zinc-400">
+                <img
+                  src={activeStory.media.url}
+                  alt={activeStory.message || "Story WhatsApp"}
+                  className="max-h-[70vh] w-full object-contain"
+                />
+              ) : activeStory.messageType === "video" &&
+                activeStory.media &&
+                "url" in activeStory.media ? (
+                <video
+                  key={activeStory.id}
+                  src={activeStory.media.url}
+                  controls
+                  autoPlay
+                  className="max-h-[70vh] w-full"
+                />
+              ) : activeStory.messageType === "audio" &&
+                activeStory.media &&
+                "url" in activeStory.media ? (
+                <div className="flex w-full flex-col items-center gap-6 px-10 py-24">
+                  <div className="grid size-24 place-items-center rounded-full bg-emerald-500/20 text-4xl">
+                    ♪
+                  </div>
+                  <audio
+                    key={activeStory.id}
+                    src={activeStory.media.url}
+                    controls
+                    autoPlay
+                    className="w-full"
+                  />
+                </div>
+              ) : (
+                <div className="grid min-h-96 w-full place-items-center bg-linear-to-br from-emerald-700 to-cyan-950 p-10 text-center text-2xl font-semibold">
+                  {activeStory.message || "Story WhatsApp"}
+                </div>
+              )}
+
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                disabled={activePosition.storyIndex === 0}
+                onClick={showPreviousStory}
+                className="absolute top-1/2 left-2 rounded-full bg-black/35 text-white hover:bg-black/60 hover:text-white disabled:opacity-20"
+                aria-label="Story sebelumnya"
+              >
+                <ChevronLeftIcon className="size-7" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={showNextStory}
+                className="absolute top-1/2 right-2 rounded-full bg-black/35 text-white hover:bg-black/60 hover:text-white"
+                aria-label="Story berikutnya"
+              >
+                <ChevronRightIcon className="size-7" />
+              </Button>
+            </div>
+
+            <footer className="flex items-center justify-between gap-3 p-4 text-sm">
+              <span className="truncate">{activeStory.message}</span>
+              <span className="flex shrink-0 items-center gap-1 text-zinc-400">
                 <EyeIcon className="size-4" /> Dilihat di aplikasi
               </span>
             </footer>

@@ -28,6 +28,7 @@ export function ChatHistoryPanel() {
   const loadPreviousSentinelRef = useRef<HTMLDivElement>(null);
   const isLoadingPreviousMessagesRef = useRef(false);
   const initialScrolledJidRef = useRef<string | null>(null);
+  const previousActiveJidRef = useRef<string | null>(null);
   const highlightTimerRef = useRef<number | null>(null);
   const [pendingReplyId, setPendingReplyId] = useState<string | null>(null);
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(
@@ -58,8 +59,12 @@ export function ChatHistoryPanel() {
   useEffect(() => {
     const scrollContainer = scrollContainerRef.current;
 
-    if (!activeJid || !scrollContainer) {
+    if (previousActiveJidRef.current !== activeJid) {
       initialScrolledJidRef.current = null;
+      previousActiveJidRef.current = activeJid;
+    }
+
+    if (!activeJid || !scrollContainer) {
       return;
     }
 

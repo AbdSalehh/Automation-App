@@ -138,6 +138,8 @@ export interface WhatsappStory {
   sentAt: string;
   expiresAt: string;
   viewedAt: string | null;
+  viewerCount: number;
+  likedBy: string[];
 }
 
 export interface WhatsappStoryGroup {
@@ -208,5 +210,16 @@ export const groupWhatsappStories = (
     senderName: groupedStories[0]?.senderName || senderJid.split("@")[0],
     stories: groupedStories,
     hasUnviewed: groupedStories.some((story) => !story.viewedAt),
-  }));
+    isOwn: groupedStories.some((story) => story.fromMe),
+  })).sort((groupA, groupB) => {
+    if (groupA.isOwn !== groupB.isOwn) {
+      return groupA.isOwn ? -1 : 1;
+    }
+
+    if (groupA.hasUnviewed !== groupB.hasUnviewed) {
+      return groupA.hasUnviewed ? -1 : 1;
+    }
+
+    return 0;
+  });
 };

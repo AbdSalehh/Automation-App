@@ -23,13 +23,7 @@ export async function GET() {
       {},
     );
 
-    /**
-     * Fallback bila user belum punya session tersimpan, agar token tetap
-     * valid dan koneksi Ably tidak gagal saat halaman pertama dibuka.
-     */
-    if (Object.keys(capability).length === 0) {
-      capability[`session:${user.id}`] = ["subscribe"];
-    }
+    capability[`session:${user.id}`] = ["subscribe"];
 
     const ablyRest = new Ably.Rest({ key: process.env.ABLY_API_KEY });
 

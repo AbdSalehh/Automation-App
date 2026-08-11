@@ -93,7 +93,7 @@ export function WhatsappSessionsView() {
         <ChatPane />
       </section>
 
-      <section className="border-border bg-card relative flex h-[calc(100dvh-10rem)] min-h-128 flex-1 flex-col overflow-hidden rounded-2xl border lg:hidden">
+      <section className="border-border bg-card relative flex h-[calc(100dvh-8rem)] max-h-[calc(100dvh-8rem)] min-h-96 flex-col overflow-hidden rounded-2xl border lg:hidden">
         <div className="border-border flex shrink-0 items-center gap-2 border-b p-3">
           <Button
             type="button"

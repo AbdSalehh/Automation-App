@@ -247,7 +247,8 @@ function ChatBubble({
     <div
       id={getMessageElementId(message.id)}
       className={cn(
-        "flex w-full max-w-[80%] self-end transition-colors duration-500",
+        "flex w-full max-w-[80%] transition-colors duration-500",
+        message.fromMe ? "self-end" : "self-start",
         isHighlighted && "bg-amber-400/10",
       )}
     >

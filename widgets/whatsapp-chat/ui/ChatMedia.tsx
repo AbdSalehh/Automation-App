@@ -38,7 +38,7 @@ export function ChatMedia({ message }: { message: ChatMessage }) {
         alt={media.fileName || "Stiker"}
         width={240}
         height={240}
-        className="max-h-72 rounded-lg object-contain"
+        className="max-h-72 max-w-full rounded-lg object-contain"
         unoptimized
       />
     );
@@ -78,7 +78,7 @@ export function LinkPreview({ message }: { message: string }) {
       href={link}
       target="_blank"
       rel="noopener noreferrer"
-      className="block min-w-0 max-w-full overflow-hidden rounded-xl border border-current/15 bg-black/10 transition-colors hover:bg-black/15"
+      className="block max-w-full min-w-0 overflow-hidden rounded-xl border border-current/15 bg-black/10 transition-colors hover:bg-black/15"
     >
       {metadata?.imageUrl ? (
         <Image
@@ -154,7 +154,6 @@ function LocationPreview({ message }: { message: ChatMessage }) {
   );
 }
 
-
 function ImagePreview({
   media,
 }: {
@@ -175,7 +174,7 @@ function ImagePreview({
           alt={media.fileName || "Gambar"}
           width={360}
           height={360}
-          className="max-h-80 rounded-lg object-cover transition-transform hover:scale-[1.02]"
+          className="max-h-80 max-w-full rounded-lg object-cover transition-transform hover:scale-[1.02]"
           unoptimized
         />
       </button>
@@ -284,5 +283,3 @@ function getTouchDistance(touches: React.TouchList): number {
     touches[0].clientY - touches[1].clientY,
   );
 }
-
-

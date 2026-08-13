@@ -37,8 +37,13 @@ export function VideoPlayer({ mediaUrl, mimetype }: VideoPlayerProps) {
   }, []);
 
   return (
-    <div className="overflow-hidden rounded-xl bg-black">
-      <video ref={videoReference} playsInline preload="metadata">
+    <div className="max-w-full overflow-hidden rounded-xl bg-black">
+      <video
+        ref={videoReference}
+        playsInline
+        preload="metadata"
+        className="max-w-full"
+      >
         <source src={mediaUrl} type={mimetype || "video/mp4"} />
         Browser tidak mendukung pemutaran video ini.
       </video>

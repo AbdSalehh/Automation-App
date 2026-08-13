@@ -1,7 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { PhoneCallIcon, VideoIcon, UsersIcon, ContactIcon } from "lucide-react";
+import {
+  PhoneCallIcon,
+  VideoIcon,
+  UsersIcon,
+  ContactIcon,
+} from "lucide-react";
 
 import { useChatHistoryStore } from "@/entities/whatsapp-session";
 import { ScrollArea } from "@/shared/ui/scroll-area";
@@ -26,9 +31,9 @@ export function ChatHistoryPanel() {
   const previousActiveJidRef = useRef<string | null>(null);
   const highlightTimerRef = useRef<number | null>(null);
   const [pendingReplyId, setPendingReplyId] = useState<string | null>(null);
-  const [highlightedMessageId, setHighlightedMessageId] = useState<
-    string | null
-  >(null);
+  const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(
+    null,
+  );
 
   const handleLoadPreviousMessages = useCallback(async () => {
     const scrollContainer = scrollContainerRef.current;
@@ -285,7 +290,7 @@ function ChatBubble({
         {message.message && (
           <>
             <LinkPreview message={message.message} />
-            <p className="min-w-0 wrap-anywhere whitespace-pre-wrap">
+            <p className="min-w-0 whitespace-pre-wrap wrap-anywhere">
               {renderMessageWithMentions(message.message, message.mentions)}
             </p>
           </>
@@ -349,7 +354,7 @@ function ReplyPreview({
       type="button"
       onClick={() => onReplyClick(replyTo.id)}
       className={cn(
-        "min-w-0 rounded-lg border-l-4 px-3 py-2 text-left text-xs transition-colors hover:bg-black/15 focus-visible:ring-2 focus-visible:outline-none",
+        "block w-full min-w-0 rounded-lg border-l-4 px-3 py-2 text-left text-xs transition-colors hover:bg-black/15 focus-visible:ring-2 focus-visible:outline-none",
         message.fromMe
           ? "border-emerald-200 bg-black/10 text-emerald-50"
           : "text-foreground border-emerald-500 bg-black/5",
@@ -357,7 +362,7 @@ function ReplyPreview({
       aria-label="Buka pesan yang dibalas"
     >
       <span className="block font-semibold">Pesan yang dibalas</span>
-      <span className="block truncate opacity-80">
+      <span className="block w-full truncate opacity-80">
         {replyTo.message || formatMessageType(replyTo.messageType)}
       </span>
     </button>

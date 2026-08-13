@@ -247,7 +247,7 @@ function ChatBubble({
     <div
       id={getMessageElementId(message.id)}
       className={cn(
-        "flex w-full max-w-full transition-colors duration-500",
+        "flex w-full max-w-[80%] self-end transition-colors duration-500",
         isHighlighted && "bg-amber-400/10",
       )}
     >
@@ -357,7 +357,7 @@ function ReplyPreview({
       aria-label="Buka pesan yang dibalas"
     >
       <span className="block font-semibold">Pesan yang dibalas</span>
-      <span className="block max-w-125 truncate opacity-80">
+      <span className="block max-w-63.75 truncate opacity-80 md:max-w-125">
         {replyTo.message || formatMessageType(replyTo.messageType)}
       </span>
     </button>

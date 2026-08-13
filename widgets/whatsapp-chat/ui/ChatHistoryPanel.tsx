@@ -247,7 +247,7 @@ function ChatBubble({
     <div
       id={getMessageElementId(message.id)}
       className={cn(
-        "flex w-full max-w-[80%] transition-colors duration-500",
+        "flex w-full max-w-full transition-colors duration-500",
         isHighlighted && "bg-amber-400/10",
       )}
     >

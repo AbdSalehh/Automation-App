@@ -30,10 +30,9 @@ export const useStoryStore = create<StoryState>((set, get) => ({
     set({ isLoading: true, errorMessage: null });
 
     try {
-      const { data: response } = await apiClient.get<ApiResponse<WhatsappStory[]>>(
-        "/whatsapp/stories",
-        { params: { sessionId, ownerId } },
-      );
+      const { data: response } = await apiClient.get<
+        ApiResponse<WhatsappStory[]>
+      >("/whatsapp/stories", { params: { sessionId, ownerId } });
 
       set({ groups: groupWhatsappStories(response.data) });
     } catch {
@@ -48,15 +47,19 @@ export const useStoryStore = create<StoryState>((set, get) => ({
       params: { sessionId, ownerId },
     });
 
-    const stories = get().groups.flatMap((group) =>
-      group.stories.map((story) =>
+    const groups = get().groups.map((group) => ({
+      ...group,
+      stories: group.stories.map((story) =>
         story.id === storyId
           ? { ...story, viewedAt: new Date().toISOString() }
           : story,
       ),
-    );
+      hasUnviewed: group.stories.some(
+        (story) => story.id !== storyId && !story.viewedAt,
+      ),
+    }));
 
-    set({ groups: groupWhatsappStories(stories) });
+    set({ groups });
   },
 
   reset: () => set({ groups: [], isLoading: false, errorMessage: null }),

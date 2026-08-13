@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   ArrowLeftIcon,
+  CircleDashedIcon,
   MenuIcon,
   MessageCircleIcon,
   SmartphoneIcon,
@@ -279,6 +280,8 @@ function ConversationPane({
   activeSessionId: string | null;
   onConversationOpened?: () => void;
 }) {
+  const [isShowingStories, setIsShowingStories] = useState(false);
+
   if (!activeSessionId) {
     return (
       <div className="text-muted-foreground flex min-h-52 items-center justify-center p-5 text-center text-sm">
@@ -290,10 +293,24 @@ function ConversationPane({
   return (
     <div className="border-border flex h-full min-h-0 flex-col overflow-hidden border-b p-3 lg:border-r lg:border-b-0">
       <div className="border-border shrink-0 border-b pb-3">
-        <StoryStrip />
+        <Button
+          type="button"
+          variant={isShowingStories ? "secondary" : "outline"}
+          onClick={() => setIsShowingStories((isShowing) => !isShowing)}
+          className="w-full justify-start gap-2"
+        >
+          <CircleDashedIcon className="size-4" />
+          {isShowingStories ? "Kembali ke percakapan" : "Lihat story"}
+        </Button>
       </div>
       <div className="min-h-0 flex-1 pt-3">
-        <ConversationList onConversationOpened={onConversationOpened} />
+        {isShowingStories ? (
+          <ScrollArea className="h-full">
+            <StoryStrip variant="list" />
+          </ScrollArea>
+        ) : (
+          <ConversationList onConversationOpened={onConversationOpened} />
+        )}
       </div>
     </div>
   );

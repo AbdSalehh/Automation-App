@@ -13,6 +13,7 @@ import {
   useChatHistoryStore,
   useStoryStore,
 } from "@/entities/whatsapp-session";
+import type { WhatsappStory } from "@/entities/whatsapp-session";
 import { Button } from "@/shared/ui/button";
 import { Spinner } from "@/shared/ui/spinner";
 import { cn } from "@/shared/lib/utils";
@@ -29,7 +30,37 @@ const storyTimeFormatter = new Intl.DateTimeFormat("id-ID", {
   minute: "2-digit",
 });
 
-export function StoryStrip() {
+const getStoryThumbnail = (story: WhatsappStory): string | null => {
+  if (
+    (story.messageType === "image" || story.messageType === "video") &&
+    story.media &&
+    "url" in story.media
+  ) {
+    return story.media.url;
+  }
+
+  return null;
+};
+
+const getStoryPreviewText = (story: WhatsappStory): string => {
+  if (story.message) {
+    return story.message;
+  }
+
+  const labelByType: Record<string, string> = {
+    image: "Foto",
+    video: "Video",
+    audio: "Pesan suara",
+  };
+
+  return labelByType[story.messageType] ?? "Story";
+};
+
+export function StoryStrip({
+  variant = "strip",
+}: {
+  variant?: "strip" | "list";
+}) {
   const { activeSessionId, activeOwnerId } = useChatHistoryStore();
   const { groups, isLoading, errorMessage, fetchStories, markViewed, reset } =
     useStoryStore();
@@ -68,19 +99,30 @@ export function StoryStrip() {
   const openStoryGroup = (groupIndex: number) => {
     const stories = groups[groupIndex]?.stories ?? [];
     const firstUnviewedIndex = stories.findIndex((story) => !story.viewedAt);
-    const storyIndex = firstUnviewedIndex >= 0
-      ? firstUnviewedIndex
-      : Math.max(stories.length - 1, 0);
+    const storyIndex =
+      firstUnviewedIndex >= 0
+        ? firstUnviewedIndex
+        : Math.max(stories.length - 1, 0);
 
     void showStory(groupIndex, storyIndex);
   };
 
   const showPreviousStory = () => {
-    if (!activePosition || activePosition.storyIndex === 0) {
+    if (!activePosition) {
       return;
     }
 
-    void showStory(activePosition.groupIndex, activePosition.storyIndex - 1);
+    if (activePosition.storyIndex > 0) {
+      void showStory(activePosition.groupIndex, activePosition.storyIndex - 1);
+      return;
+    }
+
+    const previousGroupIndex = activePosition.groupIndex - 1;
+    const previousGroup = groups[previousGroupIndex];
+
+    if (previousGroup) {
+      void showStory(previousGroupIndex, previousGroup.stories.length - 1);
+    }
   };
 
   const showNextStory = () => {
@@ -88,12 +130,19 @@ export function StoryStrip() {
       return;
     }
 
-    if (activePosition.storyIndex === activeGroup.stories.length - 1) {
-      setActivePosition(null);
+    if (activePosition.storyIndex < activeGroup.stories.length - 1) {
+      void showStory(activePosition.groupIndex, activePosition.storyIndex + 1);
       return;
     }
 
-    void showStory(activePosition.groupIndex, activePosition.storyIndex + 1);
+    const nextGroupIndex = activePosition.groupIndex + 1;
+
+    if (groups[nextGroupIndex]) {
+      void showStory(nextGroupIndex, 0);
+      return;
+    }
+
+    setActivePosition(null);
   };
 
   if (isLoading) {
@@ -110,42 +159,115 @@ export function StoryStrip() {
 
   return (
     <>
-      <div className="flex gap-3 overflow-x-auto pb-2">
-        {groups.map((group, groupIndex) => (
-          <Button
-            key={group.senderJid}
-            type="button"
-            variant="ghost"
-            onClick={() => openStoryGroup(groupIndex)}
-            className="group h-auto w-16 shrink-0 flex-col gap-1.5 p-0"
-          >
-            <span className="relative">
-              <span
-                className={cn(
-                  "grid size-12 place-items-center rounded-full border-2 bg-emerald-500/10 text-sm font-bold",
-                  group.hasUnviewed
-                    ? "border-emerald-500 text-emerald-600"
-                    : "border-muted text-muted-foreground",
-                )}
+      <div
+        className={cn(
+          variant === "list"
+            ? "flex flex-col gap-1"
+            : "flex gap-3 overflow-x-auto pb-2",
+        )}
+      >
+        {groups.map((group, groupIndex) => {
+          const latestStory = group.stories[group.stories.length - 1];
+          const thumbnail = latestStory ? getStoryThumbnail(latestStory) : null;
+          const hasLike = group.stories.some(
+            (story) => !story.fromMe && story.likedBy.length > 0,
+          );
+
+          if (variant === "list") {
+            return (
+              <Button
+                key={group.senderJid}
+                type="button"
+                variant="ghost"
+                onClick={() => openStoryGroup(groupIndex)}
+                className="h-auto w-full justify-start gap-3 rounded-lg p-2 text-left"
               >
-                {group.senderName.slice(0, 2).toUpperCase()}
-              </span>
-              {group.stories.some(
-                (story) => !story.fromMe && story.likedBy.length > 0,
-              ) && (
-                <span className="absolute -right-1 -bottom-1 grid size-4 place-items-center rounded-full bg-rose-500 text-[9px] text-white">
-                  ♥
+                <span className="relative shrink-0">
+                  <span
+                    className={cn(
+                      "grid size-12 place-items-center overflow-hidden rounded-full border-2 bg-emerald-500/10 text-xs font-bold",
+                      group.hasUnviewed
+                        ? "border-emerald-500 text-emerald-600"
+                        : "border-muted text-muted-foreground",
+                    )}
+                  >
+                    {thumbnail ? (
+                      <img
+                        src={thumbnail}
+                        alt={group.senderName}
+                        className="size-full object-cover"
+                      />
+                    ) : (
+                      group.senderName.slice(0, 2).toUpperCase()
+                    )}
+                  </span>
+                  {hasLike && (
+                    <span className="absolute -right-1 -bottom-1 grid size-4 place-items-center rounded-full bg-rose-500 text-[9px] text-white">
+                      ♥
+                    </span>
+                  )}
                 </span>
-              )}
-            </span>
-            <span className="w-full truncate text-center text-[11px]">
-              {group.senderName}
-            </span>
-          </Button>
-        ))}
+                <span className="min-w-0 flex-1">
+                  <span className="text-foreground block truncate text-sm font-medium">
+                    {group.senderName}
+                  </span>
+                  <span className="text-muted-foreground block truncate text-xs">
+                    {latestStory ? getStoryPreviewText(latestStory) : ""}
+                  </span>
+                </span>
+                {latestStory && (
+                  <span className="text-muted-foreground shrink-0 text-[11px]">
+                    {storyTimeFormatter.format(new Date(latestStory.sentAt))}
+                  </span>
+                )}
+              </Button>
+            );
+          }
+
+          return (
+            <Button
+              key={group.senderJid}
+              type="button"
+              variant="ghost"
+              onClick={() => openStoryGroup(groupIndex)}
+              className="group h-auto w-16 shrink-0 flex-col gap-1.5 p-0"
+            >
+              <span className="relative">
+                <span
+                  className={cn(
+                    "grid size-12 place-items-center overflow-hidden rounded-full border-2 bg-emerald-500/10 text-sm font-bold",
+                    group.hasUnviewed
+                      ? "border-emerald-500 text-emerald-600"
+                      : "border-muted text-muted-foreground",
+                  )}
+                >
+                  {thumbnail ? (
+                    <img
+                      src={thumbnail}
+                      alt={group.senderName}
+                      className="size-full object-cover"
+                    />
+                  ) : (
+                    group.senderName.slice(0, 2).toUpperCase()
+                  )}
+                </span>
+                {hasLike && (
+                  <span className="absolute -right-1 -bottom-1 grid size-4 place-items-center rounded-full bg-rose-500 text-[9px] text-white">
+                    ♥
+                  </span>
+                )}
+              </span>
+              <span className="w-full truncate text-center text-[11px]">
+                {group.senderName}
+              </span>
+            </Button>
+          );
+        })}
       </div>
 
-      {activeStory && activeGroup && activePosition &&
+      {activeStory &&
+        activeGroup &&
+        activePosition &&
         createPortal(
           <div className="fixed inset-0 z-100 grid place-items-center bg-black/85 p-4">
             <section className="relative w-full max-w-lg overflow-hidden rounded-2xl bg-zinc-950 text-white shadow-2xl">
@@ -231,7 +353,7 @@ export function StoryStrip() {
                   size="icon"
                   disabled={activePosition.storyIndex === 0}
                   onClick={showPreviousStory}
-                  className="absolute left-2 top-1/2 rounded-full bg-black/35 text-white hover:bg-black/60 hover:text-white disabled:opacity-20"
+                  className="absolute top-1/2 left-2 rounded-full bg-black/35 text-white hover:bg-black/60 hover:text-white disabled:opacity-20"
                   aria-label="Story sebelumnya"
                 >
                   <ChevronLeftIcon className="size-7" />
@@ -241,7 +363,7 @@ export function StoryStrip() {
                   variant="ghost"
                   size="icon"
                   onClick={showNextStory}
-                  className="absolute right-2 top-1/2 rounded-full bg-black/35 text-white hover:bg-black/60 hover:text-white"
+                  className="absolute top-1/2 right-2 rounded-full bg-black/35 text-white hover:bg-black/60 hover:text-white"
                   aria-label="Story berikutnya"
                 >
                   <ChevronRightIcon className="size-7" />
@@ -268,7 +390,9 @@ export function StoryStrip() {
                         }
                         className="h-auto p-0 text-xs text-white/70"
                       >
-                        {isDescriptionExpanded ? "Tutup deskripsi" : "Lihat selengkapnya"}
+                        {isDescriptionExpanded
+                          ? "Tutup deskripsi"
+                          : "Lihat selengkapnya"}
                       </Button>
                     </>
                   )}

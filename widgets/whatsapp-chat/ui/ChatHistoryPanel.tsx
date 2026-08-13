@@ -1,12 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  PhoneCallIcon,
-  VideoIcon,
-  UsersIcon,
-  ContactIcon,
-} from "lucide-react";
+import { PhoneCallIcon, VideoIcon, UsersIcon, ContactIcon } from "lucide-react";
 
 import { useChatHistoryStore } from "@/entities/whatsapp-session";
 import { ScrollArea } from "@/shared/ui/scroll-area";
@@ -31,9 +26,9 @@ export function ChatHistoryPanel() {
   const previousActiveJidRef = useRef<string | null>(null);
   const highlightTimerRef = useRef<number | null>(null);
   const [pendingReplyId, setPendingReplyId] = useState<string | null>(null);
-  const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(
-    null,
-  );
+  const [highlightedMessageId, setHighlightedMessageId] = useState<
+    string | null
+  >(null);
 
   const handleLoadPreviousMessages = useCallback(async () => {
     const scrollContainer = scrollContainerRef.current;
@@ -258,7 +253,7 @@ function ChatBubble({
     >
       <div
         className={cn(
-          "flex max-w-[85%] min-w-0 flex-col gap-1 overflow-hidden rounded-2xl px-3 py-2 text-sm shadow-sm sm:max-w-3/4",
+          "flex max-w-[80%] min-w-0 flex-col gap-1 overflow-hidden rounded-2xl px-3 py-2 text-sm shadow-sm",
           message.fromMe
             ? "ml-auto rounded-br-sm bg-emerald-600 text-white"
             : "bg-muted text-foreground mr-auto rounded-bl-sm",
@@ -290,7 +285,7 @@ function ChatBubble({
         {message.message && (
           <>
             <LinkPreview message={message.message} />
-            <p className="min-w-0 wrap-break-word whitespace-pre-wrap">
+            <p className="min-w-0 wrap-anywhere whitespace-pre-wrap">
               {renderMessageWithMentions(message.message, message.mentions)}
             </p>
           </>

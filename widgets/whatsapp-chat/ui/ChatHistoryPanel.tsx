@@ -357,7 +357,7 @@ function ReplyPreview({
       aria-label="Buka pesan yang dibalas"
     >
       <span className="block font-semibold">Pesan yang dibalas</span>
-      <span className="block w-full truncate opacity-80">
+      <span className="block max-w-125 truncate opacity-80">
         {replyTo.message || formatMessageType(replyTo.messageType)}
       </span>
     </button>

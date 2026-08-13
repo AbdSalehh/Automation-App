@@ -1,12 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  PhoneCallIcon,
-  VideoIcon,
-  UsersIcon,
-  ContactIcon,
-} from "lucide-react";
+import { PhoneCallIcon, VideoIcon, UsersIcon, ContactIcon } from "lucide-react";
 
 import { useChatHistoryStore } from "@/entities/whatsapp-session";
 import { ScrollArea } from "@/shared/ui/scroll-area";
@@ -31,9 +26,9 @@ export function ChatHistoryPanel() {
   const previousActiveJidRef = useRef<string | null>(null);
   const highlightTimerRef = useRef<number | null>(null);
   const [pendingReplyId, setPendingReplyId] = useState<string | null>(null);
-  const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(
-    null,
-  );
+  const [highlightedMessageId, setHighlightedMessageId] = useState<
+    string | null
+  >(null);
 
   const handleLoadPreviousMessages = useCallback(async () => {
     const scrollContainer = scrollContainerRef.current;
@@ -252,13 +247,13 @@ function ChatBubble({
     <div
       id={getMessageElementId(message.id)}
       className={cn(
-        "flex w-full min-w-0 transition-colors duration-500",
+        "flex w-full max-w-[80%] transition-colors duration-500",
         isHighlighted && "bg-amber-400/10",
       )}
     >
       <div
         className={cn(
-          "flex max-w-[80%] min-w-0 flex-col gap-1 overflow-hidden rounded-2xl px-3 py-2 text-sm shadow-sm",
+          "flex max-w-full min-w-0 flex-col gap-1 overflow-hidden rounded-2xl px-3 py-2 text-sm shadow-sm",
           message.fromMe
             ? "ml-auto rounded-br-sm bg-emerald-600 text-white"
             : "bg-muted text-foreground mr-auto rounded-bl-sm",
@@ -290,7 +285,7 @@ function ChatBubble({
         {message.message && (
           <>
             <LinkPreview message={message.message} />
-            <p className="min-w-0 whitespace-pre-wrap wrap-anywhere">
+            <p className="min-w-0 wrap-anywhere whitespace-pre-wrap">
               {renderMessageWithMentions(message.message, message.mentions)}
             </p>
           </>
@@ -354,7 +349,7 @@ function ReplyPreview({
       type="button"
       onClick={() => onReplyClick(replyTo.id)}
       className={cn(
-        "block w-full min-w-0 rounded-lg border-l-4 px-3 py-2 text-left text-xs transition-colors hover:bg-black/15 focus-visible:ring-2 focus-visible:outline-none",
+        "block w-full max-w-full rounded-lg border-l-4 px-3 py-2 text-left text-xs wrap-anywhere transition-colors hover:bg-black/15 focus-visible:ring-2 focus-visible:outline-none",
         message.fromMe
           ? "border-emerald-200 bg-black/10 text-emerald-50"
           : "text-foreground border-emerald-500 bg-black/5",

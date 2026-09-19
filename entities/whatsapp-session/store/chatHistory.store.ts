@@ -12,6 +12,7 @@ import type {
   MessagesMetadata,
   SessionUpdatePayload,
   WhatsappSessionSummary,
+  ExcludedChatSummary,
 } from "../model/whatsappSession.model";
 
 const CONVERSATIONS_PAGE_SIZE = 15;
@@ -42,6 +43,10 @@ interface ChatHistoryState {
   fetchMoreMessages: () => Promise<void>;
   fetchAvatar: (jid: string) => Promise<void>;
   hideConversation: (jid: string) => Promise<void>;
+  excludedChats: ExcludedChatSummary[];
+  isLoadingExcludedChats: boolean;
+  fetchExcludedChats: () => Promise<void>;
+  unhideConversation: (jid: string) => Promise<void>;
   subscribeRealtime: () => void;
   unsubscribeRealtime: () => void;
   reset: () => void;
@@ -61,6 +66,8 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
   messages: [],
   messagesMetadata: null,
   isLoadingMessages: false,
+  excludedChats: [],
+  isLoadingExcludedChats: false,
   errorMessage: null,
   realtimeClient: null,
   realtimeChannel: null,
@@ -332,11 +339,70 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
         { jid },
         { params: { sessionId: activeSessionId, ownerId: activeOwnerId } },
       );
+
+      void get().fetchExcludedChats();
     } catch (error) {
       set({
         conversations: previousConversations,
         errorMessage:
           getErrorMessage(error) ?? "Gagal menyembunyikan percakapan",
+      });
+    }
+  },
+
+  fetchExcludedChats: async () => {
+    const { activeSessionId, activeOwnerId } = get();
+
+    if (!activeSessionId || !activeOwnerId) {
+      return;
+    }
+
+    set({ isLoadingExcludedChats: true });
+
+    try {
+      const { data: response } = await apiClient.get<
+        ApiResponse<{ excludedChats: ExcludedChatSummary[] }>
+      >("/whatsapp/excluded-chats", {
+        params: { sessionId: activeSessionId, ownerId: activeOwnerId },
+      });
+
+      set({ excludedChats: response.data.excludedChats });
+    } catch (error) {
+      set({
+        errorMessage:
+          getErrorMessage(error) ?? "Gagal memuat daftar chat tersembunyi",
+      });
+    } finally {
+      set({ isLoadingExcludedChats: false });
+    }
+  },
+
+  unhideConversation: async (jid) => {
+    const { activeSessionId, activeOwnerId, excludedChats } = get();
+
+    if (!activeSessionId || !activeOwnerId) {
+      return;
+    }
+
+    const previousExcludedChats = excludedChats;
+
+    set({
+      excludedChats: excludedChats.filter(
+        (excludedChat) => excludedChat.jid !== jid,
+      ),
+    });
+
+    try {
+      await apiClient.delete("/whatsapp/excluded-chats", {
+        params: { sessionId: activeSessionId, ownerId: activeOwnerId, jid },
+      });
+
+      await get().fetchConversations({ reset: true });
+    } catch (error) {
+      set({
+        excludedChats: previousExcludedChats,
+        errorMessage:
+          getErrorMessage(error) ?? "Gagal menampilkan kembali percakapan",
       });
     }
   },
@@ -355,6 +421,7 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
     const reconnectHandler = () => {
       get().fetchSessions();
       get().fetchConversations({ reset: true });
+      void get().fetchExcludedChats();
     };
 
     realtimeChannel.subscribe("chat-update", (ablyMessage: Ably.Message) => {
@@ -465,6 +532,8 @@ function createEmptyChatState() {
     messages: [],
     messagesMetadata: null,
     isLoadingMessages: false,
+    excludedChats: [],
+    isLoadingExcludedChats: false,
     errorMessage: null,
   };
 }

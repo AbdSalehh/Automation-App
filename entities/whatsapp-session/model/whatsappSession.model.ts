@@ -196,6 +196,15 @@ export interface MessagesMetadata extends ConversationsMetadata {
 /** Payload event realtime `chat-update`. */
 export type ChatUpdatePayload = ChatMessage;
 
+/** Ringkasan percakapan yang disembunyikan (exclude). */
+export interface ExcludedChatSummary {
+  id: string;
+  sessionId: string;
+  jid: string;
+  name?: string;
+  createdAt: string;
+}
+
 export const groupWhatsappStories = (
   stories: WhatsappStory[],
 ): WhatsappStoryGroup[] => {

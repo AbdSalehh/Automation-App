@@ -10,6 +10,7 @@ import type {
   ChatMessage,
   MessagesMetadata,
   WhatsappStory,
+  ExcludedChatSummary,
 } from "../model/whatsappSession.model";
 
 /**
@@ -256,5 +257,30 @@ export const whatsappSessionService = {
       { jid },
       { headers: createOwnerHeaders(ownerId, "POST", path) },
     );
+  },
+
+  listExcludedChats: async (
+    ownerId: string,
+    sessionId: string,
+  ): Promise<ExcludedChatSummary[]> => {
+    const path = `/sessions/${sessionId}/excluded-chats`;
+
+    const { data: response } = await baileysClient.get<
+      ApiResponse<ExcludedChatSummary[]>
+    >(path, { headers: createOwnerHeaders(ownerId, "GET", path) });
+
+    return response.data;
+  },
+
+  unhideConversation: async (
+    ownerId: string,
+    sessionId: string,
+    jid: string,
+  ): Promise<void> => {
+    const path = `/sessions/${sessionId}/excluded-chats/${encodeURIComponent(jid)}`;
+
+    await baileysClient.delete(path, {
+      headers: createOwnerHeaders(ownerId, "DELETE", path),
+    });
   },
 };

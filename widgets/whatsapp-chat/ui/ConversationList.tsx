@@ -18,6 +18,7 @@ import { useChatHistoryStore } from "@/entities/whatsapp-session";
 import { Spinner } from "@/shared/ui/spinner";
 import { cn } from "@/shared/lib/utils";
 import type { ConversationSummary } from "@/entities/whatsapp-session";
+import { ExcludedChatsDialog } from "./ExcludedChatsDialog";
 
 const MEDIA_ICON_BY_TYPE = {
   image: ImageIcon,
@@ -76,6 +77,14 @@ export function ConversationList({
 
   return (
     <div className="flex h-full flex-col gap-2 overflow-hidden">
+      <div className="flex items-center justify-between px-1 pb-1">
+        <span className="text-muted-foreground text-xs font-medium">
+          Percakapan ({conversations.length})
+        </span>
+
+        <ExcludedChatsDialog />
+      </div>
+
       <div className="flex-1 overflow-y-auto">
         {conversations.length === 0 && !isLoadingConversations ? (
           <p className="text-muted-foreground p-4 text-center text-sm">

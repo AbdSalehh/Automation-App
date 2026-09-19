@@ -10,6 +10,7 @@ export type {
   InboundMessageType,
   WhatsappStory,
   WhatsappStoryGroup,
+  ExcludedChatSummary,
 } from "./model/whatsappSession.model";
 export { groupWhatsappStories } from "./model/whatsappSession.model";
 export { whatsappSessionService } from "./service/whatsappSession.service";

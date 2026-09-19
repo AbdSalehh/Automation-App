@@ -27,6 +27,7 @@ interface ChatHistoryState {
   conversationsMetadata: ConversationsMetadata | null;
   isLoadingConversations: boolean;
   activeJid: string | null;
+  avatarUrls: Record<string, string | null>;
   messages: ChatMessage[];
   messagesMetadata: MessagesMetadata | null;
   isLoadingMessages: boolean;
@@ -39,6 +40,8 @@ interface ChatHistoryState {
   fetchConversations: (options?: { reset?: boolean }) => Promise<void>;
   openConversation: (jid: string) => Promise<void>;
   fetchMoreMessages: () => Promise<void>;
+  fetchAvatar: (jid: string) => Promise<void>;
+  hideConversation: (jid: string) => Promise<void>;
   subscribeRealtime: () => void;
   unsubscribeRealtime: () => void;
   reset: () => void;
@@ -54,6 +57,7 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
   conversationsMetadata: null,
   isLoadingConversations: false,
   activeJid: null,
+  avatarUrls: {},
   messages: [],
   messagesMetadata: null,
   isLoadingMessages: false,
@@ -278,6 +282,62 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
       });
     } finally {
       set({ isLoadingMessages: false });
+    }
+  },
+
+  fetchAvatar: async (jid) => {
+    const { activeSessionId, activeOwnerId, avatarUrls } = get();
+
+    if (!activeSessionId || !activeOwnerId || jid in avatarUrls) {
+      return;
+    }
+
+    try {
+      const { data: response } = await apiClient.get<
+        ApiResponse<{ avatarUrl: string | null }>
+      >(`/whatsapp/conversations/${encodeURIComponent(jid)}/avatar`, {
+        params: { sessionId: activeSessionId, ownerId: activeOwnerId },
+      });
+
+      set({
+        avatarUrls: {
+          ...get().avatarUrls,
+          [jid]: response.data.avatarUrl,
+        },
+      });
+    } catch {
+      set({ avatarUrls: { ...get().avatarUrls, [jid]: null } });
+    }
+  },
+
+  hideConversation: async (jid) => {
+    const { activeSessionId, activeOwnerId, conversations } = get();
+
+    if (!activeSessionId || !activeOwnerId) {
+      return;
+    }
+
+    const previousConversations = conversations;
+
+    set({
+      conversations: conversations.filter(
+        (conversation) => conversation.jid !== jid,
+      ),
+      activeJid: get().activeJid === jid ? null : get().activeJid,
+    });
+
+    try {
+      await apiClient.post(
+        "/whatsapp/excluded-chats",
+        { jid },
+        { params: { sessionId: activeSessionId, ownerId: activeOwnerId } },
+      );
+    } catch (error) {
+      set({
+        conversations: previousConversations,
+        errorMessage:
+          getErrorMessage(error) ?? "Gagal menyembunyikan percakapan",
+      });
     }
   },
 

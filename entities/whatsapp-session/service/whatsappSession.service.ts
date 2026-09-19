@@ -228,4 +228,33 @@ export const whatsappSessionService = {
       headers: createOwnerHeaders(ownerId, "POST", path),
     });
   },
+
+  getConversationAvatar: async (
+    ownerId: string,
+    sessionId: string,
+    jid: string,
+  ): Promise<string | null> => {
+    const encodedJid = encodeURIComponent(jid);
+    const path = `/sessions/${sessionId}/conversations/${encodedJid}/avatar`;
+
+    const { data: response } = await baileysClient.get<
+      ApiResponse<{ avatarUrl: string | null }>
+    >(path, { headers: createOwnerHeaders(ownerId, "GET", path) });
+
+    return response.data.avatarUrl;
+  },
+
+  hideConversation: async (
+    ownerId: string,
+    sessionId: string,
+    jid: string,
+  ): Promise<void> => {
+    const path = `/sessions/${sessionId}/excluded-chats`;
+
+    await baileysClient.post(
+      path,
+      { jid },
+      { headers: createOwnerHeaders(ownerId, "POST", path) },
+    );
+  },
 };

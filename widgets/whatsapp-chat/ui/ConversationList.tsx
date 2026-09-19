@@ -10,6 +10,7 @@ import {
   UsersIcon,
   MapPinIcon,
   ContactIcon,
+  EyeOffIcon,
 } from "lucide-react";
 import { useEffect, useRef } from "react";
 
@@ -40,8 +41,11 @@ export function ConversationList({
     conversationsMetadata,
     isLoadingConversations,
     activeJid,
+    avatarUrls,
     fetchConversations,
     openConversation,
+    fetchAvatar,
+    hideConversation,
   } = useChatHistoryStore();
   const loadMoreReference = useRef<HTMLDivElement>(null);
 
@@ -84,6 +88,9 @@ export function ConversationList({
                 key={conversation.jid}
                 conversation={conversation}
                 isActive={conversation.jid === activeJid}
+                avatarUrl={avatarUrls[conversation.jid]}
+                onFetchAvatar={() => void fetchAvatar(conversation.jid)}
+                onHide={() => void hideConversation(conversation.jid)}
                 onClick={() => {
                   void openConversation(conversation.jid).then(onConversationOpened);
                 }}
@@ -109,59 +116,122 @@ export function ConversationList({
 function ConversationListItem({
   conversation,
   isActive,
+  avatarUrl,
+  onFetchAvatar,
+  onHide,
   onClick,
 }: {
   conversation: ConversationSummary;
   isActive: boolean;
+  avatarUrl?: string | null;
+  onFetchAvatar: () => void;
+  onHide: () => void;
   onClick: () => void;
 }) {
   const lastMessage = conversation.lastMessage;
+  const isGroup = conversation.jid.endsWith("@g.us");
+  const displayName = conversation.name || conversation.jid.split("@")[0];
   const MediaIcon = lastMessage?.messageType
     ? MEDIA_ICON_BY_TYPE[
         lastMessage.messageType as keyof typeof MEDIA_ICON_BY_TYPE
       ]
     : null;
 
+  useEffect(() => {
+    onFetchAvatar();
+  }, [onFetchAvatar]);
+
   return (
-    <li>
+    <li className="group/item relative">
       <button
         type="button"
         onClick={onClick}
         className={cn(
-          "flex w-full flex-col gap-0.5 rounded-lg px-3 py-2 text-left transition-colors",
+          "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors",
           isActive ? "bg-accent" : "hover:bg-accent/50",
         )}
       >
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex min-w-0 items-center gap-1.5">
-            <span className="text-foreground truncate text-sm font-medium">
-              {conversation.name || conversation.jid.split("@")[0]}
-            </span>
-            {conversation.jid.endsWith("@g.us") && (
-              <span className="text-muted-foreground flex shrink-0 items-center gap-1 text-[11px]">
-                <UsersIcon className="size-3" />
-                Grup
+        <ConversationAvatar
+          avatarUrl={avatarUrl}
+          displayName={displayName}
+          isGroup={isGroup}
+        />
+
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-1.5">
+              <span className="text-foreground truncate text-sm font-medium">
+                {displayName}
+              </span>
+              {isGroup && (
+                <span className="text-muted-foreground flex shrink-0 items-center gap-1 text-[11px]">
+                  <UsersIcon className="size-3" />
+                  Grup
+                </span>
+              )}
+            </div>
+
+            {lastMessage?.sentAt && (
+              <span className="text-muted-foreground shrink-0 text-[11px]">
+                {formatTimeLabel(lastMessage.sentAt)}
               </span>
             )}
           </div>
 
-          {lastMessage?.sentAt && (
-            <span className="text-muted-foreground shrink-0 text-[11px]">
-              {formatTimeLabel(lastMessage.sentAt)}
+          <div className="text-muted-foreground flex items-center gap-1 truncate text-xs">
+            {lastMessage?.fromMe && <span className="shrink-0">Anda:</span>}
+            {MediaIcon && <MediaIcon className="size-3 shrink-0" />}
+            <span className="truncate">
+              {lastMessage?.message ||
+                getPreviewLabel(lastMessage, Boolean(MediaIcon))}
             </span>
-          )}
-        </div>
-
-        <div className="text-muted-foreground flex items-center gap-1 truncate text-xs">
-          {lastMessage?.fromMe && <span className="shrink-0">Anda:</span>}
-          {MediaIcon && <MediaIcon className="size-3 shrink-0" />}
-          <span className="truncate">
-            {lastMessage?.message ||
-              getPreviewLabel(lastMessage, Boolean(MediaIcon))}
-          </span>
+          </div>
         </div>
       </button>
+
+      <button
+        type="button"
+        title="Sembunyikan chat"
+        aria-label={`Sembunyikan chat ${displayName}`}
+        onClick={(clickEvent) => {
+          clickEvent.stopPropagation();
+          onHide();
+        }}
+        className={cn(
+          "bg-background/80 text-muted-foreground hover:bg-destructive hover:text-destructive-foreground absolute top-1/2 right-2 -translate-y-1/2 rounded-md p-1.5 opacity-0 transition-opacity group-hover/item:opacity-100",
+        )}
+      >
+        <EyeOffIcon className="size-4" />
+      </button>
     </li>
+  );
+}
+
+function ConversationAvatar({
+  avatarUrl,
+  displayName,
+  isGroup,
+}: {
+  avatarUrl?: string | null;
+  displayName: string;
+  isGroup: boolean;
+}) {
+  const initial = displayName.trim().charAt(0).toUpperCase() || "?";
+
+  if (avatarUrl) {
+    return (
+      <img
+        src={avatarUrl}
+        alt={displayName}
+        className="size-10 shrink-0 rounded-full object-cover"
+      />
+    );
+  }
+
+  return (
+    <div className="bg-accent text-muted-foreground flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-medium">
+      {isGroup ? <UsersIcon className="size-5" /> : initial}
+    </div>
   );
 }
 

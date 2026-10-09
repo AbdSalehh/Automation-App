@@ -10,6 +10,8 @@ export type {
   InboundMessageType,
   WhatsappStory,
   WhatsappStoryGroup,
+  WhatsappCallEntry,
+  WhatsappCallsMetadata,
   ExcludedChatSummary,
 } from "./model/whatsappSession.model";
 export { groupWhatsappStories } from "./model/whatsappSession.model";
@@ -17,3 +19,4 @@ export { whatsappSessionService } from "./service/whatsappSession.service";
 export { useWhatsappSessionStore } from "./store/whatsappSession.store";
 export { useChatHistoryStore } from "./store/chatHistory.store";
 export { useStoryStore } from "./store/story.store";
+export { useCallStore } from "./store/call.store";

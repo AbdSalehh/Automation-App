@@ -6,6 +6,7 @@ import {
   CircleDashedIcon,
   MenuIcon,
   MessageCircleIcon,
+  PhoneCallIcon,
   SmartphoneIcon,
   XIcon,
 } from "lucide-react";
@@ -16,6 +17,7 @@ import {
 } from "@/entities/whatsapp-session";
 import { ConversationList } from "@/widgets/whatsapp-chat/ui/ConversationList";
 import { ChatHistoryPanel } from "@/widgets/whatsapp-chat/ui/ChatHistoryPanel";
+import { CallHistoryList } from "@/widgets/whatsapp-chat/ui/CallHistoryList";
 import { StoryStrip } from "@/widgets/whatsapp-chat/ui/StoryStrip";
 import { Badge } from "@/shared/ui/Badge";
 import { Button } from "@/shared/ui/button";
@@ -273,6 +275,9 @@ function SessionList({
   );
 }
 
+/** Panel yang sedang ditampilkan pada kolom tengah. */
+type ConversationPaneMode = "conversations" | "calls" | "stories";
+
 function ConversationPane({
   activeSessionId,
   onConversationOpened,
@@ -280,7 +285,15 @@ function ConversationPane({
   activeSessionId: string | null;
   onConversationOpened?: () => void;
 }) {
-  const [isShowingStories, setIsShowingStories] = useState(false);
+  const [paneMode, setPaneMode] =
+    useState<ConversationPaneMode>("conversations");
+
+  /** Menyalakan panel, atau kembali ke daftar percakapan bila sudah aktif. */
+  const togglePaneMode = (mode: ConversationPaneMode) => {
+    setPaneMode((currentMode) =>
+      currentMode === mode ? "conversations" : mode,
+    );
+  };
 
   if (!activeSessionId) {
     return (
@@ -292,22 +305,36 @@ function ConversationPane({
 
   return (
     <div className="border-border flex h-full min-h-0 flex-col overflow-hidden border-b p-3 lg:border-r lg:border-b-0">
-      <div className="border-border shrink-0 border-b pb-3">
+      <div className="border-border flex shrink-0 flex-col gap-2 border-b pb-3">
         <Button
           type="button"
-          variant={isShowingStories ? "secondary" : "outline"}
-          onClick={() => setIsShowingStories((isShowing) => !isShowing)}
+          variant={paneMode === "calls" ? "secondary" : "outline"}
+          onClick={() => togglePaneMode("calls")}
+          className="w-full justify-start gap-2"
+        >
+          <PhoneCallIcon className="size-4" />
+          {paneMode === "calls"
+            ? "Kembali ke percakapan"
+            : "Lihat panggilan hari ini"}
+        </Button>
+
+        <Button
+          type="button"
+          variant={paneMode === "stories" ? "secondary" : "outline"}
+          onClick={() => togglePaneMode("stories")}
           className="w-full justify-start gap-2"
         >
           <CircleDashedIcon className="size-4" />
-          {isShowingStories ? "Kembali ke percakapan" : "Lihat story"}
+          {paneMode === "stories" ? "Kembali ke percakapan" : "Lihat story"}
         </Button>
       </div>
       <div className="min-h-0 flex-1 pt-3">
-        {isShowingStories ? (
+        {paneMode === "stories" ? (
           <ScrollArea className="h-full">
             <StoryStrip variant="list" />
           </ScrollArea>
+        ) : paneMode === "calls" ? (
+          <CallHistoryList onConversationOpened={onConversationOpened} />
         ) : (
           <ConversationList onConversationOpened={onConversationOpened} />
         )}

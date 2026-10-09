@@ -6,6 +6,7 @@ import {
   DownloadIcon,
   ExternalLinkIcon,
   FileIcon,
+  FileWarningIcon,
   MapPinIcon,
 } from "lucide-react";
 
@@ -25,6 +26,15 @@ export function ChatMedia({ message }: { message: ChatMessage }) {
 
   if (!media || !("mimetype" in media)) {
     return null;
+  }
+
+  /**
+   * Media yang gagal diunduh/diunggah, atau yang masih menunjuk ke akun
+   * Cloudinary lama, hanya punya metadata tanpa berkas yang bisa diakses.
+   * Ditampilkan sebagai placeholder agar pesan tidak terlihat kosong.
+   */
+  if (media.unavailable || media.isStale || !media.url) {
+    return <UnavailableMedia media={media} />;
   }
 
   if (message.messageType === "image") {
@@ -259,18 +269,78 @@ function DocumentPreview({
 }: {
   media: Extract<NonNullable<ChatMessage["media"]>, { mimetype: string }>;
 }) {
+  /**
+   * `downloadUrl` membawa flag `fl_attachment` Cloudinary sehingga browser
+   * menyimpan berkas dengan nama aslinya. Berkas lama yang belum punya field
+   * ini tetap memakai URL biasa.
+   */
+  const fileUrl = media.downloadUrl || media.url;
+
   return (
     <a
-      href={media.url}
+      href={fileUrl}
+      download={media.fileName || undefined}
       target="_blank"
       rel="noopener noreferrer"
       className="flex items-center gap-2 rounded-lg bg-black/10 px-3 py-2 text-xs"
     >
       <FileIcon className="size-4 shrink-0" />
-      <span className="truncate">{media.fileName || "Dokumen"}</span>
+      <div className="flex min-w-0 flex-col">
+        <span className="truncate">{media.fileName || "Dokumen"}</span>
+        {media.fileLength > 0 && (
+          <span className="opacity-70">{formatFileSize(media.fileLength)}</span>
+        )}
+      </div>
       <DownloadIcon className="ml-auto size-3.5 shrink-0" />
     </a>
   );
+}
+
+const UNAVAILABLE_MEDIA_LABEL = {
+  too_large: "Ukuran berkas melebihi batas penyimpanan",
+  download_failed: "Berkas gagal diunduh dari WhatsApp",
+  upload_failed: "Berkas gagal disimpan ke storage",
+};
+
+/**
+ * Placeholder untuk media yang metadatanya ada tapi berkasnya tidak dapat
+ * diakses — baik karena gagal diproses saat pesan masuk, maupun karena berada
+ * di akun Cloudinary lama setelah kredensial storage diganti.
+ */
+function UnavailableMedia({
+  media,
+}: {
+  media: Extract<NonNullable<ChatMessage["media"]>, { mimetype: string }>;
+}) {
+  const reasonLabel = media.isStale
+    ? "Berkas ada di storage lama dan sudah tidak dapat diakses"
+    : (UNAVAILABLE_MEDIA_LABEL[
+        media.reason as keyof typeof UNAVAILABLE_MEDIA_LABEL
+      ] ?? "Berkas tidak tersedia");
+
+  return (
+    <div className="flex items-center gap-2 rounded-lg border border-current/15 bg-black/10 px-3 py-2 text-xs">
+      <FileWarningIcon className="size-4 shrink-0 opacity-70" />
+      <div className="flex min-w-0 flex-col">
+        <span className="truncate">
+          {media.fileName || "Media tidak tersedia"}
+        </span>
+        <span className="opacity-70">{reasonLabel}</span>
+      </div>
+    </div>
+  );
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
+
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(0)} kB`;
+  }
+
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function getFirstLink(message: string): string | null {

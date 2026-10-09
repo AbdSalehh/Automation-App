@@ -1,10 +1,18 @@
 import { badRequest, forbidden, handleRoute, ok } from "@/shared/api/http";
 import { requireUser } from "@/shared/auth";
 import { whatsappSessionService } from "@/entities/whatsapp-session";
+import { cacheKeys, cacheQuery } from "@/shared/lib/cache";
 
 interface RouteParams {
   params: Promise<{ jid: string }>;
 }
+
+/**
+ * Masa berlaku cache foto profil. WhatsApp memberi URL bertanda tangan yang
+ * berumur pendek, jadi TTL dijaga singkat; tujuannya hanya meredam permintaan
+ * berulang dari daftar percakapan agar tidak membebani service Baileys.
+ */
+const AVATAR_CACHE_TTL_SECONDS = 10 * 60;
 
 /**
  * Mengambil foto profil (user/grup) on-demand untuk percakapan tertentu.
@@ -38,10 +46,11 @@ export async function GET(request: Request, { params }: RouteParams) {
       return badRequest("JID tidak valid");
     }
 
-    const avatarUrl = await whatsappSessionService.getConversationAvatar(
-      ownerId,
-      sessionId,
-      jid,
+    const avatarUrl = await cacheQuery(
+      cacheKeys.conversationAvatar(sessionId, jid),
+      () =>
+        whatsappSessionService.getConversationAvatar(ownerId, sessionId, jid),
+      AVATAR_CACHE_TTL_SECONDS,
     );
 
     return ok({ avatarUrl }, "Foto profil berhasil diambil");

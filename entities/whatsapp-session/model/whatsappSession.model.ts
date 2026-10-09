@@ -90,12 +90,59 @@ export interface WhatsappCall {
   durationSeconds: number | null;
 }
 
+/** Satu entri riwayat panggilan WhatsApp (masuk maupun keluar). */
+export interface WhatsappCallEntry {
+  id: string;
+  jid: string;
+  /** Nama lawan bicara; jatuh ke nomor telepon bila kontak belum tersimpan. */
+  name: string;
+  phoneNumber: string;
+  /** True bila panggilan dimulai dari akun ini (panggilan keluar). */
+  fromMe: boolean;
+  isVideo: boolean;
+  isGroup: boolean;
+  status: WhatsappCallStatus | "";
+  /** Durasi bicara (detik); null bila panggilan tidak pernah tersambung. */
+  durationSeconds: number | null;
+  sentAt: string;
+}
+
+/** Ringkasan rentang & jumlah panggilan yang dikembalikan service. */
+export interface WhatsappCallsMetadata {
+  since: string;
+  timezone: string;
+  totalItems: number;
+  incomingCount: number;
+  outgoingCount: number;
+}
+
+/** Alasan sebuah media tidak tersimpan di storage. */
+export type UnavailableMediaReason =
+  | "too_large"
+  | "download_failed"
+  | "upload_failed";
+
 /** Metadata media masuk (sudah diunggah ke Cloudinary, hanya URL & info). */
 export interface InboundMedia {
   mimetype: string;
   fileName: string;
   fileLength: number;
   url: string;
+  /**
+   * URL unduh khusus dokumen (memakai `fl_attachment` Cloudinary) agar berkas
+   * tersimpan dengan nama & ekstensi aslinya, bukan dibuka sebagai teks mentah.
+   */
+  downloadUrl?: string | null;
+  /** Nama cloud Cloudinary tempat berkas diunggah. */
+  cloudName?: string;
+  /**
+   * True bila berkas berada di akun Cloudinary lama (kredensial sudah diganti),
+   * sehingga URL-nya tidak lagi dapat diakses.
+   */
+  isStale?: boolean;
+  /** True bila media gagal diunduh/diunggah, sehingga hanya metadata tersimpan. */
+  unavailable?: boolean;
+  reason?: UnavailableMediaReason;
 }
 
 export interface SharedLocation {

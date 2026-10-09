@@ -37,17 +37,29 @@ export function ConversationList({
 }: {
   onConversationOpened?: () => void;
 }) {
-  const {
-    conversations,
-    conversationsMetadata,
-    isLoadingConversations,
-    activeJid,
-    avatarUrls,
-    fetchConversations,
-    openConversation,
-    fetchAvatar,
-    hideConversation,
-  } = useChatHistoryStore();
+  /**
+   * Berlangganan per-field, bukan seluruh store. Mengambil seluruh store
+   * membuat komponen ini (dan setiap itemnya) ikut me-render pada perubahan
+   * apa pun — termasuk setiap foto profil yang masuk — sehingga pemuatan
+   * avatar saling memicu dan menghasilkan ratusan request.
+   */
+  const conversations = useChatHistoryStore((state) => state.conversations);
+  const conversationsMetadata = useChatHistoryStore(
+    (state) => state.conversationsMetadata,
+  );
+  const isLoadingConversations = useChatHistoryStore(
+    (state) => state.isLoadingConversations,
+  );
+  const activeJid = useChatHistoryStore((state) => state.activeJid);
+  const fetchConversations = useChatHistoryStore(
+    (state) => state.fetchConversations,
+  );
+  const openConversation = useChatHistoryStore(
+    (state) => state.openConversation,
+  );
+  const hideConversation = useChatHistoryStore(
+    (state) => state.hideConversation,
+  );
   const loadMoreReference = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -97,8 +109,6 @@ export function ConversationList({
                 key={conversation.jid}
                 conversation={conversation}
                 isActive={conversation.jid === activeJid}
-                avatarUrl={avatarUrls[conversation.jid]}
-                onFetchAvatar={() => void fetchAvatar(conversation.jid)}
                 onHide={() => void hideConversation(conversation.jid)}
                 onClick={() => {
                   void openConversation(conversation.jid).then(onConversationOpened);
@@ -125,18 +135,24 @@ export function ConversationList({
 function ConversationListItem({
   conversation,
   isActive,
-  avatarUrl,
-  onFetchAvatar,
   onHide,
   onClick,
 }: {
   conversation: ConversationSummary;
   isActive: boolean;
-  avatarUrl?: string | null;
-  onFetchAvatar: () => void;
   onHide: () => void;
   onClick: () => void;
 }) {
+  /**
+   * Foto profil diambil per item langsung dari store. Aksi Zustand punya
+   * identitas yang stabil dan selector hanya memantau satu JID, sehingga efek
+   * di bawah berjalan sekali per percakapan — bukan setiap kali ada avatar
+   * lain yang selesai dimuat.
+   */
+  const avatarUrl = useChatHistoryStore(
+    (state) => state.avatarUrls[conversation.jid],
+  );
+  const fetchAvatar = useChatHistoryStore((state) => state.fetchAvatar);
   const lastMessage = conversation.lastMessage;
   const isGroup = conversation.jid.endsWith("@g.us");
   const displayName = conversation.name || conversation.jid.split("@")[0];
@@ -147,8 +163,8 @@ function ConversationListItem({
     : null;
 
   useEffect(() => {
-    onFetchAvatar();
-  }, [onFetchAvatar]);
+    void fetchAvatar(conversation.jid);
+  }, [conversation.jid, fetchAvatar]);
 
   return (
     <li className="group/item relative">

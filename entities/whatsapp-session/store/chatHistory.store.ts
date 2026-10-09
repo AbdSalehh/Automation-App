@@ -18,6 +18,16 @@ import type {
 const CONVERSATIONS_PAGE_SIZE = 15;
 const MESSAGES_PAGE_SIZE = 50;
 
+/**
+ * Permintaan foto profil yang sedang berjalan, dikunci `sessionId|jid`.
+ *
+ * Penjaga `jid in avatarUrls` saja tidak cukup: hasilnya baru masuk setelah
+ * respons tiba, sehingga puluhan item daftar yang me-render bersamaan dapat
+ * menembakkan permintaan untuk JID yang sama sebelum satu pun selesai. Set ini
+ * menahan permintaan kedua dan seterusnya selama yang pertama masih berjalan.
+ */
+const inFlightAvatarRequests = new Set<string>();
+
 interface ChatHistoryState {
   sessions: WhatsappSessionSummary[];
   activeSessionId: string | null;
@@ -299,6 +309,14 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
       return;
     }
 
+    const requestKey = `${activeSessionId}|${jid}`;
+
+    if (inFlightAvatarRequests.has(requestKey)) {
+      return;
+    }
+
+    inFlightAvatarRequests.add(requestKey);
+
     try {
       const { data: response } = await apiClient.get<
         ApiResponse<{ avatarUrl: string | null }>
@@ -313,7 +331,13 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
         },
       });
     } catch {
+      /**
+       * Kegagalan ikut dicatat sebagai `null` agar JID yang bermasalah tidak
+       * terus-menerus dicoba ulang pada setiap render.
+       */
       set({ avatarUrls: { ...get().avatarUrls, [jid]: null } });
+    } finally {
+      inFlightAvatarRequests.delete(requestKey);
     }
   },
 
@@ -524,11 +548,19 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
 }));
 
 function createEmptyChatState() {
+  /**
+   * Cache foto profil dikunci JID saja, sementara satu JID bisa punya foto
+   * berbeda di tiap sesi. Dikosongkan saat sesi berganti agar tidak ada foto
+   * milik sesi sebelumnya yang ikut terbawa.
+   */
+  inFlightAvatarRequests.clear();
+
   return {
     conversations: [],
     conversationsMetadata: null,
     isLoadingConversations: false,
     activeJid: null,
+    avatarUrls: {},
     messages: [],
     messagesMetadata: null,
     isLoadingMessages: false,

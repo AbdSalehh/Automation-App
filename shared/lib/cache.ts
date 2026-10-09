@@ -19,6 +19,8 @@ export const cacheKeys = {
   credentialList: (userId: string) => `credentials:list:${userId}`,
   executionList: (userId: string, workflowId?: string) =>
     `executions:list:${userId}:${workflowId ?? "all"}`,
+  conversationAvatar: (sessionId: string, jid: string) =>
+    `whatsapp:avatar:${sessionId}:${jid}`,
 };
 
 /**

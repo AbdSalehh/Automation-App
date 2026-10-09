@@ -10,6 +10,8 @@ import type {
   ChatMessage,
   MessagesMetadata,
   WhatsappStory,
+  WhatsappCallEntry,
+  WhatsappCallsMetadata,
   ExcludedChatSummary,
 } from "../model/whatsappSession.model";
 
@@ -204,6 +206,23 @@ export const whatsappSessionService = {
     await baileysClient.delete(path, {
       headers: createOwnerHeaders(ownerId, "DELETE", path),
     });
+  },
+
+  /** Riwayat panggilan masuk & keluar pada hari berjalan. */
+  listTodayCalls: async (
+    ownerId: string,
+    sessionId: string,
+  ): Promise<{
+    data: WhatsappCallEntry[];
+    metadata: WhatsappCallsMetadata;
+  }> => {
+    const path = `/sessions/${sessionId}/calls`;
+
+    const { data: response } = await baileysClient.get<
+      BaileysListResponse<WhatsappCallEntry, WhatsappCallsMetadata>
+    >(path, { headers: createOwnerHeaders(ownerId, "GET", path) });
+
+    return { data: response.data, metadata: response.metadata };
   },
 
   listStories: async (

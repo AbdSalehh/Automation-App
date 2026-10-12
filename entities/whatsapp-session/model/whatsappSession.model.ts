@@ -120,7 +120,8 @@ export interface WhatsappCallsMetadata {
 export type UnavailableMediaReason =
   | "too_large"
   | "download_failed"
-  | "upload_failed";
+  | "upload_failed"
+  | "not_downloadable";
 
 /** Metadata media masuk (sudah diunggah ke Cloudinary, hanya URL & info). */
 export interface InboundMedia {
@@ -140,6 +141,8 @@ export interface InboundMedia {
    * sehingga URL-nya tidak lagi dapat diakses.
    */
   isStale?: boolean;
+  /** True untuk video bulat singkat ("video note") dari kamera di kolom chat. */
+  isVideoNote?: boolean;
   /** True bila media gagal diunduh/diunggah, sehingga hanya metadata tersimpan. */
   unavailable?: boolean;
   reason?: UnavailableMediaReason;

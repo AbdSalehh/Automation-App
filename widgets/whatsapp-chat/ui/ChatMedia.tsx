@@ -14,6 +14,7 @@ import { useLinkPreviewStore } from "@/entities/link-preview";
 import type { ChatMessage } from "@/entities/whatsapp-session";
 import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
 import { LocationMap } from "./LocationMap";
+import { VideoNotePlayer } from "./VideoNotePlayer";
 import { VideoPlayer } from "./VideoPlayer";
 import { VoiceWaveform } from "./VoiceWaveform";
 
@@ -59,6 +60,10 @@ export function ChatMedia({ message }: { message: ChatMessage }) {
   }
 
   if (message.messageType === "video") {
+    if (media.isVideoNote) {
+      return <VideoNotePlayer mediaUrl={media.url} mimetype={media.mimetype} />;
+    }
+
     return <VideoPlayer mediaUrl={media.url} mimetype={media.mimetype} />;
   }
 
@@ -300,6 +305,7 @@ const UNAVAILABLE_MEDIA_LABEL = {
   too_large: "Ukuran berkas melebihi batas penyimpanan",
   download_failed: "Berkas gagal diunduh dari WhatsApp",
   upload_failed: "Berkas gagal disimpan ke storage",
+  not_downloadable: "WhatsApp tidak mengirim berkas ini ke perangkat tertaut",
 };
 
 /**

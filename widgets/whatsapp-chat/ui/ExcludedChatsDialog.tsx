@@ -130,7 +130,17 @@ function ExcludedChatItem({
 }) {
   const isGroup = excludedChat.jid.endsWith("@g.us");
   const displayName =
-    excludedChat.name || excludedChat.jid.split("@")[0] || "Kontak WhatsApp";
+    excludedChat.name || (isGroup ? "Grup WhatsApp" : "Kontak WhatsApp");
+
+  /**
+   * Baris kedua menampilkan nomor telepon bila ada. JID `@lid` dan id grup
+   * adalah identitas internal WhatsApp, jadi tidak ditampilkan mentah.
+   */
+  const secondaryLabel = isGroup
+    ? "Grup"
+    : excludedChat.jid.endsWith("@s.whatsapp.net")
+      ? `+${excludedChat.jid.split("@")[0]}`
+      : "";
 
   return (
     <li className="bg-card border-border flex items-center justify-between gap-3 rounded-lg border p-3">
@@ -148,9 +158,11 @@ function ExcludedChatItem({
             {displayName}
           </span>
 
-          <span className="text-muted-foreground truncate text-xs">
-            {excludedChat.jid}
-          </span>
+          {secondaryLabel && (
+            <span className="text-muted-foreground truncate text-xs">
+              {secondaryLabel}
+            </span>
+          )}
         </div>
       </div>
 

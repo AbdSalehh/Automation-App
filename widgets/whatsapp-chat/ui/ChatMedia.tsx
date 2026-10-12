@@ -306,6 +306,7 @@ const UNAVAILABLE_MEDIA_LABEL = {
   download_failed: "Berkas gagal diunduh dari WhatsApp",
   upload_failed: "Berkas gagal disimpan ke storage",
   not_downloadable: "WhatsApp tidak mengirim berkas ini ke perangkat tertaut",
+  view_once: "Hanya bisa dibuka di ponsel",
 };
 
 /**
@@ -329,7 +330,9 @@ function UnavailableMedia({
       <FileWarningIcon className="size-4 shrink-0 opacity-70" />
       <div className="flex min-w-0 flex-col">
         <span className="truncate">
-          {media.fileName || "Media tidak tersedia"}
+          {media.reason === "view_once"
+            ? "Media sekali lihat"
+            : media.fileName || "Media tidak tersedia"}
         </span>
         <span className="opacity-70">{reasonLabel}</span>
       </div>

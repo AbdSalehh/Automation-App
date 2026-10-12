@@ -29,6 +29,7 @@ const MEDIA_ICON_BY_TYPE = {
   location: MapPinIcon,
   contact: ContactIcon,
   call: PhoneCallIcon,
+  view_once: ImageIcon,
 };
 
 /** Daftar percakapan (ringkasan chat) milik sesi WhatsApp pengguna. */
@@ -272,6 +273,7 @@ function getPreviewLabel(
     call: "Panggilan WhatsApp",
     location: "Lokasi dibagikan",
     contact: "Kontak dibagikan",
+    view_once: "Media sekali lihat",
   };
 
   return (

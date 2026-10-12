@@ -66,7 +66,8 @@ export type InboundMessageType =
   | "sticker"
   | "location"
   | "contact"
-  | "call";
+  | "call"
+  | "view_once";
 
 export interface MessageReply {
   id: string;
@@ -121,7 +122,8 @@ export type UnavailableMediaReason =
   | "too_large"
   | "download_failed"
   | "upload_failed"
-  | "not_downloadable";
+  | "not_downloadable"
+  | "view_once";
 
 /** Metadata media masuk (sudah diunggah ke Cloudinary, hanya URL & info). */
 export interface InboundMedia {

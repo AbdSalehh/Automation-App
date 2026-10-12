@@ -1,6 +1,37 @@
 import type { NextConfig } from "next";
 
 /**
+ * Origin penyimpanan media WhatsApp selain Cloudinary, mis. domain publik
+ * bucket Cloudflare R2 (`https://media.domainanda.com` atau
+ * `https://pub-xxxx.r2.dev`). Dibaca saat build; kosongkan bila masih memakai
+ * Cloudinary saja.
+ */
+const mediaStorageOrigin = (() => {
+  const rawUrl = process.env.MEDIA_STORAGE_PUBLIC_URL?.trim();
+
+  if (!rawUrl) {
+    return null;
+  }
+
+  try {
+    return new URL(rawUrl).origin;
+  } catch {
+    return null;
+  }
+})();
+
+/**
+ * Sumber media yang diizinkan diputar (video/audio). Cloudinary tetap
+ * diizinkan agar media lama masih bisa diputar selama masa transisi.
+ */
+const mediaSources = [
+  "'self'",
+  "blob:",
+  "https://res.cloudinary.com",
+  ...(mediaStorageOrigin ? [mediaStorageOrigin] : []),
+].join(" ");
+
+/**
  * Content-Security-Policy yang aman namun tetap mengizinkan layanan yang
  * dipakai aplikasi: Ably (realtime), Google OAuth/avatar, gambar data/blob,
  * serta inline-style yang dibutuhkan Tailwind/Next. Bersifat permisif pada
@@ -11,7 +42,7 @@ const contentSecurityPolicy = [
   "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
-  "media-src 'self' blob: https://res.cloudinary.com",
+  `media-src ${mediaSources}`,
   "font-src 'self' data:",
   "connect-src 'self' https://*.ably.io wss://*.ably.io https://*.ably.net wss://*.ably.net https://*.ably-realtime.com wss://*.ably-realtime.com https://accounts.google.com",
   "frame-src 'self' https://accounts.google.com",
@@ -48,6 +79,15 @@ const nextConfig: NextConfig = {
         hostname: "res.cloudinary.com",
         pathname: "/**",
       },
+      ...(mediaStorageOrigin
+        ? [
+            {
+              protocol: "https" as const,
+              hostname: new URL(mediaStorageOrigin).hostname,
+              pathname: "/**",
+            },
+          ]
+        : []),
     ],
   },
   async headers() {

@@ -456,6 +456,7 @@ function formatMessageType(messageType: ChatMessage["messageType"]): string {
     location: "Lokasi",
     contact: "Kontak",
     call: "Panggilan",
+    view_once: "Media sekali lihat",
   };
 
   return messageTypeLabels[messageType];

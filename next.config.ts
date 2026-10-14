@@ -71,7 +71,40 @@ const securityHeaders = [
   },
 ];
 
+/**
+ * Alamat bucket R2 yang dilewatkan lewat domain situs sendiri. Bila diisi,
+ * `https://domain-situs/media/...` diteruskan ke bucket. Berguna saat alamat
+ * `r2.dev` diblokir operator internet (mis. di Indonesia): browser hanya
+ * melihat domain situs, yang tidak diblokir. Kosongkan bila memakai domain
+ * kustom di Cloudflare atau Cloudinary.
+ */
+const mediaProxyTarget = (() => {
+  const rawUrl = process.env.MEDIA_PROXY_TARGET?.trim();
+
+  if (!rawUrl) {
+    return null;
+  }
+
+  try {
+    return new URL(rawUrl).origin;
+  } catch {
+    return null;
+  }
+})();
+
 const nextConfig: NextConfig = {
+  async rewrites() {
+    if (!mediaProxyTarget) {
+      return [];
+    }
+
+    return [
+      {
+        source: "/media/:path*",
+        destination: `${mediaProxyTarget}/:path*`,
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {

@@ -31,6 +31,12 @@ export function VideoPlayer({ mediaUrl, mimetype }: VideoPlayerProps) {
         "fullscreen",
       ],
       settings: ["speed"],
+      /**
+       * Sprite ikon dimuat dari domain sendiri. Bawaan Plyr mengambilnya dari
+       * cdn.plyr.io lewat XHR, yang diblokir `connect-src` pada CSP sehingga
+       * tombol play, volume, dan layar penuh tampil kosong.
+       */
+      iconUrl: "/plyr.svg",
     });
 
     return () => player.destroy();

@@ -17,7 +17,15 @@ interface CallHistoryState {
   metadata: WhatsappCallsMetadata | null;
   isLoading: boolean;
   errorMessage: string | null;
-  fetchCalls: (sessionId: string, ownerId: string) => Promise<void>;
+  /**
+   * `silent` dipakai untuk penyegaran berkala: tanpa indikator memuat dan
+   * tanpa menimpa daftar dengan pesan error bila satu permintaan gagal.
+   */
+  fetchCalls: (
+    sessionId: string,
+    ownerId: string,
+    options?: { silent?: boolean },
+  ) => Promise<void>;
   reset: () => void;
 }
 
@@ -27,8 +35,12 @@ export const useCallStore = create<CallHistoryState>((set) => ({
   isLoading: false,
   errorMessage: null,
 
-  fetchCalls: async (sessionId, ownerId) => {
-    set({ isLoading: true, errorMessage: null });
+  fetchCalls: async (sessionId, ownerId, options = {}) => {
+    const { silent = false } = options;
+
+    if (!silent) {
+      set({ isLoading: true, errorMessage: null });
+    }
 
     try {
       const { data: response } = await apiClient.get<
@@ -40,9 +52,13 @@ export const useCallStore = create<CallHistoryState>((set) => ({
 
       set({ calls: response.data.data, metadata: response.data.metadata });
     } catch {
-      set({ errorMessage: "Gagal memuat riwayat panggilan" });
+      if (!silent) {
+        set({ errorMessage: "Gagal memuat riwayat panggilan" });
+      }
     } finally {
-      set({ isLoading: false });
+      if (!silent) {
+        set({ isLoading: false });
+      }
     }
   },
 

@@ -24,10 +24,13 @@ const callTimeFormatter = new Intl.DateTimeFormat("id-ID", {
  */
 const UNANSWERED_STATUSES = new Set(["timeout", "reject"]);
 
+/** Jeda penyegaran daftar selama ada panggilan yang masih berlangsung. */
+const ONGOING_CALL_REFRESH_MS = 15_000;
+
 const STATUS_LABEL = {
   offer: "Berdering",
   ringing: "Berdering",
-  accept: "Tersambung",
+  accept: "Berlangsung",
   terminate: "Selesai",
   reject: "Ditolak",
   timeout: "Tidak dijawab",
@@ -61,6 +64,26 @@ export function CallHistoryList({
       reset();
     }
   }, [activeOwnerId, activeSessionId, fetchCalls, reset]);
+
+  /**
+   * Panggilan yang masih berlangsung disegarkan berkala sampai hasil dan
+   * durasi finalnya tiba, tanpa pengguna perlu membuka ulang panel.
+   */
+  const hasOngoingCall = calls.some(
+    (call) => call.status === "accept" && !call.durationSeconds,
+  );
+
+  useEffect(() => {
+    if (!hasOngoingCall || !activeSessionId || !activeOwnerId) {
+      return;
+    }
+
+    const refreshTimer = setInterval(() => {
+      void fetchCalls(activeSessionId, activeOwnerId, { silent: true });
+    }, ONGOING_CALL_REFRESH_MS);
+
+    return () => clearInterval(refreshTimer);
+  }, [activeOwnerId, activeSessionId, fetchCalls, hasOngoingCall]);
 
   if (isLoading && calls.length === 0) {
     return (

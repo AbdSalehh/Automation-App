@@ -387,6 +387,7 @@ function CallPreview({ message }: { message: ChatMessage }) {
           {call.isGroup && <UsersIcon className="size-3" />}
           {formatCallStatus(call.status, call.durationSeconds)}
           {call.durationSeconds !== null &&
+            call.durationSeconds > 0 &&
             ` · ${formatCallDuration(call.durationSeconds)}`}
         </p>
       </div>
@@ -476,7 +477,7 @@ function formatCallStatus(
   > = {
     offer: "Memanggil",
     ringing: "Berdering",
-    accept: "Diterima",
+    accept: "Sedang berlangsung",
     reject: "Panggilan ditolak",
     timeout: "Tidak terjawab",
   };

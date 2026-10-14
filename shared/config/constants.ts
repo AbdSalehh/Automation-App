@@ -1,6 +1,13 @@
 export const APP_NAME = "Fluxera";
 
 /**
+ * Saklar halaman publik tanpa login (beranda, Terms, Privacy). Bila `false`,
+ * beranda mengarah ke login dan Terms/Privacy tidak ditemukan. Kodenya tetap
+ * ada, jadi cukup ubah nilai ini menjadi `true` untuk menampilkannya kembali.
+ */
+export const ARE_PUBLIC_PAGES_ENABLED = false;
+
+/**
  * Model Gemini default untuk seluruh fitur AI (classifier, builder, node).
  * Pusatkan di sini agar tidak ada versi yang tertinggal/usang (mis. 1.5 yang
  * sudah dipensiunkan dan membalas 404).
@@ -28,11 +35,7 @@ export const GEMINI_MODELS: { value: string; label: string }[] = [
  * Gemini memakai endpoint nativnya.
  */
 export type AiProviderId =
-  | "gemini"
-  | "openai"
-  | "openrouter"
-  | "groq"
-  | "mistral";
+  "gemini" | "openai" | "openrouter" | "groq" | "mistral";
 
 export const AI_PROVIDERS: { value: AiProviderId; label: string }[] = [
   { value: "gemini", label: "Google Gemini (gratis)" },

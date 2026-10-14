@@ -22,7 +22,7 @@ export function LoginButton({ disabled = false }: LoginButtonProps) {
       onClick={() => signIn("google", { callbackUrl: ROUTES.workflows })}
       disabled={disabled}
       variant="outline"
-      className="h-12 w-full gap-3 rounded-lg text-sm font-semibold"
+      className="short:py-2.5 h-auto w-full gap-3 rounded-xl border-neutral-200 py-3 text-sm font-semibold text-neutral-800 hover:bg-neutral-50 dark:bg-white dark:hover:bg-neutral-50"
     >
       <svg className="size-5" viewBox="0 0 24 24" aria-hidden="true">
         <path

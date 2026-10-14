@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { LegalPage } from "@/views/legal";
-import { APP_NAME } from "@/shared/config/constants";
+import { APP_NAME, ARE_PUBLIC_PAGES_ENABLED } from "@/shared/config/constants";
 import {
   UserIcon,
   ShieldCheckIcon,
@@ -16,6 +17,10 @@ export const metadata: Metadata = {
 };
 
 export default function TermsPage() {
+  if (!ARE_PUBLIC_PAGES_ENABLED) {
+    notFound();
+  }
+
   return (
     <LegalPage
       type="terms"

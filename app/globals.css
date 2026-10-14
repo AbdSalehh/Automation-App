@@ -1,6 +1,12 @@
 @import "tailwindcss";
 @plugin "tailwindcss-animate";
 
+/**
+ * Layar pendek, misalnya saat browser di-zoom atau pada laptop kecil. Dipakai
+ * untuk memadatkan jarak vertikal agar konten tetap muat tanpa banyak scroll.
+ */
+@custom-variant short (@media (max-height: 760px));
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

@@ -3,19 +3,23 @@
 import { useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import {
-  MailIcon,
-  LockIcon,
-  EyeIcon,
-  EyeOffIcon,
-  ArrowRightIcon,
-} from "lucide-react";
-import { Button, Input } from "@/shared/ui";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { toast } from "sonner";
+import { Button, Input, Spinner } from "@/shared/ui";
 import { ROUTES } from "@/shared/config/constants";
 
 /**
- * Form login berbasis kredensial email & password dengan ikon dalam input,
- * tombol toggle visibilitas password, dan tautan lupa password.
+ * Gaya input form login: kotak abu muda yang berubah putih saat difokuskan.
+ * Kelas `dark:` ikut ditimpa agar tampilan tidak berubah mengikuti tema OS.
+ */
+const INPUT_CLASS_NAME =
+  "short:py-2.5 h-auto rounded-xl border-neutral-200 bg-neutral-100 px-4 py-3 text-sm text-neutral-900 shadow-none placeholder:text-neutral-400 focus-visible:border-neutral-400 focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-black/5 dark:bg-neutral-100";
+
+const LABEL_CLASS_NAME = "text-xs font-semibold text-neutral-700";
+
+/**
+ * Form login berbasis kredensial email & password dengan tombol toggle
+ * visibilitas password dan tautan lupa password.
  */
 interface CredentialsLoginFormProps {
   disabled?: boolean;
@@ -74,34 +78,32 @@ export function CredentialsLoginForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex w-full flex-col gap-5">
-      <div className="flex flex-col gap-2">
-        <label htmlFor="email" className="text-foreground text-sm font-bold">
+    <form
+      onSubmit={handleSubmit}
+      className="short:gap-3 flex w-full flex-col gap-4"
+    >
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="email" className={LABEL_CLASS_NAME}>
           Email
         </label>
-
-        <div className="relative">
-          <MailIcon className="text-muted-foreground absolute top-1/2 left-3.5 size-4 -translate-y-1/2" />
-          <Input
-            id="email"
-            type="email"
-            placeholder="nama@contoh.com"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            autoComplete="email"
-            required
-            className="h-12 rounded-lg pl-10"
-          />
-        </div>
+        <Input
+          id="email"
+          type="email"
+          placeholder="name@example.com"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          autoComplete="email"
+          required
+          className={INPUT_CLASS_NAME}
+        />
       </div>
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor="password" className="text-foreground text-sm font-bold">
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="password" className={LABEL_CLASS_NAME}>
           Password
         </label>
 
         <div className="relative">
-          <LockIcon className="text-muted-foreground absolute top-1/2 left-3.5 size-4 -translate-y-1/2" />
           <Input
             id="password"
             type={isPasswordVisible ? "text" : "password"}
@@ -110,12 +112,12 @@ export function CredentialsLoginForm({
             onChange={(event) => setPassword(event.target.value)}
             autoComplete="current-password"
             required
-            className="h-12 rounded-lg pr-10 pl-10"
+            className={`${INPUT_CLASS_NAME} pr-10`}
           />
           <button
             type="button"
             onClick={() => setIsPasswordVisible((previous) => !previous)}
-            className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3.5 -translate-y-1/2 transition-colors"
+            className="absolute top-1/2 right-3 -translate-y-1/2 p-1 text-neutral-400 transition-colors hover:text-neutral-700"
             aria-label={isPasswordVisible ? "Hide password" : "Show password"}
           >
             {isPasswordVisible ? (
@@ -125,10 +127,17 @@ export function CredentialsLoginForm({
             )}
           </button>
         </div>
+      </div>
 
+      <div className="flex justify-end">
         <button
           type="button"
-          className="self-end text-sm font-semibold text-orange-500 transition-colors hover:text-orange-600"
+          onClick={() =>
+            toast.info(
+              "Please contact your administrator to reset your password.",
+            )
+          }
+          className="text-xs font-medium text-neutral-600 transition-colors hover:text-neutral-900"
         >
           Forgot password?
         </button>
@@ -143,9 +152,9 @@ export function CredentialsLoginForm({
       <Button
         type="submit"
         disabled={isLoading || disabled}
-        className="h-12 w-full rounded-lg bg-orange-500 text-base font-bold shadow-sm hover:bg-orange-600"
+        className="short:py-3 h-auto w-full rounded-xl bg-neutral-900 py-3.5 text-sm font-semibold text-white shadow-md hover:bg-neutral-800 active:scale-[0.99]"
       >
-        {isLoading ? "Signing in..." : "Sign In"}
+        {isLoading ? <Spinner /> : "Sign In"}
       </Button>
     </form>
   );

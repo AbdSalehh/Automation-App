@@ -64,7 +64,7 @@ export function OnboardingForm() {
       <div className="flex flex-col gap-1">
         <p className="text-foreground text-sm font-medium">Usage Purpose</p>
         <p className="text-muted-foreground text-xs">
-          What is your main goal for using Fluxera?
+          What is your main goal for using Fyber?
         </p>
       </div>
 
@@ -121,7 +121,7 @@ export function OnboardingForm() {
         disabled={isLoading || !formData.usagePurpose}
         className="w-full"
       >
-        {isLoading ? "Saving..." : "Start Using Fluxera"}
+        {isLoading ? "Saving..." : "Start Using Fyber"}
       </Button>
     </form>
   );

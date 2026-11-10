@@ -13,7 +13,7 @@ interface BrandLogoProps {
 }
 
 /**
- * Logo brand Fluxera memakai berkas resmi `public/logo.webp`. Dipakai lintas
+ * Logo brand Fyber memakai berkas resmi `public/logo.webp`. Dipakai lintas
  * header, footer, dan dashboard agar identitas visual konsisten.
  */
 export function BrandLogo({

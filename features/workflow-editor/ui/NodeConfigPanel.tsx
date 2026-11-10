@@ -23,6 +23,7 @@ import {
   Spinner,
   ScrollArea,
   SimpleTooltip,
+  InfoTooltip,
 } from "@/shared/ui";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import {
@@ -40,6 +41,7 @@ import {
 import { useCredentialStore } from "@/entities/credential";
 import { useWhatsappSessionStore } from "@/entities/whatsapp-session";
 import { ConditionBuilder } from "./ConditionBuilder";
+import { ConfigFieldLabel } from "./ConfigFieldLabel";
 import { SheetWriteTargets, type WriteTarget } from "./SheetWriteTargets";
 import { SpreadsheetPreviewDrawer } from "./SpreadsheetPreviewDrawer";
 import { DateCalculatorConfig } from "./DateCalculatorConfig";
@@ -99,20 +101,20 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
       multiline: true,
       placeholder:
         "You are an assistant that records expenses. Extract the item name and price from the message.",
-      hint: "Defines the AI persona/role and the expected response format.",
+      hint: "Sets the AI's role and how its replies should be formatted.",
     },
     {
       key: "prompt",
       label: "Prompt / Message",
       multiline: true,
       placeholder: "{{message}}",
-      hint: "The message processed by the AI. Use {{message}} for the incoming message content.",
+      hint: "What the AI receives. {{message}} inserts the incoming message.",
     },
     {
       key: "model",
       label: "Model (optional)",
       selectOptions: GEMINI_MODELS,
-      hint: "Flash-Lite is suitable when Flash is busy (high-traffic).",
+      hint: "Switch to Flash-Lite if Flash is busy or rate-limited.",
     },
   ],
   supabase_insert: [
@@ -122,7 +124,7 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
       label: "Columns (one per line: column=value)",
       multiline: true,
       placeholder: "item={{text}}\namount={{amount}}\nsender={{sender}}",
-      hint: "Leave blank to store all incoming data fields as-is. Values support {{template}}.",
+      hint: "Leave empty to save every incoming field as is. Values can use {{field}}.",
     },
   ],
   supabase_query: [
@@ -131,14 +133,14 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
       key: "select",
       label: "Selected Columns",
       placeholder: "*",
-      hint: "Comma-separated list of columns, or * for all.",
+      hint: "Columns to return, separated by commas. Use * for all of them.",
     },
     {
       key: "filters",
       label: "Filter (one per line: column operator value)",
       multiline: true,
       placeholder: "sender eq {{sender}}\namount gte 1000",
-      hint: "PostgREST operators: eq, gte, lte, like, etc.",
+      hint: "Uses PostgREST operators such as eq, gte, lte, and like.",
     },
     {
       key: "orderBy",
@@ -152,7 +154,7 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
       key: "info",
       label: "Info",
       placeholder: "",
-      hint: "When a Telegram message arrives, data is available as {{sender}}, {{message}}, {{name}}. Register the bot webhook on the Telegram credentials page.",
+      hint: "Incoming messages provide {{sender}}, {{message}}, and {{name}}. Register the bot webhook on the Telegram credential first.",
     },
   ],
   http_request: [
@@ -164,7 +166,7 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
       key: "targetField",
       label: "Destination Number Column",
       columnSelect: true,
-      hint: "Select the column containing the WhatsApp number from the sheet.",
+      hint: "The sheet column that holds the WhatsApp number.",
     },
     {
       key: "target",
@@ -183,13 +185,13 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
       key: "reminderDelayMinutes",
       label: "Send Delay (minutes)",
       placeholder: "0 = send immediately",
-      hint: "If set, the message is scheduled after N minutes. When it is due, the data is rechecked — if the condition is no longer met (e.g. already paid), sending is canceled automatically.",
+      hint: "Wait this many minutes before sending. If the row no longer matches by then, the message is skipped.",
     },
     {
       key: "sendDelaySeconds",
       label: "Delay Between Sends (seconds)",
       placeholder: "2",
-      hint: "When sending to many numbers at once, add a delay between messages so they are not sent at the same second. Default 2 seconds.",
+      hint: "Pause between messages when sending to many numbers. Defaults to 2 seconds.",
     },
   ],
   whatsapp_trigger: [
@@ -197,7 +199,7 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
       key: "senderField",
       label: "Info",
       placeholder: "",
-      hint: "When a WhatsApp reply arrives, data is available as {{sender}}, {{message}}, {{name}}. Connect your WhatsApp account (Baileys) via QR scan in Settings, or use the WhatsApp Cloud API (Meta).",
+      hint: "Incoming replies provide {{sender}}, {{message}}, and {{name}}. Needs a WhatsApp number linked by QR scan, or the WhatsApp Cloud API.",
     },
   ],
   schedule: [
@@ -205,7 +207,7 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
       key: "executeDate",
       label: "Execution Date / Template",
       placeholder: "{{computedDate}}",
-      hint: "Absolute date or {{computedDate}} from the Date Calculator.",
+      hint: "A fixed date, or {{computedDate}} from a Date Calculator node.",
     },
     {
       key: "time",
@@ -218,7 +220,7 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
       key: "matchField",
       label: "Target Number Column",
       columnSelect: true,
-      hint: "The number whose reply is awaited, e.g. Number.",
+      hint: "The column with the number you're waiting to hear from, such as Number.",
     },
     {
       key: "matchValue",
@@ -229,7 +231,7 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
       key: "countryCode",
       label: "Country Code",
       selectOptions: COUNTRY_CODE_OPTIONS,
-      hint: "Used to align local number formats (e.g. 08xxx) with international replies (e.g. 628xxx).",
+      hint: "Lets local numbers (08…) match replies that arrive in international format (628…).",
     },
   ],
   telegram_send: [
@@ -248,19 +250,19 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
         { value: "new_spreadsheet", label: "Create new spreadsheet" },
         { value: "new_sheet", label: "Add sheet to an existing spreadsheet" },
       ],
-      hint: "Create a new spreadsheet (auto-generated ID) or add a tab to an existing spreadsheet.",
+      hint: "Create a new spreadsheet, or add a tab to one you already have.",
     },
     {
       key: "title",
       label: "Spreadsheet Title (new mode)",
       placeholder: "Financial Records {{name}}",
-      hint: "Used in 'Create new spreadsheet' mode. Supports {{template}}.",
+      hint: "Only used when creating a new spreadsheet. Can use {{field}}.",
     },
     {
       key: "spreadsheetId",
       label: "Spreadsheet ID (add sheet mode)",
       placeholder: "1AbC...xyz",
-      hint: "Used in 'Add sheet to an existing spreadsheet' mode.",
+      hint: "Only used when adding a tab to an existing spreadsheet.",
     },
     {
       key: "sheetName",
@@ -275,7 +277,7 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
       key: "columns",
       label: "Columns (comma-separated)",
       placeholder: "sender,message,receivedAt",
-      hint: "Field names from the incoming data (e.g. sender, message, name from the WA trigger). New rows are written starting at column A in this order.",
+      hint: "Fields to write, in order, starting at column A. For example: sender, message, name.",
     },
   ],
   gmail_send: [
@@ -283,7 +285,7 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
       key: "to",
       label: "Recipient (to)",
       placeholder: "recipient@email.com or {{email}}",
-      hint: "Required. Supports {{template}} from incoming data, e.g. {{email}}.",
+      hint: "Can use a field from earlier nodes, such as {{email}}.",
     },
     {
       key: "subject",
@@ -297,7 +299,7 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
         { value: "text", label: "Plain Text" },
         { value: "html", label: "HTML Email" },
       ],
-      hint: "Choose HTML Email for a formatted template with preview.",
+      hint: "HTML Email lets you design a formatted message with a live preview.",
     },
     {
       key: "body",
@@ -339,13 +341,13 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
       key: "field",
       label: "Field to Evaluate",
       placeholder: "status or {{status}}",
-      hint: "Name of the incoming data field whose value is compared.",
+      hint: "The incoming field to compare.",
     },
     {
       key: "value",
       label: "Target Value",
       placeholder: "approved or {{target}}",
-      hint: "Only rows whose field value equals this are forwarded.",
+      hint: "Only rows where the field equals this value continue.",
     },
   ],
   merge: [],
@@ -354,7 +356,7 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
       key: "batchSize",
       label: "Batch Size",
       placeholder: "1",
-      hint: "Number of items per batch processed incrementally. Default 1.",
+      hint: "How many items to process in each batch. Defaults to 1.",
     },
   ],
   no_op: [],
@@ -363,7 +365,7 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
       key: "webhookUrl",
       label: "Slack Incoming Webhook URL",
       placeholder: "https://hooks.slack.com/services/...",
-      hint: "Create in Slack: Apps → Incoming Webhooks.",
+      hint: "Create one in Slack under Apps → Incoming Webhooks.",
     },
     {
       key: "text",
@@ -377,7 +379,7 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
       key: "webhookUrl",
       label: "Discord Webhook URL",
       placeholder: "https://discord.com/api/webhooks/...",
-      hint: "Create in Server Settings → Integrations → Webhooks.",
+      hint: "Create one in Discord under Server Settings → Integrations → Webhooks.",
     },
     {
       key: "content",
@@ -391,7 +393,6 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
       key: "url",
       label: "Feed URL",
       placeholder: "https://techcrunch.com/feed/",
-      hint: "The RSS/Atom feed address to read.",
     },
     {
       key: "limit",
@@ -407,7 +408,7 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
         { value: "openai", label: "OpenAI" },
         { value: "openrouter", label: "OpenRouter" },
       ],
-      hint: "OpenAI directly, or OpenRouter as a multi-model gateway.",
+      hint: "Call OpenAI directly, or use OpenRouter to reach many models with one key.",
     },
     {
       key: "model",
@@ -419,14 +420,14 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
       label: "AI Role (System Instruction)",
       multiline: true,
       placeholder: "You are an assistant that summarizes articles in 3 points.",
-      hint: "Defines the AI persona/role and response format.",
+      hint: "Sets the AI's role and how its replies should be formatted.",
     },
     {
       key: "prompt",
       label: "Prompt / Message",
       multiline: true,
       placeholder: "{{message}}",
-      hint: "The message processed by the AI. Use {{template}} from incoming data.",
+      hint: "What the AI receives. Use {{field}} to insert data from earlier nodes.",
     },
   ],
   ai_agent: [
@@ -436,14 +437,14 @@ const CONFIG_FIELDS: Record<string, ConfigFieldDef[]> = {
       multiline: true,
       placeholder:
         "You are an automation assistant that replies concisely and clearly.",
-      hint: "Defines the AI persona/role and response format.",
+      hint: "Sets the AI's role and how its replies should be formatted.",
     },
     {
       key: "prompt",
       label: "Prompt / Message",
       multiline: true,
       placeholder: "{{message}}",
-      hint: "The message processed by the AI. Use {{template}} from incoming data.",
+      hint: "What the AI receives. Use {{field}} to insert data from earlier nodes.",
     },
   ],
 };
@@ -709,7 +710,7 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
             </div>
 
             {node.data.ref && (
-              <div className="border-border bg-muted/40 rounded-md border px-3 py-2">
+              <div className="border-border bg-muted/40 flex items-center gap-1.5 rounded-md border px-3 py-2">
                 <p className="text-muted-foreground text-xs">
                   Node reference:{" "}
                   <code className="text-foreground font-mono font-semibold">
@@ -717,25 +718,30 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                   </code>
                 </p>
 
-                <p className="text-muted-foreground mt-1 text-[11px]">
-                  Use in another node with{" "}
-                  <code className="font-mono">
-                    {`{{${node.data.ref}.field}}`}
-                  </code>{" "}
-                  to use this node's output (e.g.{" "}
-                  <code className="font-mono">
-                    {`{{${node.data.ref}.spreadsheetId}}`}
-                  </code>
-                  ).
-                </p>
+                <InfoTooltip
+                  label="About node reference"
+                  content={
+                    <>
+                      Use{" "}
+                      <code className="font-mono">
+                        {`{{${node.data.ref}.field}}`}
+                      </code>{" "}
+                      in a later node to read this node&apos;s output, such as{" "}
+                      <code className="font-mono">
+                        {`{{${node.data.ref}.spreadsheetId}}`}
+                      </code>
+                      .
+                    </>
+                  }
+                />
               </div>
             )}
 
             {siblingOperations.length > 1 && (
               <div>
-                <label className="text-muted-foreground mb-1 block text-xs font-medium">
+                <ConfigFieldLabel hint="Each operation has its own settings, so the fields below change to match.">
                   Operation
-                </label>
+                </ConfigFieldLabel>
 
                 <Select
                   value={node.data.kind}
@@ -753,11 +759,6 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                     ))}
                   </SelectContent>
                 </Select>
-
-                <p className="text-muted-foreground mt-1.5 text-xs">
-                  Select an operation for this node. The configuration below
-                  adapts to your choice.
-                </p>
               </div>
             )}
 
@@ -889,9 +890,9 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                 </div>
 
                 <div>
-                  <label className="text-muted-foreground mb-1 block text-xs font-medium">
+                  <ConfigFieldLabel hint="Every column in this sheet is read automatically.">
                     Sheet Name
-                  </label>
+                  </ConfigFieldLabel>
 
                   <Input
                     value={String(node.data.config.sheetName ?? "")}
@@ -900,10 +901,6 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                       updateConfigValue("sheetName", changeEvent.target.value)
                     }
                   />
-
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    Automatically reads all columns from this sheet.
-                  </p>
                 </div>
 
                 <button
@@ -931,10 +928,6 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                     onChange={(next) => updateConfigValue("readColumns", next)}
                     placeholder="All columns (default)"
                   />
-
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    Leave blank to read all columns.
-                  </p>
                 </div>
 
                 <div>
@@ -957,9 +950,17 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
             {isSheetUpdateNode && (
               <>
                 <div>
-                  <label className="text-muted-foreground mb-1 block text-xs font-medium">
+                  <ConfigFieldLabel
+                    hint={
+                      <>
+                        For WhatsApp replies: picks the row where this column
+                        matches the value below, such as Number ={" "}
+                        <code className="font-mono">{"{{sender}}"}</code>.
+                      </>
+                    }
+                  >
                     Find Row by Column (optional)
-                  </label>
+                  </ConfigFieldLabel>
 
                   <Select
                     value={
@@ -988,11 +989,6 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                       ))}
                     </SelectContent>
                   </Select>
-
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    Use this for WA replies: find the row whose column matches
-                    the value below (e.g. Number column = {"{{sender}}"}).
-                  </p>
                 </div>
 
                 {String(node.data.config.matchColumn ?? "") && (
@@ -1031,9 +1027,20 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
             {usesConditionBuilder && (
               <div>
                 <div className="mb-1 flex items-center justify-between">
-                  <label className="text-muted-foreground block text-xs font-medium">
-                    Condition
-                  </label>
+                  <div className="flex items-center gap-1.5">
+                    <label className="text-muted-foreground block text-xs font-medium">
+                      Condition
+                    </label>
+
+                    <InfoTooltip
+                      label="About condition"
+                      content={
+                        node.data.kind === "filter"
+                          ? "Only rows that meet the condition move on to the next node."
+                          : "The flow continues only if at least one row matches."
+                      }
+                    />
+                  </div>
 
                   {sheetSources.length > 0 && (
                     <button
@@ -1090,12 +1097,6 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                     &quot;Load sheet columns&quot;.
                   </p>
                 )}
-
-                <p className="text-muted-foreground mt-1.5 text-xs">
-                  {node.data.kind === "filter"
-                    ? "Only rows that pass the condition are forwarded to the next node."
-                    : "The flow continues to the next node only if a matching row exists."}
-                </p>
               </div>
             )}
 
@@ -1129,9 +1130,9 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
 
             {configFields.map((configField) => (
               <div key={configField.key}>
-                <label className="text-muted-foreground mb-1 block text-xs font-medium">
+                <ConfigFieldLabel hint={configField.hint}>
                   {configField.label}
-                </label>
+                </ConfigFieldLabel>
 
                 {configField.htmlEmail &&
                 String(node.data.config.bodyType ?? "text") === "html" ? (
@@ -1285,12 +1286,6 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                     }
                   />
                 )}
-
-                {configField.hint && (
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    {configField.hint}
-                  </p>
-                )}
               </div>
             ))}
 
@@ -1313,9 +1308,16 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
             {/* Per-node Test Run */}
             <div className="border-border bg-muted/20 flex flex-col gap-2 rounded-md border p-2.5">
               <div className="flex items-center justify-between">
-                <span className="text-foreground text-xs font-semibold">
-                  Test Node
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-foreground text-xs font-semibold">
+                    Test Node
+                  </span>
+
+                  <InfoTooltip
+                    label="About test node"
+                    content="Runs only this node with sample data. Connector nodes still make real API calls, so a WhatsApp or email node really sends."
+                  />
+                </div>
 
                 <Button
                   variant="secondary"
@@ -1349,11 +1351,6 @@ export function NodeConfigPanel({ node, onClose }: NodeConfigPanelProps) {
                   </pre>
                 </div>
               )}
-
-              <p className="text-muted-foreground text-[11px]">
-                Runs only this node with sample data. Connector nodes still call
-                their actual API.
-              </p>
             </div>
 
             <Button

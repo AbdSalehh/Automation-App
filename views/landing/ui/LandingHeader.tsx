@@ -10,7 +10,7 @@ const NAV_LINKS = [
 ];
 
 /**
- * Header landing page bertema terang. Memuat logo Fluxera, navigasi anchor,
+ * Header landing page bertema terang. Memuat logo Fyber, navigasi anchor,
  * serta tombol aksi. Untuk pengguna yang sudah login ditampilkan tombol menuju
  * dashboard, selain itu tombol Login dan Login dengan Google (aksen oranye).
  */

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "./providers";
 import { APP_NAME } from "@/shared/config/constants";
+import { getAppUrl } from "@/shared/config/appUrl";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,18 +15,31 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+const appUrl = getAppUrl();
+const appTitle = `${APP_NAME} — Workflow Automation`;
 const appDescription =
   "Platform otomatisasi workflow — rancang, jalankan, dan pantau alur kerja agen Anda dalam satu tempat.";
 
+/**
+ * Metadata dasar untuk seluruh halaman. Gambar Open Graph dibuat oleh
+ * `app/opengraph-image.tsx`, dan Next.js menambahkan tag gambarnya beserta
+ * ukurannya secara otomatis, jadi tidak perlu ditulis ulang di sini.
+ */
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),
   title: {
-    default: APP_NAME,
+    default: appTitle,
     template: `%s | ${APP_NAME}`,
   },
   description: appDescription,
   applicationName: APP_NAME,
+  keywords: [
+    "workflow automation",
+    "otomatisasi workflow",
+    "WhatsApp automation",
+    "no-code",
+    APP_NAME,
+  ],
   icons: {
     icon: "/logo.webp",
     shortcut: "/logo.webp",
@@ -34,24 +48,15 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: APP_NAME,
-    title: APP_NAME,
+    title: appTitle,
     description: appDescription,
-    url: appUrl,
+    url: "/",
     locale: "id_ID",
-    images: [
-      {
-        url: "/logo.webp",
-        width: 1200,
-        height: 630,
-        alt: APP_NAME,
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: APP_NAME,
+    title: appTitle,
     description: appDescription,
-    images: ["/logo.webp"],
   },
 };
 

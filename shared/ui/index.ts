@@ -60,6 +60,7 @@ export {
   TooltipProvider,
 } from "./tooltip";
 export { SimpleTooltip } from "./SimpleTooltip";
+export { InfoTooltip } from "./InfoTooltip";
 export { Calendar } from "./calendar";
 export {
   Dialog,

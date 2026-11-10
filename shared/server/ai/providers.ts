@@ -1,4 +1,6 @@
 import { requestExternal } from "@/shared/server/httpClient";
+import { APP_NAME } from "@/shared/config/constants";
+import { getAppUrl } from "@/shared/config/appUrl";
 import type { AiProvider, AiProviderConfig } from "./types";
 
 /**
@@ -130,8 +132,8 @@ async function completeOpenAi(args: CompleteArgs): Promise<string> {
  */
 async function completeOpenRouter(args: CompleteArgs): Promise<string> {
   return completeChatCompletions("https://openrouter.ai/api/v1", args, {
-    "HTTP-Referer": "https://fluxera.app",
-    "X-Title": "Fluxera",
+    "HTTP-Referer": getAppUrl(),
+    "X-Title": APP_NAME,
   });
 }
 

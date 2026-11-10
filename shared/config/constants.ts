@@ -1,4 +1,4 @@
-export const APP_NAME = "Fluxera";
+export const APP_NAME = "Fyber";
 
 /**
  * Saklar halaman publik tanpa login (beranda, Terms, Privacy). Bila `false`,

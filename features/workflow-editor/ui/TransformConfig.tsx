@@ -2,7 +2,7 @@
 
 import { PlusIcon, Trash2Icon } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
-import { Button, Input, Textarea } from "@/shared/ui";
+import { Button, InfoTooltip, Input, Textarea } from "@/shared/ui";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/shared/ui/tabs";
 import { Label } from "@/shared/ui/label";
 import { ExpressionInput } from "./ExpressionInput";
@@ -129,9 +129,23 @@ export function TransformConfig({
       </TabsContent>
 
       <TabsContent value="code" className="mt-3">
-        <Label className="text-muted-foreground mb-1 block text-xs font-medium">
-          JavaScript Transform
-        </Label>
+        <div className="mb-1 flex items-center gap-1.5">
+          <Label className="text-muted-foreground block text-xs font-medium">
+            JavaScript Transform
+          </Label>
+
+          <InfoTooltip
+            label="About JavaScript transform"
+            content={
+              <>
+                Read the input from <code className="font-mono">payload</code>{" "}
+                and the current time from{" "}
+                <code className="font-mono">$now</code>, then{" "}
+                <code className="font-mono">return</code> the new object.
+              </>
+            }
+          />
+        </div>
 
         <Textarea
           rows={8}
@@ -140,12 +154,6 @@ export function TransformConfig({
           placeholder={DEFAULT_CODE}
           onChange={(changeEvent) => onCodeChange(changeEvent.target.value)}
         />
-
-        <p className="text-muted-foreground mt-1 text-xs">
-          Access data via <code className="font-mono">payload</code> and{" "}
-          <code className="font-mono">$now</code>. Return the result object with{" "}
-          <code className="font-mono">return</code>.
-        </p>
       </TabsContent>
     </Tabs>
   );

@@ -21,7 +21,7 @@ const STEPS = [
   {
     number: "4",
     title: "Activate & Automate",
-    description: "Activate the workflow and let Fluxera work for you 24/7.",
+    description: "Activate the workflow and let Fyber work for you 24/7.",
   },
 ];
 

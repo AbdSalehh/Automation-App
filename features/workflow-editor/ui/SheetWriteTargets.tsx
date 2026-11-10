@@ -9,6 +9,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  InfoTooltip,
 } from "@/shared/ui";
 
 export interface WriteTarget {
@@ -53,9 +54,22 @@ export function SheetWriteTargets({
 
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-muted-foreground block text-xs font-medium">
-        Columns to Write
-      </label>
+      <div className="flex items-center gap-1.5">
+        <label className="text-muted-foreground block text-xs font-medium">
+          Columns to Write
+        </label>
+
+        <InfoTooltip
+          label="About columns to write"
+          content={
+            <>
+              Values can use any column as {"{{column}}"}, WhatsApp send results
+              ({"{{__waMessageId}}"}, {"{{__waTarget}}"}, {"{{__waSentAt}}"}),
+              and the reply time {"{{__replyAt}}"}.
+            </>
+          }
+        />
+      </div>
 
       {targets.length === 0 && (
         <p className="text-muted-foreground text-xs">
@@ -141,12 +155,6 @@ export function SheetWriteTargets({
         <PlusIcon className="size-4" />
         Add Column
       </Button>
-
-      <p className="text-muted-foreground text-xs">
-        Supports {"{{column}}"}, WA results ({"{{__waMessageId}}"},{" "}
-        {"{{__waTarget}}"}, {"{{__waSentAt}}"}) and reply time {"{{__replyAt}}"}
-        .
-      </p>
     </div>
   );
 }

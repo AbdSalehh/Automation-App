@@ -426,10 +426,6 @@ export function ScheduleTriggerConfig({
               </SelectContent>
             </Select>
           </div>
-
-          <p className="text-muted-foreground text-[11px]">
-            Mis. setiap 5 menit, atau setiap 12 jam.
-          </p>
         </TabsContent>
 
         <TabsContent value="daily" className="mt-3 flex flex-col gap-2">
@@ -447,10 +443,6 @@ export function ScheduleTriggerConfig({
               onConfigChange({ dailyTime: changeEvent.target.value, cron });
             }}
           />
-
-          <p className="text-muted-foreground text-[11px]">
-            Mis. kirim reminder setiap jam 09:00 pagi.
-          </p>
         </TabsContent>
 
         <TabsContent value="weekly" className="mt-3 flex flex-col gap-3">

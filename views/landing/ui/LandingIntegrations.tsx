@@ -5,7 +5,7 @@ import { Button, BrandIcon } from "@/shared/ui";
 import Image from "next/image";
 
 /**
- * Bagian integrasi (gambar 4): panel oranye lembut dengan Fluxera di tengah
+ * Bagian integrasi (gambar 4): panel oranye lembut dengan Fyber di tengah
  * dikelilingi kartu logo brand, dihubungkan garis konektor putus-putus.
  */
 export function LandingIntegrations() {
@@ -20,7 +20,7 @@ export function LandingIntegrations() {
             Terhubung dengan tools yang Anda gunakan
           </h2>
           <p className="mt-3 text-slate-600">
-            Fluxera mendukung berbagai integrasi populer dan terus bertambah.
+            Fyber mendukung berbagai integrasi populer dan terus bertambah.
           </p>
 
           <Link href={ROUTES.login} className="mt-6">

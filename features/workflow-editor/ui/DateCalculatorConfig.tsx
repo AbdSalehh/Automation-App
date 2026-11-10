@@ -9,6 +9,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  InfoTooltip,
 } from "@/shared/ui";
 import { Button } from "@/shared/ui/button";
 import { Calendar } from "@/shared/ui/calendar";
@@ -211,9 +212,16 @@ export function DateCalculatorConfig({
 
       {/* Shared time-of-day override */}
       <div>
-        <Label className="text-muted-foreground mb-1 block text-xs font-medium">
-          Execution Time (optional)
-        </Label>
+        <div className="mb-1 flex items-center gap-1.5">
+          <Label className="text-muted-foreground block text-xs font-medium">
+            Execution Time (optional)
+          </Label>
+
+          <InfoTooltip
+            label="About execution time"
+            content="Sets the time of day on the result. Leave empty to keep the original time."
+          />
+        </div>
 
         <Input
           type="time"
@@ -222,11 +230,6 @@ export function DateCalculatorConfig({
             onConfigChange("time", changeEvent.target.value)
           }
         />
-
-        <p className="text-muted-foreground mt-1 text-xs">
-          Set a specific time on the resulting date. Leave blank to keep the
-          original time.
-        </p>
       </div>
     </div>
   );

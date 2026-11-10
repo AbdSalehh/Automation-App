@@ -16,7 +16,7 @@ export function LandingCta() {
         </h2>
         <p className="relative mx-auto mt-3 max-w-xl text-orange-50">
           Bergabunglah dan rasakan betul efisiensi membangun otomasi bisnis
-          tanpa coding bersama Fluxera.
+          tanpa coding bersama Fyber.
         </p>
 
         <div className="relative mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">

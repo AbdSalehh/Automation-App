@@ -1,43 +1,30 @@
-import Image from "next/image";
-import { APP_NAME } from "@/shared/config/constants";
 import { cn } from "@/shared/lib/utils";
+import { BrandWordmark } from "./BrandMark";
+
+/** Perbandingan tinggi tulisan terhadap `size` agar sepadan dengan teks sekitar. */
+const WORDMARK_HEIGHT_RATIO = 0.75;
 
 interface BrandLogoProps {
-  /** Ukuran sisi logo dalam piksel. Default 32. */
+  /** Ukuran acuan logo dalam piksel. Default 32. */
   size?: number;
-  /** Sembunyikan teks nama brand bila hanya ingin menampilkan ikon. */
-  hideText?: boolean;
-  /** Kelas tambahan untuk teks nama brand. */
+  /** Kelas tambahan untuk warna huruf logo, mis. `text-slate-900`. */
   textClassName?: string;
   className?: string;
 }
 
 /**
- * Logo brand Fyber memakai berkas resmi `public/logo.webp`. Dipakai lintas
- * header, footer, dan dashboard agar identitas visual konsisten.
+ * Logo brand Fyber berupa tulisan "fyber." dengan titik berwarna primer.
+ * Dipakai lintas header, footer, dan dashboard agar identitas visual
+ * konsisten. Warna huruf mengikuti `textClassName` atau teks sekitarnya.
  */
 export function BrandLogo({
   size = 32,
-  hideText = false,
   textClassName,
   className,
 }: BrandLogoProps) {
   return (
-    <span className={cn("flex items-center gap-2", className)}>
-      <Image
-        src="/logo.webp"
-        alt={`Logo ${APP_NAME}`}
-        width={size}
-        height={size}
-        className="rounded-lg object-contain"
-        priority
-      />
-
-      {!hideText && (
-        <span className={cn("font-bold tracking-tight", textClassName)}>
-          {APP_NAME}
-        </span>
-      )}
+    <span className={cn("flex items-center", textClassName, className)}>
+      <BrandWordmark height={Math.round(size * WORDMARK_HEIGHT_RATIO)} />
     </span>
   );
 }

@@ -40,11 +40,6 @@ export const metadata: Metadata = {
     "no-code",
     APP_NAME,
   ],
-  icons: {
-    icon: "/logo.webp",
-    shortcut: "/logo.webp",
-    apple: "/logo.webp",
-  },
   openGraph: {
     type: "website",
     siteName: APP_NAME,

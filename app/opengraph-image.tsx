@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import { APP_NAME } from "@/shared/config/constants";
+import { BrandWordmark } from "@/shared/ui/BrandMark";
 
 export const alt = `${APP_NAME} — Workflow automation made simpler & smarter`;
 export const size = { width: 1200, height: 630 };
@@ -33,18 +34,12 @@ export default function OpenGraphImage() {
         color: "#ffffff",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-        <div
-          style={{
-            width: 56,
-            height: 56,
-            borderRadius: 16,
-            backgroundColor: PRIMARY_COLOR,
-          }}
+      <div style={{ display: "flex", alignItems: "center" }}>
+        <BrandWordmark
+          height={72}
+          letterColor="#ffffff"
+          dotColor={PRIMARY_COLOR}
         />
-        <div style={{ fontSize: 44, fontWeight: 700, letterSpacing: -1 }}>
-          {APP_NAME}
-        </div>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>

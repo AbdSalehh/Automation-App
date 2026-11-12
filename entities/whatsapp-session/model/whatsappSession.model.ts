@@ -80,6 +80,8 @@ export type WhatsappCallStatus =
   | "offer"
   | "ringing"
   | "accept"
+  /** Diangkat di ponsel utama; durasi menyusul dari riwayat panggilan ponsel. */
+  | "answered_elsewhere"
   | "terminate"
   | "reject"
   | "timeout";
@@ -145,6 +147,15 @@ export interface InboundMedia {
   isStale?: boolean;
   /** True untuk video bulat singkat ("video note") dari kamera di kolom chat. */
   isVideoNote?: boolean;
+  /**
+   * True bila baru preview yang disimpan (hemat penyimpanan). Berkas penuh
+   * diunduh saat pengguna menekan tombol unduh.
+   */
+  deferred?: boolean;
+  /** Thumbnail kecil (data URL) dari WhatsApp untuk gambar/video/dokumen. */
+  previewUrl?: string | null;
+  width?: number | null;
+  height?: number | null;
   /** True bila media gagal diunduh/diunggah, sehingga hanya metadata tersimpan. */
   unavailable?: boolean;
   reason?: UnavailableMediaReason;

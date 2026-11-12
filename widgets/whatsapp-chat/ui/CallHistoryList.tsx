@@ -31,6 +31,7 @@ const STATUS_LABEL = {
   offer: "Berdering",
   ringing: "Berdering",
   accept: "Berlangsung",
+  answered_elsewhere: "Diangkat di ponsel",
   terminate: "Selesai",
   reject: "Ditolak",
   timeout: "Tidak dijawab",

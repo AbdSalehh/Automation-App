@@ -13,6 +13,7 @@ import type {
   WhatsappCallEntry,
   WhatsappCallsMetadata,
   ExcludedChatSummary,
+  InboundMedia,
 } from "../model/whatsappSession.model";
 
 /**
@@ -206,6 +207,24 @@ export const whatsappSessionService = {
     await baileysClient.delete(path, {
       headers: createOwnerHeaders(ownerId, "DELETE", path),
     });
+  },
+
+  /** Mengunduh media penuh untuk pesan yang baru disimpan preview-nya. */
+  downloadMessageMedia: async (
+    ownerId: string,
+    sessionId: string,
+    messageId: string,
+  ): Promise<InboundMedia> => {
+    const path = `/sessions/${encodeURIComponent(sessionId)}/messages/${encodeURIComponent(messageId)}/media`;
+
+    const { data: response } = await baileysClient.post<
+      ApiResponse<InboundMedia>
+    >(path, undefined, {
+      headers: createOwnerHeaders(ownerId, "POST", path),
+      timeout: 120_000,
+    });
+
+    return response.data;
   },
 
   /** Riwayat panggilan masuk & keluar pada hari berjalan. */

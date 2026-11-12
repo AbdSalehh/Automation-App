@@ -13,7 +13,9 @@ import {
 import { useLinkPreviewStore } from "@/entities/link-preview";
 import type { ChatMessage } from "@/entities/whatsapp-session";
 import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
+import { formatFileSize } from "../lib/formatFileSize";
 import { LocationMap } from "./LocationMap";
+import { DeferredMedia } from "./DeferredMedia";
 import { VideoNotePlayer } from "./VideoNotePlayer";
 import { VideoPlayer } from "./VideoPlayer";
 import { VoiceWaveform } from "./VoiceWaveform";
@@ -27,6 +29,11 @@ export function ChatMedia({ message }: { message: ChatMessage }) {
 
   if (!media || !("mimetype" in media)) {
     return null;
+  }
+
+  /** Baru preview yang tersimpan; berkas penuh diunduh lewat tombol unduh. */
+  if (media.deferred) {
+    return <DeferredMedia message={message} media={media} />;
   }
 
   /**
@@ -338,18 +345,6 @@ function UnavailableMedia({
       </div>
     </div>
   );
-}
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) {
-    return `${bytes} B`;
-  }
-
-  if (bytes < 1024 * 1024) {
-    return `${(bytes / 1024).toFixed(0)} kB`;
-  }
-
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function getFirstLink(message: string): string | null {

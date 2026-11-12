@@ -478,6 +478,7 @@ function formatCallStatus(
     offer: "Memanggil",
     ringing: "Berdering",
     accept: "Sedang berlangsung",
+    answered_elsewhere: "Diangkat di ponsel",
     reject: "Panggilan ditolak",
     timeout: "Tidak terjawab",
   };

@@ -13,6 +13,7 @@ import type {
   SessionUpdatePayload,
   WhatsappSessionSummary,
   ExcludedChatSummary,
+  InboundMedia,
 } from "../model/whatsappSession.model";
 
 const CONVERSATIONS_PAGE_SIZE = 15;
@@ -53,6 +54,10 @@ interface ChatHistoryState {
   fetchMoreMessages: () => Promise<void>;
   fetchAvatar: (jid: string) => Promise<void>;
   hideConversation: (jid: string) => Promise<void>;
+  /** ID pesan yang media penuhnya sedang diunduh. */
+  downloadingMediaIds: Record<string, boolean>;
+  /** Mengunduh media penuh untuk pesan yang baru disimpan preview-nya. */
+  downloadMessageMedia: (messageId: string) => Promise<boolean>;
   excludedChats: ExcludedChatSummary[];
   isLoadingExcludedChats: boolean;
   fetchExcludedChats: () => Promise<void>;
@@ -338,6 +343,43 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
       set({ avatarUrls: { ...get().avatarUrls, [jid]: null } });
     } finally {
       inFlightAvatarRequests.delete(requestKey);
+    }
+  },
+
+  downloadingMediaIds: {},
+
+  downloadMessageMedia: async (messageId) => {
+    const { activeSessionId, activeOwnerId, downloadingMediaIds } = get();
+
+    if (!activeSessionId || !activeOwnerId || downloadingMediaIds[messageId]) {
+      return false;
+    }
+
+    set({ downloadingMediaIds: { ...downloadingMediaIds, [messageId]: true } });
+
+    try {
+      const { data: response } = await apiClient.post<
+        ApiResponse<InboundMedia>
+      >(`/whatsapp/messages/${encodeURIComponent(messageId)}/media`, undefined, {
+        params: { sessionId: activeSessionId, ownerId: activeOwnerId },
+        timeout: 120_000,
+      });
+
+      set({
+        messages: get().messages.map((message) =>
+          message.id === messageId
+            ? { ...message, media: response.data }
+            : message,
+        ),
+      });
+
+      return true;
+    } catch {
+      return false;
+    } finally {
+      const remaining = { ...get().downloadingMediaIds };
+      delete remaining[messageId];
+      set({ downloadingMediaIds: remaining });
     }
   },
 

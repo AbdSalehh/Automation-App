@@ -272,15 +272,28 @@ export const groupWhatsappStories = (
     stories: groupedStories,
     hasUnviewed: groupedStories.some((story) => !story.viewedAt),
     isOwn: groupedStories.some((story) => story.fromMe),
-  })).sort((groupA, groupB) => {
-    if (groupA.isOwn !== groupB.isOwn) {
-      return groupA.isOwn ? -1 : 1;
-    }
+    /** Story orang lain yang sudah di-love akun ini. */
+    isLiked: groupedStories.some(
+      (story) => !story.fromMe && story.likedBy.length > 0,
+    ),
+    latestAt: Math.max(
+      ...groupedStories.map((story) => new Date(story.sentAt).getTime()),
+    ),
+  }))
+    .sort((groupA, groupB) => {
+      /** Urutan: story sendiri, story yang di-love, belum dilihat, terbaru. */
+      if (groupA.isOwn !== groupB.isOwn) {
+        return groupA.isOwn ? -1 : 1;
+      }
 
-    if (groupA.hasUnviewed !== groupB.hasUnviewed) {
-      return groupA.hasUnviewed ? -1 : 1;
-    }
+      if (groupA.isLiked !== groupB.isLiked) {
+        return groupA.isLiked ? -1 : 1;
+      }
 
-    return 0;
-  });
+      if (groupA.hasUnviewed !== groupB.hasUnviewed) {
+        return groupA.hasUnviewed ? -1 : 1;
+      }
+
+      return groupB.latestAt - groupA.latestAt;
+    });
 };
